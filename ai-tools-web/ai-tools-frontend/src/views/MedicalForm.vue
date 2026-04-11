@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
-import { apiUrl } from '../api.js'
+import { API, apiUrl, logApiFailure } from '../api.js'
 
 const STORAGE_KEY = 'consult_result'
 
@@ -32,26 +32,41 @@ async function onGenerate() {
   }
 
   loading.value = true
+  const url = apiUrl(API.medicalAssistant)
+  const requestBody = {
+    symptom: s,
+    report: r,
+    target: t,
+  }
   try {
-    const res = await fetch(apiUrl('/prepare-consult'), {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        symptom: s,
-        report: r,
-        target: t,
-      }),
+      body: JSON.stringify(requestBody),
     })
+
+    if (!res.ok) {
+      await logApiFailure(url, requestBody, res, new Error(`HTTP ${res.status}`))
+      showToast('网络异常')
+      return
+    }
 
     let payload
     try {
       payload = await res.json()
-    } catch {
+    } catch (parseErr) {
+      await logApiFailure(url, requestBody, res, parseErr)
       showToast('网络异常')
       return
     }
 
     if (!payload || payload.code !== 0) {
+      console.error('[medical-assistant business]', {
+        url,
+        code: payload?.code,
+        message: payload?.message,
+        payload,
+      })
       showToast(payload?.message || '生成失败，请重试')
       return
     }
@@ -66,7 +81,7 @@ async function onGenerate() {
 
     router.push({ name: 'medicalResult' })
   } catch (e) {
-    console.error(e)
+    await logApiFailure(url, requestBody, null, e)
     showToast('网络异常')
   } finally {
     loading.value = false

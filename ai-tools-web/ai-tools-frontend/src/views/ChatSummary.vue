@@ -1,7 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
-import { apiUrl } from '../api.js'
+import { API, apiUrl, logApiFailure } from '../api.js'
 
 const STORAGE_KEY = 'summary_used_count'
 
@@ -63,22 +63,32 @@ async function onSummarize() {
   checkUnlock()
 
   loading.value = true
+  const url = apiUrl(API.summary)
+  const requestBody = { inputText: text }
   try {
-    const res = await fetch(apiUrl('/summary'), {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ inputText: text }),
+      body: JSON.stringify(requestBody),
     })
+
+    if (!res.ok) {
+      await logApiFailure(url, requestBody, res, new Error(`HTTP ${res.status}`))
+      showToast('网络异常')
+      return
+    }
 
     let r
     try {
       r = await res.json()
-    } catch {
+    } catch (parseErr) {
+      await logApiFailure(url, requestBody, res, parseErr)
       showToast('网络异常')
       return
     }
 
     if (r?.code !== 0) {
+      console.error('[summary business]', { url, code: r?.code, message: r?.message, data: r })
       showToast(r?.message || '生成失败，请重试')
       return
     }
@@ -86,7 +96,7 @@ async function onSummarize() {
     incrementSummaryCount()
     result.value = r.data ?? null
   } catch (e) {
-    console.error(e)
+    await logApiFailure(url, requestBody, null, e)
     showToast('网络异常')
   } finally {
     loading.value = false
