@@ -52,9 +52,15 @@ async def summary(body: SummaryRequest) -> SummaryEnvelope:
     response_model=PrepareConsultEnvelope,
     response_model_exclude_none=True,
 )
+@app.post(
+    "/medical-assistant",
+    response_model=PrepareConsultEnvelope,
+    response_model_exclude_none=True,
+)
 async def prepare_consult_route(body: PrepareConsultRequest) -> PrepareConsultEnvelope:
     """
     对齐 `prepareConsult` 云函数：symptom / report / target。
+    `/medical-assistant` 与 `/prepare-consult` 相同，供 Nginx 剥掉 `/api` 后路径为 /medical-assistant 时使用。
     """
     return await prepare_consult(body.symptom, body.report, body.target)
 
