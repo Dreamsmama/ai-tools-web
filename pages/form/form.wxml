@@ -1,0 +1,51 @@
+<view class="page">
+
+<view class="card">
+  <view class="title">问诊准备</view>
+  <view class="sub">把你现在的情况写清楚，系统会帮你整理成就医沟通清单。</view>
+</view>
+
+<view class="card">
+  <view class="label">1）现在的情况 / 不舒服的地方（必填）</view>
+  <textarea
+    class="textarea"
+    value="{{symptom}}"
+    placeholder="建议按这个模板写（越具体越有用）：\n- 部位：上腹/下腹/左/右？\n- 性质：绞痛/胀痛/隐痛？\n- 时长：多久了？有没有加重？\n- 诱因：饭后/受凉/熬夜/运动？\n- 伴随：发热/腹泻/恶心/便血？\n示例：右下腹隐痛2天，走路更痛，偶尔恶心，无发热。"
+    maxlength="800"
+    bindinput="onSymptomInput"
+  ></textarea>
+  <!-- 你说不要限制，那就把“至少两句话”改成软提示 -->
+  <view class="hint">写得越具体，生成的清单越有用。</view>
+</view>
+
+<view class="card">
+  <view class="label">2）已经做过的检查 / 报告（可选）</view>
+  <textarea
+    class="textarea"
+    value="{{report}}"
+    placeholder="可填写：体检异常项、化验结果、影像检查结论、医生之前说法等。\n示例：血常规白细胞略高；B超提示轻度脂肪肝。"
+    maxlength="800"
+    bindinput="onReportInput"
+  ></textarea>
+</view>
+
+<view class="card">
+  <view class="label">3）你最想问医生的问题（可选）</view>
+  <textarea
+    class="textarea"
+    value="{{target}}"
+    placeholder="示例：\n- 我最担心的是不是需要进一步检查？\n- 我应该优先排查哪些方向？\n- 哪些情况算需要尽快处理？"
+    maxlength="500"
+    bindinput="onTargetInput"
+  ></textarea>
+</view>
+
+<view class="disclaimer">⚠️ 本工具仅用于健康信息整理与沟通准备，不构成医疗建议。</view>
+
+<button class="btn" loading="{{loading}}" disabled="{{loading}}" bindtap="onGenerate">
+  {{loading ? "生成中…" : "生成问诊准备"}}
+</button>
+
+<!-- <button bindtap="onResetTrial">重置体验（测试用）</button> -->
+
+</view>

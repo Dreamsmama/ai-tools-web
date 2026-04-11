@@ -1,0 +1,38 @@
+<view class="card">
+  <view class="h2">问诊准备结果</view>
+  <view class="sub">下面内容用于就医前整理与沟通准备。</view>
+</view>
+
+<view class="card">
+  <view class="h2">① 关键信息整理</view>
+  <view wx:if="{{summary.length}}">
+    <view class="list-item" wx:for="{{summary}}" wx:key="idx">
+      <view>• {{item}}</view>
+    </view>
+  </view>
+  <view wx:else class="sub">暂无</view>
+</view>
+
+<view class="card">
+  <view class="h2">② 建议向医生询问</view>
+  <view wx:if="{{questions.length}}">
+    <view class="list-item" wx:for="{{questions}}" wx:key="idx">
+      <view>Q{{index + 1}}. {{item}}</view>
+    </view>
+  </view>
+  <view wx:else class="sub">暂无</view>
+</view>
+
+<view class="card">
+  <view class="h2">③ 沟通/准备提醒</view>
+  <view wx:if="{{notes.length}}">
+    <view class="list-item" wx:for="{{notes}}" wx:key="idx">
+      <view>• {{item}}</view>
+    </view>
+  </view>
+  <view wx:else class="sub">暂无</view>
+</view>
+
+<view class="disclaimer">
+  本工具仅用于健康信息整理与沟通准备，不构成医疗建议。
+</view>

@@ -1,0 +1,66 @@
+<view class="page">
+  <view class="header">
+    <view class="title">聊天重点总结器（内测）</view>
+    <view class="sub">粘贴聊天内容 → 输出结论 / 待办 / 风险</view>
+  </view>
+
+  <view class="card">
+    <view class="label">粘贴聊天内容</view>
+    <textarea
+      class="textarea"
+      placeholder="把微信/群聊/工作对话粘贴到这里…（支持多段文字）"
+      maxlength="-1"
+      value="{{inputText}}"
+      bindinput="onInput"
+    />
+    <button class="btn" bindtap="onSummarize">一键总结</button>
+    <!-- <view class="tip">提示：2这只是内测版，先用假数据跑通流程。</view> -->
+  </view>
+
+  <view class="card">
+    <view class="block-title">核心结论</view>
+    <view wx:if="{{!result}}" class="empty">点击“一键总结”后显示</view>
+    <view wx:else>
+      <view class="item" wx:for="{{result.summary}}" wx:key="*this">• {{item}}</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="block-title">待办事项</view>
+    <view wx:if="{{!result}}" class="empty">点击“一键总结”后显示</view>
+    <view wx:else>
+      <view class="item" wx:for="{{result.todos}}" wx:key="task">• {{item.owner}}：{{item.task}}</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="block-title">风险 / 没说清的地方</view>
+    <view wx:if="{{!result}}" class="empty">点击“一键总结”后显示</view>
+    <view wx:else>
+      <view class="item" wx:for="{{result.risks}}" wx:key="*this">• {{item}}</view>
+    </view>
+  </view>
+
+  <view class="card">
+    <view class="block-title">建议下一步怎么回</view>
+    <view wx:if="{{!result}}" class="empty">点击"一键总结"后显示</view>
+    <view wx:else>
+      <view class="reply">{{result.reply}}</view>
+      <button class="copyBtn" bindtap="copyReply">复制这段回复</button>
+    </view>
+  </view>
+</view>
+
+<!-- 解锁提示弹窗 -->
+<view wx:if="{{showUnlockModal}}" class="unlock-modal-mask" bindtap="onCloseUnlockModal">
+  <view class="unlock-modal" catchtap="">
+    <view class="unlock-modal-title">解锁更多使用次数</view>
+    <view class="unlock-modal-content">
+      你已经使用了 3 次聊天总结，如果这个工具对你有帮助，可以支持一下我们继续完善
+    </view>
+    <view class="unlock-modal-buttons">
+      <button class="unlock-btn-secondary" bindtap="onCloseUnlockModal">以后再说</button>
+      <button class="unlock-btn-primary" bindtap="onUnlockClick">解锁更多</button>
+    </view>
+  </view>
+</view>

@@ -1,0 +1,73 @@
+/* 首页局部样式：主入口更突出 + 工具区更清晰 */
+
+/* 工具区容器 */
+.tools-section{
+  margin: 24rpx;
+}
+
+/* 分区标题 */
+.section-title{
+  font-size: 30rpx;
+  font-weight: 600;
+  margin: 24rpx 0 16rpx;
+  color: #111;
+}
+
+/* 工具卡 */
+.tool-card{
+  padding: 24rpx;
+  border-radius: 16rpx;
+  background: #fff;
+  box-shadow: 0 10rpx 26rpx rgba(0,0,0,0.06);
+  margin-bottom: 18rpx;
+}
+
+.tool-row{
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tool-title{
+  font-size: 34rpx;
+  font-weight: 600;
+  color: #111;
+}
+
+.tool-tag{
+  font-size: 22rpx;
+  padding: 6rpx 12rpx;
+  border-radius: 999rpx;
+  background: #f2f3f5;
+  color: #555;
+}
+
+.tool-desc{
+  margin-top: 10rpx;
+  font-size: 26rpx;
+  color: #666;
+  line-height: 1.5;
+}
+
+/* 统一 hover（你 wxml 里用的是 hover-class="card-hover"） */
+.card-hover{
+  opacity: 0.85;
+}
+
+/* 兼容：如果你别的地方用了 tool-card-hover，也不会失效 */
+.tool-card-hover{
+  opacity: 0.85;
+}
+
+/* ✅ 让“主按钮”更像首页主入口（不依赖你全局 btn 是否有 margin） */
+.btn{
+  margin: 16rpx 24rpx 24rpx;
+}
+
+/* ✅ 免责声明别太抢屏（如果全局没有定义，这里兜底） */
+.disclaimer{
+  margin: 0 24rpx 24rpx;
+  font-size: 24rpx;
+  line-height: 36rpx;
+  opacity: 0.85;
+}

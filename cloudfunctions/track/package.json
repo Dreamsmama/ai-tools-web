@@ -1,0 +1,10 @@
+{
+  "name": "track",
+  "version": "1.0.0",
+  "description": "埋点数据写入云数据库",
+  "main": "index.js",
+  "dependencies": {
+    "wx-server-sdk": "~2.6.3"
+  }
+}
+

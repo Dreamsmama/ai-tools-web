@@ -1,0 +1,83 @@
+/* pages/summary/summary.wxss */
+
+/* 解锁弹窗遮罩 */
+.unlock-modal-mask {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+/* 解锁弹窗主体 */
+.unlock-modal {
+  width: 80%;
+  max-width: 500rpx;
+  background-color: #fff;
+  border-radius: 16rpx;
+  padding: 40rpx 32rpx;
+  box-sizing: border-box;
+}
+
+/* 弹窗标题 */
+.unlock-modal-title {
+  font-size: 36rpx;
+  font-weight: 600;
+  color: #333;
+  text-align: center;
+  margin-bottom: 24rpx;
+}
+
+/* 弹窗内容 */
+.unlock-modal-content {
+  font-size: 28rpx;
+  color: #666;
+  line-height: 1.6;
+  text-align: center;
+  margin-bottom: 40rpx;
+}
+
+/* 按钮容器 */
+.unlock-modal-buttons {
+  display: flex;
+  gap: 20rpx;
+}
+
+/* 次要按钮（以后再说） */
+.unlock-btn-secondary {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  background-color: #f5f5f5;
+  color: #333;
+  border: none;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  padding: 0;
+}
+
+.unlock-btn-secondary::after {
+  border: none;
+}
+
+/* 主要按钮（解锁更多） */
+.unlock-btn-primary {
+  flex: 1;
+  height: 80rpx;
+  line-height: 80rpx;
+  background-color: #07c160;
+  color: #fff;
+  border: none;
+  border-radius: 8rpx;
+  font-size: 28rpx;
+  padding: 0;
+}
+
+.unlock-btn-primary::after {
+  border: none;
+}

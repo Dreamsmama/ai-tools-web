@@ -1,0 +1,65 @@
+"""
+FastAPI entry: /health, /summary, /prepare-consult (aligned with WeChat cloud functions).
+"""
+
+from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
+
+from app.prepare_consult_service import prepare_consult
+from app.schemas import (
+    PrepareConsultEnvelope,
+    PrepareConsultRequest,
+    SummaryEnvelope,
+    SummaryRequest,
+)
+from app.summarize_service import summarize_chat
+
+app = FastAPI(title="ai-tools-backend", version="0.1.0")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+
+@app.get("/health")
+async def health() -> dict[str, str]:
+    return {"status": "ok"}
+
+
+@app.post(
+    "/summary",
+    response_model=SummaryEnvelope,
+    response_model_exclude_none=True,
+)
+async def summary(body: SummaryRequest) -> SummaryEnvelope:
+    """
+    Body: `{ "inputText": "..." }` — same field name as `wx.cloud.callFunction({ data: { inputText } })`.
+    Response: `{ "code": 0, "data": { summary, todos, risks, reply } }` or `{ "code", "message" }`.
+    """
+    return await summarize_chat(body.inputText)
+
+
+@app.post(
+    "/prepare-consult",
+    response_model=PrepareConsultEnvelope,
+    response_model_exclude_none=True,
+)
+async def prepare_consult_route(body: PrepareConsultRequest) -> PrepareConsultEnvelope:
+    """
+    对齐 `prepareConsult` 云函数：symptom / report / target。
+    """
+    return await prepare_consult(body.symptom, body.report, body.target)
+
+
+def main() -> None:
+    import uvicorn
+
+    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,39 @@
+<!-- ✅ 主卡：聊天重点总结（C 位） -->
+<view class="card">
+  <view class="h1">把一堆聊天，整理成你该记住的重点</view>
+  <view class="sub">
+    输出：结论 · 待办 · 风险（适合工作/群聊/重要对话）
+  </view>
+</view>
+
+<view class="btn" bindtap="goSummary">开始整理聊天</view>
+
+<!-- ✅ 轻量说明：别把“医疗免责声明”放第一屏 -->
+<view class="card">
+  <view class="h2">它能帮你做什么？</view>
+  <view class="sub">
+    1）提取核心结论　2）列出下一步待办　3）标出没说清/有风险的点
+  </view>
+</view>
+
+<!-- 🟡 次卡：就医助手（保留，但降级成“场景工具”） -->
+<view class="tools-section">
+  <view class="section-title">场景工具</view>
+
+  <navigator url="/pages/form/form" hover-class="card-hover">
+    <view class="tool-card">
+      <view class="tool-row">
+        <view class="tool-title">就医前沟通准备</view>
+        <view class="tool-tag">辅助</view>
+      </view>
+      <view class="tool-desc">整理症状/检查/疑问，用好和医生的 10 分钟</view>
+    </view>
+  </navigator>
+</view>
+
+<!-- 🧾 医疗免责声明：放到就医工具下面 -->
+<view class="disclaimer">
+  本工具仅用于就医前的信息整理与沟通准备，不提供医疗诊断或治疗建议。最终请以专业医生意见为准。
+</view>
+
+<!-- ✅ 你原来的“适合什么情况”可以保留，但语义改成“就医工具适
