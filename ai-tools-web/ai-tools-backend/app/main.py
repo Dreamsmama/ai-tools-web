@@ -2,6 +2,10 @@
 FastAPI entry: /health, /summary, /prepare-consult (aligned with WeChat cloud functions).
 """
 
+from __future__ import annotations
+
+from typing import Dict
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -26,7 +30,7 @@ app.add_middleware(
 
 
 @app.get("/health")
-async def health() -> dict[str, str]:
+async def health() -> Dict[str, str]:
     return {"status": "ok"}
 
 

@@ -1,5 +1,6 @@
-fastapi>=0.109.0
-uvicorn[standard]>=0.27.0
-httpx>=0.26.0
-pydantic>=2.5.0
-pydantic-settings>=2.1.0
+# Python 3.8+（建议在 ECS 上使用 python3.8 -m venv）
+fastapi>=0.109.0,<1
+uvicorn[standard]>=0.27.0,<1
+httpx>=0.26.0,<1
+pydantic>=2.5.0,<3
+pydantic-settings>=2.1.0,<3

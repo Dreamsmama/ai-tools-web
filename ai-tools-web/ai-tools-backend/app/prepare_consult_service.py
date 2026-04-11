@@ -6,7 +6,7 @@ from __future__ import annotations
 
 import json
 import logging
-from typing import Any
+from typing import Any, Dict, List
 
 import httpx
 
@@ -21,7 +21,7 @@ def _safe_trim(v: Any) -> str:
 
 
 def _parse_strict_json(content: str) -> PrepareConsultData:
-    obj: dict[str, Any]
+    obj: Dict[str, Any]
     try:
         obj = json.loads(content)
     except json.JSONDecodeError:
@@ -47,7 +47,7 @@ def _parse_strict_json(content: str) -> PrepareConsultData:
     )
 
 
-async def _call_dashscope_prepare(messages: list[dict[str, str]]) -> str:
+async def _call_dashscope_prepare(messages: List[Dict[str, str]]) -> str:
     api_key = settings.dashscope_api_key.strip()
     if not api_key:
         raise RuntimeError("缺少 DASHSCOPE_API_KEY 环境变量")

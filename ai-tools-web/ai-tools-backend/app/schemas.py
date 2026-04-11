@@ -1,6 +1,8 @@
 """Request/response models aligned with miniprogram cloud function `summarize`."""
 
-from typing import Any, Optional
+from __future__ import annotations
+
+from typing import List, Optional
 
 from pydantic import BaseModel, Field
 
@@ -12,9 +14,9 @@ class SummaryTodo(BaseModel):
 
 
 class SummaryData(BaseModel):
-    summary: list[str] = Field(default_factory=list)
-    todos: list[SummaryTodo] = Field(default_factory=list)
-    risks: list[str] = Field(default_factory=list)
+    summary: List[str] = Field(default_factory=list)
+    todos: List[SummaryTodo] = Field(default_factory=list)
+    risks: List[str] = Field(default_factory=list)
     reply: str = ""
 
 
@@ -38,9 +40,9 @@ class SummaryEnvelope(BaseModel):
 
 
 class PrepareConsultData(BaseModel):
-    summary: list[str] = Field(default_factory=list)
-    questions: list[str] = Field(default_factory=list)
-    notes: list[str] = Field(default_factory=list)
+    summary: List[str] = Field(default_factory=list)
+    questions: List[str] = Field(default_factory=list)
+    notes: List[str] = Field(default_factory=list)
 
 
 class PrepareConsultRequest(BaseModel):
