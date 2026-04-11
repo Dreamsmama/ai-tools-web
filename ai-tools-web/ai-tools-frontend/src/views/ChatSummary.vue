@@ -2,6 +2,12 @@
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { API, apiUrl, logApiFailure } from '../api.js'
+import {
+  httpErrorMessage,
+  NETWORK_UNREACHABLE,
+  RESPONSE_PARSE_ERROR,
+} from '../clientErrors.js'
+import ErrorDialog from '../components/ErrorDialog.vue'
 
 const STORAGE_KEY = 'summary_used_count'
 
@@ -10,6 +16,13 @@ const result = ref(null)
 const showUnlockModal = ref(false)
 const loading = ref(false)
 const toast = ref('')
+const errorDialog = ref(false)
+const errorText = ref('')
+
+function showErrorDetail(text) {
+  errorText.value = text
+  errorDialog.value = true
+}
 
 function showToast(message) {
   toast.value = message
@@ -74,7 +87,7 @@ async function onSummarize() {
 
     if (!res.ok) {
       await logApiFailure(url, requestBody, res, new Error(`HTTP ${res.status}`))
-      showToast('网络异常')
+      showErrorDetail(httpErrorMessage(res.status))
       return
     }
 
@@ -83,13 +96,16 @@ async function onSummarize() {
       r = await res.json()
     } catch (parseErr) {
       await logApiFailure(url, requestBody, res, parseErr)
-      showToast('网络异常')
+      showErrorDetail(RESPONSE_PARSE_ERROR)
       return
     }
 
     if (r?.code !== 0) {
       console.error('[summary business]', { url, code: r?.code, message: r?.message, data: r })
-      showToast(r?.message || '生成失败，请重试')
+      showErrorDetail(
+        r?.message ||
+          '【原因】本次未成功。\n【怎么办】无需改内容，直接再点一次提交试试，通常 1～2 次就会好。',
+      )
       return
     }
 
@@ -97,7 +113,7 @@ async function onSummarize() {
     result.value = r.data ?? null
   } catch (e) {
     await logApiFailure(url, requestBody, null, e)
-    showToast('网络异常')
+    showErrorDetail(NETWORK_UNREACHABLE)
   } finally {
     loading.value = false
   }
@@ -236,6 +252,8 @@ async function copyReply() {
         </div>
       </div>
     </div>
+
+    <ErrorDialog v-model="errorDialog" :text="errorText" />
   </div>
 </template>
 

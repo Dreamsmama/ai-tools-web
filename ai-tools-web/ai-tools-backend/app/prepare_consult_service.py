@@ -11,52 +11,15 @@ from typing import Any, Dict, List
 import httpx
 
 from app.config import settings
-from app.schemas import PrepareConsultData, PrepareConsultEnvelope
+from app.llm_json import parse_prepare_model_output
+from app.schemas import PrepareConsultEnvelope
+from app import user_messages as user_msg
 
 logger = logging.getLogger(__name__)
 
 
 def _safe_trim(v: Any) -> str:
     return v.strip() if isinstance(v, str) else ""
-
-
-def _parse_strict_json(content: str) -> PrepareConsultData:
-    obj: Dict[str, Any]
-    try:
-        obj = json.loads(content)
-    except json.JSONDecodeError as e1:
-        logger.warning(
-            "prepare_consult model JSON first parse failed: %s; snippet=%r",
-            e1,
-            (content or "")[:400],
-        )
-        s = content.find("{")
-        e2 = content.rfind("}")
-        if s >= 0 and e2 > s:
-            try:
-                obj = json.loads(content[s : e2 + 1])
-            except json.JSONDecodeError as e2:
-                logger.warning(
-                    "prepare_consult model JSON brace-slice parse failed: %s",
-                    e2,
-                )
-                raise ValueError("模型返回格式异常，请稍后重试") from None
-        else:
-            raise ValueError("模型返回格式异常，请稍后重试") from None
-
-    summary_raw = obj.get("summary")
-    questions_raw = obj.get("questions")
-    notes_raw = obj.get("notes")
-
-    summary = list(map(str, summary_raw)) if isinstance(summary_raw, list) else []
-    questions = list(map(str, questions_raw)) if isinstance(questions_raw, list) else []
-    notes = list(map(str, notes_raw)) if isinstance(notes_raw, list) else []
-
-    return PrepareConsultData(
-        summary=summary[:3],
-        questions=questions[:3],
-        notes=notes[:2],
-    )
 
 
 async def _call_dashscope_prepare(messages: List[Dict[str, str]]) -> str:
@@ -109,7 +72,10 @@ async def prepare_consult(symptom: str, report: str, target: str) -> PrepareCons
     target = _safe_trim(target)
 
     if not symptom:
-        return PrepareConsultEnvelope(code=400, message="symptom 不能为空")
+        return PrepareConsultEnvelope(
+            code=400,
+            message="【原因】症状描述为空。\n【怎么办】请至少用一句话描述当前不适后再试。",
+        )
 
     system_message = {
         "role": "system",
@@ -138,37 +104,18 @@ async def prepare_consult(symptom: str, report: str, target: str) -> PrepareCons
 
     try:
         raw = await _call_dashscope_prepare([system_message, user_message])
-        data = _parse_strict_json(raw)
+        data = parse_prepare_model_output(raw)
 
         if not data.summary and not data.questions and not data.notes:
-            return PrepareConsultEnvelope(code=500, message="模型输出为空/不符合格式")
+            return PrepareConsultEnvelope(code=500, message=user_msg.msg_model_empty())
 
         return PrepareConsultEnvelope(code=0, data=data)
     except httpx.TimeoutException:
         logger.exception("prepare_consult dashscope timeout")
-        return PrepareConsultEnvelope(
-            code=504, message="生成超时，请重试（网络或模型响应较慢）"
-        )
-    except json.JSONDecodeError as err:
-        logger.warning("prepare_consult unexpected JSONDecodeError: %s", err)
-        return PrepareConsultEnvelope(
-            code=500, message="模型返回格式异常，请稍后重试"
-        )
+        return PrepareConsultEnvelope(code=504, message=user_msg.msg_timeout())
     except Exception as err:
         logger.exception("prepare_consult error")
-        msg = str(err) if err else "server error"
-        if "timeout" in msg.lower():
-            return PrepareConsultEnvelope(
-                code=504, message="生成超时，请重试（网络或模型响应较慢）"
-            )
-        if isinstance(err, ValueError) and "模型返回格式异常" in msg:
-            return PrepareConsultEnvelope(code=500, message=msg)
-        if isinstance(err, json.JSONDecodeError):
-            return PrepareConsultEnvelope(
-                code=500, message="模型返回格式异常，请稍后重试"
-            )
-        if "Expecting" in msg and "delimiter" in msg:
-            return PrepareConsultEnvelope(
-                code=500, message="模型返回格式异常，请稍后重试"
-            )
-        return PrepareConsultEnvelope(code=500, message=msg)
+        low = str(err).lower() if err else ""
+        if "timeout" in low:
+            return PrepareConsultEnvelope(code=504, message=user_msg.msg_timeout())
+        return PrepareConsultEnvelope(code=500, message=user_msg.from_exception(err))

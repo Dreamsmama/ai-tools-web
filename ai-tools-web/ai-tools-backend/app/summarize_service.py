@@ -12,73 +12,15 @@ from typing import Any, Dict, List
 import httpx
 
 from app.config import settings
-from app.schemas import SummaryData, SummaryEnvelope, SummaryTodo
+from app.llm_json import parse_summary_model_output
+from app.schemas import SummaryEnvelope
+from app import user_messages as user_msg
 
 logger = logging.getLogger(__name__)
 
 
 def _safe_trim(v: Any) -> str:
     return v.strip() if isinstance(v, str) else ""
-
-
-def _parse_strict_json(content: str) -> SummaryData:
-    obj: Dict[str, Any]
-    try:
-        obj = json.loads(content)
-    except json.JSONDecodeError as e1:
-        logger.warning(
-            "summary model JSON first parse failed: %s; snippet=%r",
-            e1,
-            (content or "")[:400],
-        )
-        s = content.find("{")
-        e2 = content.rfind("}")
-        if s >= 0 and e2 > s:
-            try:
-                obj = json.loads(content[s : e2 + 1])
-            except json.JSONDecodeError as e2:
-                logger.warning(
-                    "summary model JSON brace-slice parse failed: %s",
-                    e2,
-                )
-                raise ValueError("模型返回格式异常，请稍后重试") from None
-        else:
-            raise ValueError("模型返回格式异常，请稍后重试") from None
-
-    summary_raw = obj.get("summary")
-    todos_raw = obj.get("todos")
-    risks_raw = obj.get("risks")
-    reply_raw = obj.get("reply")
-
-    summary = list(map(str, summary_raw)) if isinstance(summary_raw, list) else []
-    todos_in = todos_raw if isinstance(todos_raw, list) else []
-    risks = list(map(str, risks_raw)) if isinstance(risks_raw, list) else []
-    reply = reply_raw if isinstance(reply_raw, str) else ""
-
-    norm_todos: List[SummaryTodo] = []
-    for t in todos_in:
-        if isinstance(t, dict):
-            owner = t.get("owner")
-            task = t.get("task")
-            due = t.get("due")
-            item = SummaryTodo(
-                owner=owner if isinstance(owner, str) else "未明确",
-                task=task if isinstance(task, str) else str(t or ""),
-                due=due if isinstance(due, str) else "",
-            )
-        else:
-            item = SummaryTodo(owner="未明确", task=str(t or ""), due="")
-        if item.task and item.task.strip():
-            norm_todos.append(item)
-    norm_todos = norm_todos[:6]
-
-    data = SummaryData(
-        summary=summary[:5],
-        todos=norm_todos,
-        risks=risks[:5],
-        reply=reply.strip(),
-    )
-    return data
 
 
 async def _call_dashscope(messages: List[Dict[str, str]]) -> str:
@@ -128,7 +70,7 @@ async def _call_dashscope(messages: List[Dict[str, str]]) -> str:
 async def summarize_chat(input_text: str) -> SummaryEnvelope:
     text = _safe_trim(input_text)
     if not text:
-        return SummaryEnvelope(code=400, message="inputText 不能为空")
+        return SummaryEnvelope(code=400, message=user_msg.msg_input_empty())
 
     system_message = {
         "role": "system",
@@ -161,7 +103,7 @@ async def summarize_chat(input_text: str) -> SummaryEnvelope:
 
     try:
         raw = await _call_dashscope([system_message, user_message])
-        data = _parse_strict_json(raw)
+        data = parse_summary_model_output(raw)
 
         if (
             not data.summary
@@ -169,7 +111,7 @@ async def summarize_chat(input_text: str) -> SummaryEnvelope:
             and not data.risks
             and not data.reply
         ):
-            return SummaryEnvelope(code=500, message="模型输出为空/不符合格式")
+            return SummaryEnvelope(code=500, message=user_msg.msg_model_empty())
 
         if data.reply and len(data.reply) > 400:
             data = data.model_copy(update={"reply": data.reply[:400]})
@@ -177,23 +119,10 @@ async def summarize_chat(input_text: str) -> SummaryEnvelope:
         return SummaryEnvelope(code=0, data=data)
     except httpx.TimeoutException:
         logger.exception("dashscope timeout")
-        return SummaryEnvelope(
-            code=504, message="生成超时，请重试（网络或模型响应较慢）"
-        )
-    except json.JSONDecodeError as err:
-        logger.warning("summarize unexpected JSONDecodeError: %s", err)
-        return SummaryEnvelope(code=500, message="模型返回格式异常，请稍后重试")
+        return SummaryEnvelope(code=504, message=user_msg.msg_timeout())
     except Exception as err:
         logger.exception("summarize error")
-        msg = str(err) if err else "server error"
-        if "timeout" in msg.lower():
-            return SummaryEnvelope(
-                code=504, message="生成超时，请重试（网络或模型响应较慢）"
-            )
-        if isinstance(err, ValueError) and "模型返回格式异常" in msg:
-            return SummaryEnvelope(code=500, message=msg)
-        if isinstance(err, json.JSONDecodeError):
-            return SummaryEnvelope(code=500, message="模型返回格式异常，请稍后重试")
-        if "Expecting" in msg and "delimiter" in msg:
-            return SummaryEnvelope(code=500, message="模型返回格式异常，请稍后重试")
-        return SummaryEnvelope(code=500, message=msg)
+        low = str(err).lower() if err else ""
+        if "timeout" in low:
+            return SummaryEnvelope(code=504, message=user_msg.msg_timeout())
+        return SummaryEnvelope(code=500, message=user_msg.from_exception(err))
