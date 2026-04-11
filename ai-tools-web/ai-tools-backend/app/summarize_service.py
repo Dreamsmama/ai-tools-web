@@ -25,13 +25,25 @@ def _parse_strict_json(content: str) -> SummaryData:
     obj: Dict[str, Any]
     try:
         obj = json.loads(content)
-    except json.JSONDecodeError:
+    except json.JSONDecodeError as e1:
+        logger.warning(
+            "summary model JSON first parse failed: %s; snippet=%r",
+            e1,
+            (content or "")[:400],
+        )
         s = content.find("{")
         e2 = content.rfind("}")
         if s >= 0 and e2 > s:
-            obj = json.loads(content[s : e2 + 1])
+            try:
+                obj = json.loads(content[s : e2 + 1])
+            except json.JSONDecodeError as e2:
+                logger.warning(
+                    "summary model JSON brace-slice parse failed: %s",
+                    e2,
+                )
+                raise ValueError("模型返回格式异常，请稍后重试") from None
         else:
-            raise ValueError("模型返回非JSON") from None
+            raise ValueError("模型返回格式异常，请稍后重试") from None
 
     summary_raw = obj.get("summary")
     todos_raw = obj.get("todos")
@@ -168,6 +180,9 @@ async def summarize_chat(input_text: str) -> SummaryEnvelope:
         return SummaryEnvelope(
             code=504, message="生成超时，请重试（网络或模型响应较慢）"
         )
+    except json.JSONDecodeError as err:
+        logger.warning("summarize unexpected JSONDecodeError: %s", err)
+        return SummaryEnvelope(code=500, message="模型返回格式异常，请稍后重试")
     except Exception as err:
         logger.exception("summarize error")
         msg = str(err) if err else "server error"
@@ -175,4 +190,10 @@ async def summarize_chat(input_text: str) -> SummaryEnvelope:
             return SummaryEnvelope(
                 code=504, message="生成超时，请重试（网络或模型响应较慢）"
             )
+        if isinstance(err, ValueError) and "模型返回格式异常" in msg:
+            return SummaryEnvelope(code=500, message=msg)
+        if isinstance(err, json.JSONDecodeError):
+            return SummaryEnvelope(code=500, message="模型返回格式异常，请稍后重试")
+        if "Expecting" in msg and "delimiter" in msg:
+            return SummaryEnvelope(code=500, message="模型返回格式异常，请稍后重试")
         return SummaryEnvelope(code=500, message=msg)
