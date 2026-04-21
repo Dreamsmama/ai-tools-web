@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import time
+from typing import Dict, List
 
 from app.config import settings
 from app.rag.prompt_builder import build_prompt
@@ -13,7 +14,7 @@ from app.summarize_service import _call_dashscope
 
 
 class RagQaService:
-    def _fallback_answer(self, query: str, hits: list[dict]) -> str:
+    def _fallback_answer(self, query: str, hits: List[Dict]) -> str:
         if not hits:
             return (
                 "当前未检索到可用知识片段，暂时无法给出可靠答案。"

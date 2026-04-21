@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 from dataclasses import dataclass
+from typing import Optional
 
 from fastapi import Header
 
@@ -24,9 +25,9 @@ def build_default_scope() -> RequestScope:
 
 
 def get_request_scope(
-    x_user_id: str | None = Header(default=None),
-    x_workspace_id: str | None = Header(default=None),
-    x_trace_id: str | None = Header(default=None),
+    x_user_id: Optional[str] = Header(default=None),
+    x_workspace_id: Optional[str] = Header(default=None),
+    x_trace_id: Optional[str] = Header(default=None),
 ) -> RequestScope:
     return RequestScope(
         user_id=(x_user_id or settings.rag_default_user_id).strip(),

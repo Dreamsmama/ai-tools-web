@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 from pathlib import Path
+from typing import Tuple
 
 from app.config import settings
 
@@ -9,7 +10,7 @@ from app.config import settings
 class StorageProvider:
     """File storage abstraction for raw documents."""
 
-    def save(self, file_bytes: bytes, filename: str) -> tuple[str, str]:
+    def save(self, file_bytes: bytes, filename: str) -> Tuple[str, str]:
         raise NotImplementedError
 
     def load(self, storage_path: str) -> bytes:
@@ -21,7 +22,7 @@ class LocalStorageProvider(StorageProvider):
         self.base_path = Path(base_dir)
         self.base_path.mkdir(parents=True, exist_ok=True)
 
-    def save(self, file_bytes: bytes, filename: str) -> tuple[str, str]:
+    def save(self, file_bytes: bytes, filename: str) -> Tuple[str, str]:
         file_hash = hashlib.sha256(file_bytes).hexdigest()
         sanitized = filename.replace("/", "_").replace("\\", "_")
         storage_name = f"{file_hash[:12]}_{sanitized}"
@@ -36,7 +37,7 @@ class LocalStorageProvider(StorageProvider):
 class S3CompatibleStorageProvider(StorageProvider):
     """Placeholder for future MinIO/S3 integration."""
 
-    def save(self, file_bytes: bytes, filename: str) -> tuple[str, str]:
+    def save(self, file_bytes: bytes, filename: str) -> Tuple[str, str]:
         raise NotImplementedError("S3/MinIO provider is not implemented yet")
 
     def load(self, storage_path: str) -> bytes:
