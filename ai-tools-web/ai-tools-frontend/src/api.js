@@ -15,6 +15,10 @@ export const API = {
   summary: '/api/summary',
   medicalAssistant: '/api/medical-assistant',
   health: '/api/health',
+  ragKbs: '/api/rag/kbs',
+  ragUpload: '/api/rag/documents/upload',
+  ragIngest: (documentId) => `/api/rag/documents/${documentId}/ingest`,
+  ragAsk: '/api/rag/ask',
 }
 
 export function apiUrl(path) {

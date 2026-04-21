@@ -10,6 +10,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.prepare_consult_service import prepare_consult
+from app.rag.api import router as rag_router
 from app.schemas import (
     PrepareConsultEnvelope,
     PrepareConsultRequest,
@@ -27,6 +28,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+app.include_router(rag_router)
 
 
 @app.get("/health")

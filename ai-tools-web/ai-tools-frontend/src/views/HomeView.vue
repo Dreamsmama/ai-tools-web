@@ -41,6 +41,16 @@ import { RouterLink } from 'vue-router'
           <p class="tool-desc">整理症状/检查/疑问，用好和医生的 10 分钟</p>
         </div>
       </RouterLink>
+      <RouterLink class="tool-card-link" to="/rag">
+        <div class="tool-card">
+          <div class="tool-accent" aria-hidden="true" />
+          <div class="tool-row">
+            <span class="tool-title">RAG 知识库问答</span>
+            <span class="tool-tag">新</span>
+          </div>
+          <p class="tool-desc">上传文档，建立知识库，基于引用做问答</p>
+        </div>
+      </RouterLink>
     </div>
 
     <p class="disclaimer">
