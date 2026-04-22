@@ -51,16 +51,6 @@ import { RouterLink } from 'vue-router'
           <p class="tool-desc">上传文档，建立知识库，基于引用做问答</p>
         </div>
       </RouterLink>
-      <RouterLink class="tool-card-link" to="/analytics">
-        <div class="tool-card">
-          <div class="tool-accent" aria-hidden="true" />
-          <div class="tool-row">
-            <span class="tool-title">用户使用概览</span>
-            <span class="tool-tag">统计</span>
-          </div>
-          <p class="tool-desc">查看访问、提交、成功率与失败情况（支持全量）</p>
-        </div>
-      </RouterLink>
     </div>
 
     <p class="disclaimer">
