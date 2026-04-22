@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { API, apiUrl, logApiFailure } from '../api.js'
+import { trackApiFail, trackApiSuccess, trackSubmit } from '../analytics.js'
 import { httpErrorMessage, NETWORK_UNREACHABLE, RESPONSE_PARSE_ERROR } from '../clientErrors.js'
 import ErrorDialog from '../components/ErrorDialog.vue'
 
@@ -63,6 +64,8 @@ async function createKb() {
   const name = kbName.value.trim()
   if (!name) return showToast('请先填写知识库名称')
   loadingCreateKb.value = true
+  const requestStart = Date.now()
+  const trackEventId = trackSubmit('rag_upload_ask', '/rag/upload')
   const url = apiUrl(API.ragKbs)
   const requestBody = { name, description: kbDescription.value.trim() }
   try {
@@ -73,18 +76,28 @@ async function createKb() {
     })
     if (!res.ok) {
       await logApiFailure(url, requestBody, res, new Error(`HTTP ${res.status}`))
+      trackApiFail('rag_upload_ask', '/rag/upload', trackEventId, `http_${res.status}`, Date.now() - requestStart)
       return showErrorDetail(httpErrorMessage(res.status))
     }
     const payload = await res.json()
     if (payload?.code !== 0 || !payload?.data?.id) {
+      trackApiFail(
+        'rag_upload_ask',
+        '/rag/upload',
+        trackEventId,
+        payload?.code != null ? `business_${payload.code}` : 'business_error',
+        Date.now() - requestStart,
+      )
       return showErrorDetail(payload?.message || '创建知识库失败')
     }
+    trackApiSuccess('rag_upload_ask', '/rag/upload', trackEventId, Date.now() - requestStart)
     kbId.value = payload.data.id
     kbName.value = ''
     kbDescription.value = ''
     showToast('知识库创建成功')
   } catch (e) {
     await logApiFailure(url, requestBody, null, e)
+    trackApiFail('rag_upload_ask', '/rag/upload', trackEventId, 'network_error', Date.now() - requestStart)
     showErrorDetail(NETWORK_UNREACHABLE)
   } finally {
     loadingCreateKb.value = false
@@ -95,6 +108,8 @@ async function uploadDocument() {
   if (!kbId.value) return showToast('请先创建知识库')
   if (!selectedFile.value) return showToast('请先选择文件')
   loadingUpload.value = true
+  const requestStart = Date.now()
+  const trackEventId = trackSubmit('rag_upload_ask', '/rag/upload')
   const url = apiUrl(API.ragUpload)
   const formData = new FormData()
   formData.append('kb_id', kbId.value)
@@ -103,16 +118,26 @@ async function uploadDocument() {
     const res = await fetch(url, { method: 'POST', body: formData })
     if (!res.ok) {
       await logApiFailure(url, { kbId: kbId.value }, res, new Error(`HTTP ${res.status}`))
+      trackApiFail('rag_upload_ask', '/rag/upload', trackEventId, `http_${res.status}`, Date.now() - requestStart)
       return showErrorDetail(httpErrorMessage(res.status))
     }
     const payload = await res.json()
     if (payload?.code !== 0 || !payload?.data?.id) {
+      trackApiFail(
+        'rag_upload_ask',
+        '/rag/upload',
+        trackEventId,
+        payload?.code != null ? `business_${payload.code}` : 'business_error',
+        Date.now() - requestStart,
+      )
       return showErrorDetail(payload?.message || '上传文档失败')
     }
+    trackApiSuccess('rag_upload_ask', '/rag/upload', trackEventId, Date.now() - requestStart)
     documentInfo.value = payload.data
     showToast('文档上传成功')
   } catch (e) {
     await logApiFailure(url, { kbId: kbId.value }, null, e)
+    trackApiFail('rag_upload_ask', '/rag/upload', trackEventId, 'network_error', Date.now() - requestStart)
     showErrorDetail(NETWORK_UNREACHABLE)
   } finally {
     loadingUpload.value = false
@@ -122,19 +147,33 @@ async function uploadDocument() {
 async function ingestDocument() {
   if (!documentInfo.value?.id) return showToast('请先上传文档')
   loadingIngest.value = true
+  const requestStart = Date.now()
+  const trackEventId = trackSubmit('rag_upload_ask', '/rag/upload')
   const url = apiUrl(API.ragIngest(documentInfo.value.id))
   try {
     const res = await fetch(url, { method: 'POST' })
     if (!res.ok) {
       await logApiFailure(url, { documentId: documentInfo.value.id }, res, new Error(`HTTP ${res.status}`))
+      trackApiFail('rag_upload_ask', '/rag/upload', trackEventId, `http_${res.status}`, Date.now() - requestStart)
       return showErrorDetail(httpErrorMessage(res.status))
     }
     const payload = await res.json()
-    if (payload?.code !== 0) return showErrorDetail(payload?.message || '文档入库失败')
+    if (payload?.code !== 0) {
+      trackApiFail(
+        'rag_upload_ask',
+        '/rag/upload',
+        trackEventId,
+        payload?.code != null ? `business_${payload.code}` : 'business_error',
+        Date.now() - requestStart,
+      )
+      return showErrorDetail(payload?.message || '文档入库失败')
+    }
+    trackApiSuccess('rag_upload_ask', '/rag/upload', trackEventId, Date.now() - requestStart)
     documentInfo.value = payload.data
     showToast(`入库完成，状态：${statusLabel(payload.data?.status)}`)
   } catch (e) {
     await logApiFailure(url, { documentId: documentInfo.value.id }, null, e)
+    trackApiFail('rag_upload_ask', '/rag/upload', trackEventId, 'network_error', Date.now() - requestStart)
     showErrorDetail(NETWORK_UNREACHABLE)
   } finally {
     loadingIngest.value = false
@@ -146,6 +185,8 @@ async function askRag() {
   const q = question.value.trim()
   if (!q) return showToast('请先输入问题')
   loadingAsk.value = true
+  const requestStart = Date.now()
+  const trackEventId = trackSubmit('rag_upload_ask', '/rag/upload')
   const url = apiUrl(API.ragAsk)
   const requestBody = { kb_id: kbId.value, query: q, top_k: Number(topK.value) || 3 }
   try {
@@ -156,13 +197,25 @@ async function askRag() {
     })
     if (!res.ok) {
       await logApiFailure(url, requestBody, res, new Error(`HTTP ${res.status}`))
+      trackApiFail('rag_upload_ask', '/rag/upload', trackEventId, `http_${res.status}`, Date.now() - requestStart)
       return showErrorDetail(httpErrorMessage(res.status))
     }
     const payload = await res.json()
-    if (payload?.code !== 0) return showErrorDetail(payload?.message || '问答失败')
+    if (payload?.code !== 0) {
+      trackApiFail(
+        'rag_upload_ask',
+        '/rag/upload',
+        trackEventId,
+        payload?.code != null ? `business_${payload.code}` : 'business_error',
+        Date.now() - requestStart,
+      )
+      return showErrorDetail(payload?.message || '问答失败')
+    }
+    trackApiSuccess('rag_upload_ask', '/rag/upload', trackEventId, Date.now() - requestStart)
     askResult.value = payload.data
   } catch (e) {
     await logApiFailure(url, requestBody, null, e)
+    trackApiFail('rag_upload_ask', '/rag/upload', trackEventId, 'network_error', Date.now() - requestStart)
     showErrorDetail(NETWORK_UNREACHABLE)
   } finally {
     loadingAsk.value = false

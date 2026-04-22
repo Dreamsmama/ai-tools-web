@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 import { API, apiUrl, logApiFailure } from '../api.js'
+import { trackApiFail, trackApiSuccess, trackSubmit } from '../analytics.js'
 import {
   httpErrorMessage,
   NETWORK_UNREACHABLE,
@@ -45,6 +46,8 @@ async function onGenerate() {
   }
 
   loading.value = true
+  const requestStart = Date.now()
+  const trackEventId = trackSubmit('medical', '/medical')
   const url = apiUrl(API.medicalAssistant)
   const requestBody = {
     symptom: s,
@@ -60,6 +63,7 @@ async function onGenerate() {
 
     if (!res.ok) {
       await logApiFailure(url, requestBody, res, new Error(`HTTP ${res.status}`))
+      trackApiFail('medical', '/medical', trackEventId, `http_${res.status}`, Date.now() - requestStart)
       showErrorDetail(httpErrorMessage(res.status))
       return
     }
@@ -69,6 +73,7 @@ async function onGenerate() {
       payload = await res.json()
     } catch (parseErr) {
       await logApiFailure(url, requestBody, res, parseErr)
+      trackApiFail('medical', '/medical', trackEventId, 'response_parse_error', Date.now() - requestStart)
       showErrorDetail(RESPONSE_PARSE_ERROR)
       return
     }
@@ -80,6 +85,13 @@ async function onGenerate() {
         message: payload?.message,
         payload,
       })
+      trackApiFail(
+        'medical',
+        '/medical',
+        trackEventId,
+        payload?.code != null ? `business_${payload.code}` : 'business_error',
+        Date.now() - requestStart,
+      )
       showErrorDetail(
         payload?.message ||
           '【原因】本次未成功。\n【怎么办】无需改内容，直接再点一次提交试试，通常 1～2 次就会好。',
@@ -95,9 +107,11 @@ async function onGenerate() {
       return
     }
 
+    trackApiSuccess('medical', '/medical', trackEventId, Date.now() - requestStart)
     router.push({ name: 'medicalResult' })
   } catch (e) {
     await logApiFailure(url, requestBody, null, e)
+    trackApiFail('medical', '/medical', trackEventId, 'network_error', Date.now() - requestStart)
     showErrorDetail(NETWORK_UNREACHABLE)
   } finally {
     loading.value = false

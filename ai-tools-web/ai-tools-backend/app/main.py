@@ -18,6 +18,7 @@ from app.schemas import (
     SummaryRequest,
 )
 from app.summarize_service import summarize_chat
+from app.track_api import router as track_router
 
 app = FastAPI(title="ai-tools-backend", version="0.1.0")
 
@@ -30,6 +31,7 @@ app.add_middleware(
 )
 
 app.include_router(rag_router)
+app.include_router(track_router)
 
 
 @app.get("/health")

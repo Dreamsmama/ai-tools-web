@@ -15,6 +15,8 @@ export const API = {
   summary: '/api/summary',
   medicalAssistant: '/api/medical-assistant',
   health: '/api/health',
+  trackEvents: '/api/track/events',
+  trackStats: '/api/track/stats',
   ragKbs: '/api/rag/kbs',
   ragUpload: '/api/rag/documents/upload',
   ragIngest: (documentId) => `/api/rag/documents/${documentId}/ingest`,

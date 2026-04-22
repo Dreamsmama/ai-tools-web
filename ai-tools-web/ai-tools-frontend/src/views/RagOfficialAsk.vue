@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { API, apiUrl, logApiFailure } from '../api.js'
+import { trackApiFail, trackApiSuccess, trackSubmit } from '../analytics.js'
 import { httpErrorMessage, NETWORK_UNREACHABLE, RESPONSE_PARSE_ERROR } from '../clientErrors.js'
 import ErrorDialog from '../components/ErrorDialog.vue'
 
@@ -48,6 +49,8 @@ async function askRag() {
   const q = question.value.trim()
   if (!q) return showErrorDetail('请先输入问题')
   loadingAsk.value = true
+  const requestStart = Date.now()
+  const trackEventId = trackSubmit('rag_official_ask', '/rag/official')
   const url = apiUrl(API.ragAsk)
   const requestBody = { kb_id: kbId.value, query: q, top_k: Number(topK.value) || 3 }
   try {
@@ -58,13 +61,32 @@ async function askRag() {
     })
     if (!res.ok) {
       await logApiFailure(url, requestBody, res, new Error(`HTTP ${res.status}`))
+      trackApiFail('rag_official_ask', '/rag/official', trackEventId, `http_${res.status}`, Date.now() - requestStart)
       return showErrorDetail(httpErrorMessage(res.status))
     }
-    const payload = await res.json()
-    if (payload?.code !== 0) return showErrorDetail(payload?.message || '问答失败')
+    let payload
+    try {
+      payload = await res.json()
+    } catch (parseErr) {
+      await logApiFailure(url, requestBody, res, parseErr)
+      trackApiFail('rag_official_ask', '/rag/official', trackEventId, 'response_parse_error', Date.now() - requestStart)
+      return showErrorDetail(RESPONSE_PARSE_ERROR)
+    }
+    if (payload?.code !== 0) {
+      trackApiFail(
+        'rag_official_ask',
+        '/rag/official',
+        trackEventId,
+        payload?.code != null ? `business_${payload.code}` : 'business_error',
+        Date.now() - requestStart,
+      )
+      return showErrorDetail(payload?.message || '问答失败')
+    }
+    trackApiSuccess('rag_official_ask', '/rag/official', trackEventId, Date.now() - requestStart)
     askResult.value = payload.data
   } catch (e) {
     await logApiFailure(url, requestBody, null, e)
+    trackApiFail('rag_official_ask', '/rag/official', trackEventId, 'network_error', Date.now() - requestStart)
     showErrorDetail(NETWORK_UNREACHABLE)
   } finally {
     loadingAsk.value = false

@@ -36,6 +36,8 @@ class Settings(BaseSettings):
     rag_official_kb_id: str = "official_kb_default"
     rag_official_kb_name: str = "官方模板库"
     rag_official_kb_description: str = "平台官方只读知识库"
+    analytics_database_url: str = ""
+    analytics_ip_salt: str = "change-me"
 
 
 settings = Settings()

@@ -2,6 +2,7 @@
 import { ref } from 'vue'
 import { RouterLink } from 'vue-router'
 import { API, apiUrl, logApiFailure } from '../api.js'
+import { trackApiFail, trackApiSuccess, trackSubmit } from '../analytics.js'
 import {
   httpErrorMessage,
   NETWORK_UNREACHABLE,
@@ -76,6 +77,8 @@ async function onSummarize() {
   checkUnlock()
 
   loading.value = true
+  const requestStart = Date.now()
+  const trackEventId = trackSubmit('summary', '/summary')
   const url = apiUrl(API.summary)
   const requestBody = { inputText: text }
   try {
@@ -87,6 +90,7 @@ async function onSummarize() {
 
     if (!res.ok) {
       await logApiFailure(url, requestBody, res, new Error(`HTTP ${res.status}`))
+      trackApiFail('summary', '/summary', trackEventId, `http_${res.status}`, Date.now() - requestStart)
       showErrorDetail(httpErrorMessage(res.status))
       return
     }
@@ -96,12 +100,20 @@ async function onSummarize() {
       r = await res.json()
     } catch (parseErr) {
       await logApiFailure(url, requestBody, res, parseErr)
+      trackApiFail('summary', '/summary', trackEventId, 'response_parse_error', Date.now() - requestStart)
       showErrorDetail(RESPONSE_PARSE_ERROR)
       return
     }
 
     if (r?.code !== 0) {
       console.error('[summary business]', { url, code: r?.code, message: r?.message, data: r })
+      trackApiFail(
+        'summary',
+        '/summary',
+        trackEventId,
+        r?.code != null ? `business_${r.code}` : 'business_error',
+        Date.now() - requestStart,
+      )
       showErrorDetail(
         r?.message ||
           '【原因】本次未成功。\n【怎么办】无需改内容，直接再点一次提交试试，通常 1～2 次就会好。',
@@ -109,10 +121,12 @@ async function onSummarize() {
       return
     }
 
+    trackApiSuccess('summary', '/summary', trackEventId, Date.now() - requestStart)
     incrementSummaryCount()
     result.value = r.data ?? null
   } catch (e) {
     await logApiFailure(url, requestBody, null, e)
+    trackApiFail('summary', '/summary', trackEventId, 'network_error', Date.now() - requestStart)
     showErrorDetail(NETWORK_UNREACHABLE)
   } finally {
     loading.value = false
