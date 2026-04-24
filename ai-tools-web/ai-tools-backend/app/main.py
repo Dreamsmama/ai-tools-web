@@ -9,9 +9,12 @@ from typing import Dict
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.model_compare_service import compare_model_output
 from app.prepare_consult_service import prepare_consult
 from app.rag.api import router as rag_router
 from app.schemas import (
+    ModelCompareEnvelope,
+    ModelCompareRequest,
     PrepareConsultEnvelope,
     PrepareConsultRequest,
     SummaryEnvelope,
@@ -68,6 +71,15 @@ async def prepare_consult_route(body: PrepareConsultRequest) -> PrepareConsultEn
     `/medical-assistant` 与 `/prepare-consult` 相同，供 Nginx 剥掉 `/api` 后路径为 /medical-assistant 时使用。
     """
     return await prepare_consult(body.symptom, body.report, body.target)
+
+
+@app.post(
+    "/model-compare",
+    response_model=ModelCompareEnvelope,
+    response_model_exclude_none=True,
+)
+async def model_compare(body: ModelCompareRequest) -> ModelCompareEnvelope:
+    return await compare_model_output(body.input)
 
 
 def main() -> None:

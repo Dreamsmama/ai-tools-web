@@ -22,6 +22,16 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: () => '/health',
       },
+      '/api/model-compare': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        rewrite: () => '/model-compare',
+      },
+      '/api/track': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
       '/api/rag': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,

@@ -23,13 +23,13 @@ def _safe_trim(v: Any) -> str:
     return v.strip() if isinstance(v, str) else ""
 
 
-async def _call_dashscope(messages: List[Dict[str, str]]) -> str:
+async def _call_dashscope(messages: List[Dict[str, str]], model: str | None = None) -> str:
     api_key = settings.dashscope_api_key.strip()
     if not api_key:
         raise RuntimeError("缺少 DASHSCOPE_API_KEY 环境变量")
 
     payload = {
-        "model": settings.dashscope_model,
+        "model": model or settings.dashscope_model,
         "input": {"messages": messages},
         "parameters": {
             "temperature": settings.dashscope_temperature,

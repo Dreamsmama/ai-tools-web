@@ -51,6 +51,16 @@ import { RouterLink } from 'vue-router'
           <p class="tool-desc">上传文档，建立知识库，基于引用做问答</p>
         </div>
       </RouterLink>
+      <RouterLink class="tool-card-link" to="/model-compare">
+        <div class="tool-card">
+          <div class="tool-accent" aria-hidden="true" />
+          <div class="tool-row">
+            <span class="tool-title">模型优化实验 / 微调效果对比</span>
+            <span class="tool-tag">实验</span>
+          </div>
+          <p class="tool-desc">同一输入下对比原始模型与优化模型输出差异</p>
+        </div>
+      </RouterLink>
     </div>
 
     <p class="disclaimer">

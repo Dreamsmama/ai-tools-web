@@ -59,3 +59,23 @@ class PrepareConsultEnvelope(BaseModel):
     data: Optional[PrepareConsultData] = None
 
     model_config = {"extra": "allow"}
+
+
+class ModelCompareRequest(BaseModel):
+    """模型优化实验请求参数。"""
+
+    input: str = Field(..., description="用户输入内容")
+
+
+class ModelCompareData(BaseModel):
+    original_output: str = ""
+    optimized_output: str = ""
+    mode: str = "placeholder"
+
+
+class ModelCompareEnvelope(BaseModel):
+    code: int
+    message: Optional[str] = None
+    data: Optional[ModelCompareData] = None
+
+    model_config = {"extra": "allow"}

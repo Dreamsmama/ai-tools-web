@@ -7,6 +7,7 @@ import RagWorkbench from '../views/RagWorkbench.vue'
 import RagUploadAsk from '../views/RagUploadAsk.vue'
 import RagOfficialAsk from '../views/RagOfficialAsk.vue'
 import AnalyticsDashboard from '../views/AnalyticsDashboard.vue'
+import ModelCompareView from '../views/ModelCompareView.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -19,6 +20,7 @@ const router = createRouter({
     { path: '/rag/upload', name: 'ragUploadAsk', component: RagUploadAsk },
     { path: '/rag/official', name: 'ragOfficialAsk', component: RagOfficialAsk },
     { path: '/analytics', name: 'analyticsDashboard', component: AnalyticsDashboard },
+    { path: '/model-compare', name: 'modelCompare', component: ModelCompareView },
   ],
 })
 

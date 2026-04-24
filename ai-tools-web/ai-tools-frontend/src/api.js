@@ -14,6 +14,7 @@
 export const API = {
   summary: '/api/summary',
   medicalAssistant: '/api/medical-assistant',
+  modelCompare: '/api/model-compare',
   health: '/api/health',
   trackEvents: '/api/track/events',
   trackStats: '/api/track/stats',

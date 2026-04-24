@@ -11,6 +11,7 @@ class Settings(BaseSettings):
         "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation"
     )
     dashscope_model: str = "qwen-turbo"
+    dashscope_optimized_model: str = ""
     dashscope_timeout_seconds: float = 30.0
     dashscope_temperature: float = 0.2
     dashscope_max_tokens: int = 512
