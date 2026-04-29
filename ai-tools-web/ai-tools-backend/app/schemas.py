@@ -79,3 +79,27 @@ class ModelCompareEnvelope(BaseModel):
     data: Optional[ModelCompareData] = None
 
     model_config = {"extra": "allow"}
+
+
+class XiaohongshuAgentRequest(BaseModel):
+    topic: str = Field(..., description="内容主题，必填")
+    product: str = Field(default="", description="产品/服务")
+    audience: str = Field(default="", description="目标人群")
+    style: str = Field(default="种草", description="内容风格")
+    count: int = Field(default=3, ge=1, le=10, description="输出数量")
+
+
+class XiaohongshuAgentData(BaseModel):
+    titles: List[str] = Field(default_factory=list)
+    content: str = ""
+    image_prompts: List[str] = Field(default_factory=list)
+    publish_tips: List[str] = Field(default_factory=list)
+    risks: List[str] = Field(default_factory=list)
+
+
+class XiaohongshuAgentEnvelope(BaseModel):
+    code: int
+    message: Optional[str] = None
+    data: Optional[XiaohongshuAgentData] = None
+
+    model_config = {"extra": "allow"}

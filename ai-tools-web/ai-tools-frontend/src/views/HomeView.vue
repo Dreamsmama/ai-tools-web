@@ -61,6 +61,16 @@ import { RouterLink } from 'vue-router'
           <p class="tool-desc">同一输入下对比原始模型与优化模型输出差异</p>
         </div>
       </RouterLink>
+      <RouterLink class="tool-card-link" to="/xiaohongshu-agent">
+        <div class="tool-card">
+          <div class="tool-accent" aria-hidden="true" />
+          <div class="tool-row">
+            <span class="tool-title">小红书内容生产 Agent</span>
+            <span class="tool-tag">Agent</span>
+          </div>
+          <p class="tool-desc">输入主题/产品/人群，一键生成标题、文案、图片提示词</p>
+        </div>
+      </RouterLink>
     </div>
 
     <p class="disclaimer">

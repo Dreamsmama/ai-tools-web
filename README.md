@@ -12,6 +12,7 @@
 本项目提供两个 AI 能力方向：
 
 1. 通用 AI 工具能力：对话摘要、就诊咨询准备等。
+   - 新增：小红书内容生产 Agent（主题 -> 结构规划 -> 文案 -> 图片提示词 -> 风险检查）
 2. RAG 知识问答能力：
    - 支持知识库创建、文档上传与入库；
    - 基于向量检索返回高相关上下文；
@@ -67,6 +68,12 @@
 - 后续可替换为真实微调模型；
 - 用于验证模型优化前后的回答结构化、一致性与可控性差异。
 - 新增环境变量：`DASHSCOPE_OPTIMIZED_MODEL`（填微调模型可调用 code；为空时走占位模式）。
+
+### 小红书内容生产 Agent
+
+- 接口：`POST /tools/xiaohongshu-agent/generate`（前端调用 `/api/tools/xiaohongshu-agent/generate`）；
+- Agent Flow：`topic -> plan -> copywriting -> image prompts -> risk check -> final result`；
+- 当前仅输出文案与图片提示词，保留 `ImageProvider` / `VideoProvider` 扩展点，后续可接文生图/文生视频。
 
 ---
 
@@ -139,6 +146,15 @@ npm run dev
 ```
 
 开发模式下由 Vite 代理 API；线上统一通过 `/api` 与 Nginx 对接。
+
+### 6.3 生产环境变量修改流程
+
+- 固定流程文档：`ai-tools-web/ai-tools-backend/docs/production-env-release.md`
+- 包含：
+  - `vi /root/ai-tools-backend.env` 修改规范
+  - 保存退出步骤
+  - 重启服务步骤
+  - 本次小红书 Agent 发布的变量清单与可直接执行命令
 
 ---
 

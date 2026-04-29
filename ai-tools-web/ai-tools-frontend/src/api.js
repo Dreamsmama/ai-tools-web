@@ -15,6 +15,7 @@ export const API = {
   summary: '/api/summary',
   medicalAssistant: '/api/medical-assistant',
   modelCompare: '/api/model-compare',
+  xiaohongshuAgentGenerate: '/api/tools/xiaohongshu-agent/generate',
   health: '/api/health',
   trackEvents: '/api/track/events',
   trackStats: '/api/track/stats',

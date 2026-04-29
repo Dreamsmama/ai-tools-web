@@ -19,9 +19,12 @@ from app.schemas import (
     PrepareConsultRequest,
     SummaryEnvelope,
     SummaryRequest,
+    XiaohongshuAgentEnvelope,
+    XiaohongshuAgentRequest,
 )
 from app.summarize_service import summarize_chat
 from app.track_api import router as track_router
+from app.xiaohongshu_agent_service import xiaohongshu_agent_service
 
 app = FastAPI(title="ai-tools-backend", version="0.1.0")
 
@@ -80,6 +83,23 @@ async def prepare_consult_route(body: PrepareConsultRequest) -> PrepareConsultEn
 )
 async def model_compare(body: ModelCompareRequest) -> ModelCompareEnvelope:
     return await compare_model_output(body.input)
+
+
+@app.post(
+    "/tools/xiaohongshu-agent/generate",
+    response_model=XiaohongshuAgentEnvelope,
+    response_model_exclude_none=True,
+)
+async def xiaohongshu_agent_generate(
+    body: XiaohongshuAgentRequest,
+) -> XiaohongshuAgentEnvelope:
+    return await xiaohongshu_agent_service.run(
+        topic=body.topic,
+        product=body.product,
+        audience=body.audience,
+        style=body.style,
+        count=body.count,
+    )
 
 
 def main() -> None:

@@ -10,7 +10,7 @@ class Settings(BaseSettings):
     dashscope_url: str = (
         "https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation"
     )
-    dashscope_model: str = "qwen-turbo"
+    dashscope_model: str = "qwen-plus"
     dashscope_optimized_model: str = ""
     dashscope_timeout_seconds: float = 30.0
     dashscope_temperature: float = 0.2

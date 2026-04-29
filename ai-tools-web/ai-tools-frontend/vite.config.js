@@ -27,6 +27,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: () => '/model-compare',
       },
+      '/api/tools/xiaohongshu-agent/generate': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        rewrite: () => '/tools/xiaohongshu-agent/generate',
+      },
       '/api/track': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
