@@ -61,6 +61,16 @@ import { RouterLink } from 'vue-router'
           <p class="tool-desc">同一输入下对比原始模型与优化模型输出差异</p>
         </div>
       </RouterLink>
+      <RouterLink class="tool-card-link" to="/tools/memory-compare">
+        <div class="tool-card">
+          <div class="tool-accent" aria-hidden="true" />
+          <div class="tool-row">
+            <span class="tool-title">AI 记忆对比助手</span>
+            <span class="tool-tag">对比</span>
+          </div>
+          <p class="tool-desc">对比无记忆回答与记忆增强回答，直观看出差异</p>
+        </div>
+      </RouterLink>
       <RouterLink class="tool-card-link" to="/xiaohongshu-agent">
         <div class="tool-card">
           <div class="tool-accent" aria-hidden="true" />

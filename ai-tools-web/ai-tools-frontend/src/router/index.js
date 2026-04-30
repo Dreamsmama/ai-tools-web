@@ -8,6 +8,7 @@ import RagUploadAsk from '../views/RagUploadAsk.vue'
 import RagOfficialAsk from '../views/RagOfficialAsk.vue'
 import AnalyticsDashboard from '../views/AnalyticsDashboard.vue'
 import ModelCompareView from '../views/ModelCompareView.vue'
+import MemoryCompareView from '../views/MemoryCompareView.vue'
 import XiaohongshuAgentView from '../views/XiaohongshuAgentView.vue'
 
 const router = createRouter({
@@ -22,6 +23,7 @@ const router = createRouter({
     { path: '/rag/official', name: 'ragOfficialAsk', component: RagOfficialAsk },
     { path: '/analytics', name: 'analyticsDashboard', component: AnalyticsDashboard },
     { path: '/model-compare', name: 'modelCompare', component: ModelCompareView },
+    { path: '/tools/memory-compare', name: 'memoryCompare', component: MemoryCompareView },
     { path: '/xiaohongshu-agent', name: 'xiaohongshuAgent', component: XiaohongshuAgentView },
   ],
 })

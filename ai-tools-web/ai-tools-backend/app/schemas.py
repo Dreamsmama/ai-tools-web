@@ -103,3 +103,30 @@ class XiaohongshuAgentEnvelope(BaseModel):
     data: Optional[XiaohongshuAgentData] = None
 
     model_config = {"extra": "allow"}
+
+
+class StructuredMemory(BaseModel):
+    职业: str = ""
+    目标: str = ""
+    情绪: str = ""
+    风险倾向: str = ""
+    关键事件: List[str] = Field(default_factory=list)
+
+
+class MemoryCompareRequest(BaseModel):
+    chat_content: str = Field(..., description="聊天记录")
+    question: str = Field(..., description="用户问题")
+
+
+class MemoryCompareData(BaseModel):
+    normal_answer: str = ""
+    memory_answer: str = ""
+    structured_memory: StructuredMemory = Field(default_factory=StructuredMemory)
+
+
+class MemoryCompareEnvelope(BaseModel):
+    code: int
+    message: Optional[str] = None
+    data: Optional[MemoryCompareData] = None
+
+    model_config = {"extra": "allow"}

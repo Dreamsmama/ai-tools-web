@@ -9,10 +9,13 @@ from typing import Dict
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.memory_compare_service import memory_compare
 from app.model_compare_service import compare_model_output
 from app.prepare_consult_service import prepare_consult
 from app.rag.api import router as rag_router
 from app.schemas import (
+    MemoryCompareEnvelope,
+    MemoryCompareRequest,
     ModelCompareEnvelope,
     ModelCompareRequest,
     PrepareConsultEnvelope,
@@ -83,6 +86,15 @@ async def prepare_consult_route(body: PrepareConsultRequest) -> PrepareConsultEn
 )
 async def model_compare(body: ModelCompareRequest) -> ModelCompareEnvelope:
     return await compare_model_output(body.input)
+
+
+@app.post(
+    "/memory/compare",
+    response_model=MemoryCompareEnvelope,
+    response_model_exclude_none=True,
+)
+async def compare_memory_answer(body: MemoryCompareRequest) -> MemoryCompareEnvelope:
+    return await memory_compare(body.chat_content, body.question)
 
 
 @app.post(
