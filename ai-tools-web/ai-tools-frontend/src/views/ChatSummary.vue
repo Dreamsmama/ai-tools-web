@@ -10,7 +10,7 @@ import {
 } from '../clientErrors.js'
 import ErrorDialog from '../components/ErrorDialog.vue'
 
-const STORAGE_KEY = 'summary_used_count'
+const STORAGE_KEY = 'work_reply_used_count'
 
 const inputText = ref('')
 const result = ref(null)
@@ -67,10 +67,10 @@ function onUnlockClick() {
   showUnlockModal.value = false
 }
 
-async function onSummarize() {
+async function onAnalyze() {
   const text = (inputText.value || '').trim()
   if (!text) {
-    showToast('先粘贴聊天内容')
+    showToast('先粘贴沟通内容')
     return
   }
 
@@ -78,7 +78,7 @@ async function onSummarize() {
 
   loading.value = true
   const requestStart = Date.now()
-  const trackEventId = trackSubmit('summary', '/summary')
+  const trackEventId = trackSubmit('work_reply', '/work-reply')
   const url = apiUrl(API.summary)
   const requestBody = { inputText: text }
   try {
@@ -90,7 +90,7 @@ async function onSummarize() {
 
     if (!res.ok) {
       await logApiFailure(url, requestBody, res, new Error(`HTTP ${res.status}`))
-      trackApiFail('summary', '/summary', trackEventId, `http_${res.status}`, Date.now() - requestStart)
+      trackApiFail('work_reply', '/work-reply', trackEventId, `http_${res.status}`, Date.now() - requestStart)
       showErrorDetail(httpErrorMessage(res.status))
       return
     }
@@ -100,16 +100,22 @@ async function onSummarize() {
       r = await res.json()
     } catch (parseErr) {
       await logApiFailure(url, requestBody, res, parseErr)
-      trackApiFail('summary', '/summary', trackEventId, 'response_parse_error', Date.now() - requestStart)
+      trackApiFail(
+        'work_reply',
+        '/work-reply',
+        trackEventId,
+        'response_parse_error',
+        Date.now() - requestStart,
+      )
       showErrorDetail(RESPONSE_PARSE_ERROR)
       return
     }
 
     if (r?.code !== 0) {
-      console.error('[summary business]', { url, code: r?.code, message: r?.message, data: r })
+      console.error('[work_reply business]', { url, code: r?.code, message: r?.message, data: r })
       trackApiFail(
-        'summary',
-        '/summary',
+        'work_reply',
+        '/work-reply',
         trackEventId,
         r?.code != null ? `business_${r.code}` : 'business_error',
         Date.now() - requestStart,
@@ -121,12 +127,12 @@ async function onSummarize() {
       return
     }
 
-    trackApiSuccess('summary', '/summary', trackEventId, Date.now() - requestStart)
+    trackApiSuccess('work_reply', '/work-reply', trackEventId, Date.now() - requestStart)
     incrementSummaryCount()
     result.value = r.data ?? null
   } catch (e) {
     await logApiFailure(url, requestBody, null, e)
-    trackApiFail('summary', '/summary', trackEventId, 'network_error', Date.now() - requestStart)
+    trackApiFail('work_reply', '/work-reply', trackEventId, 'network_error', Date.now() - requestStart)
     showErrorDetail(NETWORK_UNREACHABLE)
   } finally {
     loading.value = false
@@ -151,16 +157,16 @@ async function copyReply() {
       <RouterLink class="nav-link" to="/">← 首页</RouterLink>
     </nav>
     <header class="header">
-      <h1 class="title">聊天重点总结器（内测）</h1>
-      <p class="sub">粘贴聊天内容 → 输出结论 / 待办 / 风险</p>
+      <h1 class="title">职场沟通理解 + 回复生成（内测）</h1>
+      <p class="sub">看懂对方意图和情绪，给你一段能直接发出去的话</p>
     </header>
 
     <section class="card">
-      <div class="label">粘贴聊天内容</div>
+      <div class="label">粘贴沟通内容</div>
       <textarea
         v-model="inputText"
         class="textarea"
-        placeholder="把微信/群聊/工作对话粘贴到这里…（支持多段文字）"
+        placeholder="粘贴老板/同事的原话或上下文（如模糊需求、催进度、要求优化），我会帮你拆解并给出可直接回复的话术。"
         rows="10"
         spellcheck="false"
       />
@@ -168,20 +174,20 @@ async function copyReply() {
         type="button"
         class="btn btn-gradient"
         :disabled="loading"
-        @click="onSummarize"
+        @click="onAnalyze"
       >
-        {{ loading ? '总结中…' : '一键总结' }}
+        {{ loading ? '理解中…' : '生成回复方案' }}
       </button>
     </section>
 
     <section class="card">
-      <h2 class="block-title">核心结论</h2>
+      <h2 class="block-title">对方意图</h2>
       <template v-if="!result">
-        <p class="empty">点击「一键总结」后显示</p>
+        <p class="empty">点击「生成回复方案」后显示</p>
       </template>
       <template v-else>
         <p
-          v-for="(item, idx) in result.summary"
+          v-for="(item, idx) in result.intent"
           :key="'s-' + idx"
           class="item"
         >
@@ -191,29 +197,29 @@ async function copyReply() {
     </section>
 
     <section class="card">
-      <h2 class="block-title">待办事项</h2>
+      <h2 class="block-title">对方情绪</h2>
       <template v-if="!result">
-        <p class="empty">点击「一键总结」后显示</p>
+        <p class="empty">点击「生成回复方案」后显示</p>
       </template>
       <template v-else>
         <p
-          v-for="(item, idx) in result.todos"
+          v-for="(item, idx) in result.emotion"
           :key="'t-' + idx"
           class="item"
         >
-          • {{ item.owner }}：{{ item.task }}
+          • {{ item }}
         </p>
       </template>
     </section>
 
     <section class="card">
-      <h2 class="block-title">风险 / 没说清的地方</h2>
+      <h2 class="block-title">应对策略</h2>
       <template v-if="!result">
-        <p class="empty">点击「一键总结」后显示</p>
+        <p class="empty">点击「生成回复方案」后显示</p>
       </template>
       <template v-else>
         <p
-          v-for="(item, idx) in result.risks"
+          v-for="(item, idx) in result.strategy"
           :key="'r-' + idx"
           class="item"
         >
@@ -223,9 +229,9 @@ async function copyReply() {
     </section>
 
     <section class="card">
-      <h2 class="block-title">建议下一步怎么回</h2>
+      <h2 class="block-title">可复制回复</h2>
       <template v-if="!result">
-        <p class="empty">点击「一键总结」后显示</p>
+        <p class="empty">点击「生成回复方案」后显示</p>
       </template>
       <template v-else>
         <div class="reply">{{ result.reply }}</div>
@@ -246,7 +252,7 @@ async function copyReply() {
         <div class="unlock-modal-title">解锁更多使用次数</div>
         <p class="unlock-modal-content">
           你已经使用了 3
-          次聊天总结，如果这个工具对你有帮助，可以支持一下我们继续完善
+          次职场沟通分析，如果这个工具对你有帮助，可以支持一下我们继续完善
         </p>
         <div class="unlock-modal-buttons">
           <button

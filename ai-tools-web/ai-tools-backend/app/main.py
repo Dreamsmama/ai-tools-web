@@ -56,7 +56,7 @@ async def health() -> Dict[str, str]:
 async def summary(body: SummaryRequest) -> SummaryEnvelope:
     """
     Body: `{ "inputText": "..." }` — same field name as `wx.cloud.callFunction({ data: { inputText } })`.
-    Response: `{ "code": 0, "data": { summary, todos, risks, reply } }` or `{ "code", "message" }`.
+    Response: `{ "code": 0, "data": { intent, emotion, strategy, reply } }` or `{ "code", "message" }`.
     """
     return await summarize_chat(body.inputText)
 

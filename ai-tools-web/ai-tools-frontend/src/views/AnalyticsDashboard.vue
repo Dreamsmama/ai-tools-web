@@ -21,7 +21,8 @@ const periodOptions = [
 ]
 
 const featureLabelMap = {
-  summary: '聊天重点总结',
+  work_reply: '职场沟通理解 + 回复生成',
+  summary: '职场沟通理解 + 回复生成（旧埋点）',
   medical: '就医前沟通准备',
   rag_upload_ask: 'RAG 上传后提问',
   rag_official_ask: 'RAG 官方模板提问',

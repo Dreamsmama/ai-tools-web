@@ -1,6 +1,5 @@
 """
-Chat summary logic ported from miniprogram-2/cloudfunctions/summarize/index.js.
-Not migrated: WeChat-specific env; local usage quota (summary_used_count) stays on client.
+Workplace communication understanding + reply generation service.
 """
 
 from __future__ import annotations
@@ -75,26 +74,26 @@ async def summarize_chat(input_text: str) -> SummaryEnvelope:
     system_message = {
         "role": "system",
         "content": (
-            "你是“聊天重点总结器”。只做信息提炼与行动整理，不编造事实。"
+            "你是“职场沟通理解与回复助手”。帮用户看懂对方真实意图，并给出能直接发送的回复。"
             "只输出严格 JSON，不要 markdown，不要多余文本。"
         ),
     }
     user_message = {
         "role": "user",
         "content": f"""
-请把下面聊天内容整理为严格 JSON（不要markdown、不要多余文本）：
+请把下面聊天内容输出为严格 JSON（不要markdown、不要多余文本）：
 {{
-  "summary": ["...","...","..."],
-  "todos": [{{"owner":"我/对方/未明确","task":"...","due":""}}],
-  "risks": ["...","..."],
-  "reply": "一段可直接复制发送的确认话术"
+  "intent": ["...","..."],
+  "emotion": ["...","..."],
+  "strategy": ["...","...","..."],
+  "reply": "一段可直接复制发送的回复"
 }}
 
 规则：
-- summary：3~5条，短句，提炼结论/共识/决定
-- todos：2~6条，能执行的动作，owner 尽量判断（我/对方/未明确），due 没有就空字符串
-- risks：2~5条，没说清/容易扯皮/需要确认的点
-- reply：1段，可直接发群/私聊的确认话术（简洁、不强势）
+- intent：2~4条，判断对方真实诉求（显性+隐性），短句，贴近职场场景
+- emotion：2~4条，判断对方沟通情绪和压力状态（如着急、担心风险、想要确定性）
+- strategy：3~5条，给用户可执行的应对策略，强调如何减少扯皮、推进事情
+- reply：1段可直接发送的话术，语气专业不僵硬，给出边界和下一步；避免空话和学术表达
 
 聊天内容：
 {text}
@@ -106,9 +105,9 @@ async def summarize_chat(input_text: str) -> SummaryEnvelope:
         data = parse_summary_model_output(raw)
 
         if (
-            not data.summary
-            and not data.todos
-            and not data.risks
+            not data.intent
+            and not data.emotion
+            and not data.strategy
             and not data.reply
         ):
             return SummaryEnvelope(code=500, message=user_msg.msg_model_empty())

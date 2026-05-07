@@ -9,21 +9,21 @@ import { RouterLink } from 'vue-router'
     <section class="card hero">
       <div class="hero-glow" aria-hidden="true" />
       <h1 class="h1">
-        <span class="gradient-text">把一堆聊天</span>，整理成你该记住的重点
+        <span class="gradient-text">把一段沟通</span>，变成你能直接发的高质量回复
       </h1>
       <p class="sub">
-        输出：结论 · 待办 · 风险（适合工作/群聊/重要对话）
+        输出：意图 · 情绪 · 应对策略 · 可复制回复（适合职场沟通）
       </p>
     </section>
 
     <RouterLink class="btn-link btn-gradient" to="/summary">
-      开始整理聊天
+      开始生成回复
     </RouterLink>
 
     <section class="card card-glass">
       <h2 class="h2">它能帮你做什么？</h2>
       <p class="sub">
-        1）提取核心结论　2）列出下一步待办　3）标出没说清/有风险的点
+        1）看懂对方真实诉求　2）识别沟通情绪　3）给你可直接发送的回复话术
       </p>
     </section>
 

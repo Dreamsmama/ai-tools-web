@@ -7,16 +7,10 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 
-class SummaryTodo(BaseModel):
-    owner: str = "未明确"
-    task: str = ""
-    due: str = ""
-
-
 class SummaryData(BaseModel):
-    summary: List[str] = Field(default_factory=list)
-    todos: List[SummaryTodo] = Field(default_factory=list)
-    risks: List[str] = Field(default_factory=list)
+    intent: List[str] = Field(default_factory=list)
+    emotion: List[str] = Field(default_factory=list)
+    strategy: List[str] = Field(default_factory=list)
     reply: str = ""
 
 

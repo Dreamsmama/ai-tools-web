@@ -9,7 +9,7 @@ import logging
 import re
 from typing import Any, Dict, List, Optional
 
-from app.schemas import PrepareConsultData, SummaryData, SummaryTodo
+from app.schemas import PrepareConsultData, SummaryData
 
 logger = logging.getLogger(__name__)
 
@@ -87,56 +87,41 @@ def lines_from_plain_text(text: str, max_lines: int = 20) -> List[str]:
 
 
 def fallback_summary_data(raw: str) -> SummaryData:
-    """模型有输出但非合法 JSON 时，用原文拆行作为要点，并给出可复制的回复段。"""
+    """模型有输出但非合法 JSON 时，用原文拆行为沟通理解结果，并给出可复制回复。"""
     text = (raw or "").strip()
     logger.info("summary: using plain-text fallback (model output was not valid JSON)")
     if not text:
         return SummaryData(
-            summary=["（未解析到模型正文，请重试）"],
-            todos=[],
-            risks=[],
+            intent=["（未解析到模型正文，请重试）"],
+            emotion=[],
+            strategy=[],
             reply="",
         )
     lines = lines_from_plain_text(text)
     if not lines:
         lines = [text[:500]]
-    summary = lines[:5]
+    intent = lines[:3]
+    emotion = lines[3:6] if len(lines) > 3 else []
+    strategy = lines[6:10] if len(lines) > 6 else []
     reply = text[:400] if len(text) > 400 else text
-    return SummaryData(summary=summary, todos=[], risks=[], reply=reply)
+    return SummaryData(intent=intent, emotion=emotion, strategy=strategy, reply=reply)
 
 
 def dict_to_summary_data(obj: Dict[str, Any]) -> SummaryData:
-    summary_raw = obj.get("summary")
-    todos_raw = obj.get("todos")
-    risks_raw = obj.get("risks")
+    intent_raw = obj.get("intent")
+    emotion_raw = obj.get("emotion")
+    strategy_raw = obj.get("strategy")
     reply_raw = obj.get("reply")
 
-    summary = list(map(str, summary_raw)) if isinstance(summary_raw, list) else []
-    todos_in = todos_raw if isinstance(todos_raw, list) else []
-    risks = list(map(str, risks_raw)) if isinstance(risks_raw, list) else []
+    intent = list(map(str, intent_raw)) if isinstance(intent_raw, list) else []
+    emotion = list(map(str, emotion_raw)) if isinstance(emotion_raw, list) else []
+    strategy = list(map(str, strategy_raw)) if isinstance(strategy_raw, list) else []
     reply = reply_raw if isinstance(reply_raw, str) else ""
 
-    norm_todos: List[SummaryTodo] = []
-    for t in todos_in:
-        if isinstance(t, dict):
-            owner = t.get("owner")
-            task = t.get("task")
-            due = t.get("due")
-            item = SummaryTodo(
-                owner=owner if isinstance(owner, str) else "未明确",
-                task=task if isinstance(task, str) else str(t or ""),
-                due=due if isinstance(due, str) else "",
-            )
-        else:
-            item = SummaryTodo(owner="未明确", task=str(t or ""), due="")
-        if item.task and item.task.strip():
-            norm_todos.append(item)
-    norm_todos = norm_todos[:6]
-
     return SummaryData(
-        summary=summary[:5],
-        todos=norm_todos,
-        risks=risks[:5],
+        intent=intent[:4],
+        emotion=emotion[:4],
+        strategy=strategy[:5],
         reply=reply.strip(),
     )
 
@@ -145,7 +130,7 @@ def parse_summary_model_output(raw: str) -> SummaryData:
     obj = try_parse_json_object(raw)
     if obj is not None:
         data = dict_to_summary_data(obj)
-        if data.summary or data.todos or data.risks or data.reply:
+        if data.intent or data.emotion or data.strategy or data.reply:
             return data
     return fallback_summary_data(raw)
 
