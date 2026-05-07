@@ -27,6 +27,11 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: () => '/model-compare',
       },
+      '/api/offer-decision': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        rewrite: () => '/offer-decision',
+      },
       '/api/memory/compare': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,

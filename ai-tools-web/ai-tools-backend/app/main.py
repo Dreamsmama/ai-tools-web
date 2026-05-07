@@ -11,6 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.memory_compare_service import memory_compare
 from app.model_compare_service import compare_model_output
+from app.offer_decision_service import offer_decision_analyze
 from app.prepare_consult_service import prepare_consult
 from app.rag.api import router as rag_router
 from app.schemas import (
@@ -18,6 +19,8 @@ from app.schemas import (
     MemoryCompareRequest,
     ModelCompareEnvelope,
     ModelCompareRequest,
+    OfferDecisionEnvelope,
+    OfferDecisionRequest,
     PrepareConsultEnvelope,
     PrepareConsultRequest,
     SummaryEnvelope,
@@ -59,6 +62,15 @@ async def summary(body: SummaryRequest) -> SummaryEnvelope:
     Response: `{ "code": 0, "data": { intent, emotion, strategy, reply } }` or `{ "code", "message" }`.
     """
     return await summarize_chat(body.inputText)
+
+
+@app.post(
+    "/offer-decision",
+    response_model=OfferDecisionEnvelope,
+    response_model_exclude_none=True,
+)
+async def offer_decision(body: OfferDecisionRequest) -> OfferDecisionEnvelope:
+    return await offer_decision_analyze(body.input_text)
 
 
 @app.post(

@@ -78,6 +78,20 @@ export function trackApiFail(feature, page, eventId, errorCode, durationMs, isRe
   })
 }
 
+export function trackEvent(event, payload = {}) {
+  postEvent({
+    event: String(event || 'unknown').slice(0, 64),
+    feature: payload.feature || 'unknown',
+    page: payload.page || '',
+    event_id: payload.event_id || buildEventId(),
+    status: payload.status || '',
+    error_code: payload.error_code || '',
+    duration_ms: Math.max(0, Number(payload.duration_ms) || 0),
+    is_retry: Boolean(payload.is_retry),
+    props: payload.props && typeof payload.props === 'object' ? payload.props : {},
+  })
+}
+
 export function setupRouteAnalytics(router) {
   trackPageView(router.currentRoute?.value?.path || '/')
   router.afterEach((to) => {

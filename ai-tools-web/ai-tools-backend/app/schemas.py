@@ -33,6 +33,40 @@ class SummaryEnvelope(BaseModel):
     model_config = {"extra": "allow"}
 
 
+class OfferDecisionRequest(BaseModel):
+    """Offer / 职业决策输入。"""
+
+    input_text: str = Field(..., description="用户输入的 offer 信息与顾虑")
+
+
+class OfferOptionInsight(BaseModel):
+    option_name: str = ""
+    stability: str = ""
+    growth: str = ""
+    risk: str = ""
+    long_term_space: str = ""
+    tech_value: str = ""
+    team_industry_factor: str = ""
+
+
+class OfferDecisionData(BaseModel):
+    core_conflict: List[str] = Field(default_factory=list)
+    option_insights: List[OfferOptionInsight] = Field(default_factory=list)
+    blind_spots: List[str] = Field(default_factory=list)
+    regret_after_3_months: List[str] = Field(default_factory=list)
+    fit_by_choice: List[str] = Field(default_factory=list)
+    questions_to_confirm: List[str] = Field(default_factory=list)
+    recommendation: str = ""
+
+
+class OfferDecisionEnvelope(BaseModel):
+    code: int
+    message: Optional[str] = None
+    data: Optional[OfferDecisionData] = None
+
+    model_config = {"extra": "allow"}
+
+
 class PrepareConsultData(BaseModel):
     summary: List[str] = Field(default_factory=list)
     questions: List[str] = Field(default_factory=list)

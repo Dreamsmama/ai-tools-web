@@ -7,9 +7,10 @@ from __future__ import annotations
 import json
 import logging
 import re
+from ast import literal_eval
 from typing import Any, Dict, List, Optional
 
-from app.schemas import PrepareConsultData, SummaryData
+from app.schemas import OfferDecisionData, OfferOptionInsight, PrepareConsultData, SummaryData
 
 logger = logging.getLogger(__name__)
 
@@ -133,6 +134,158 @@ def parse_summary_model_output(raw: str) -> SummaryData:
         if data.intent or data.emotion or data.strategy or data.reply:
             return data
     return fallback_summary_data(raw)
+
+
+def dict_to_offer_decision_data(obj: Dict[str, Any]) -> OfferDecisionData:
+    def _list(key: str, limit: int) -> List[str]:
+        raw = obj.get(key)
+        return list(map(str, raw))[:limit] if isinstance(raw, list) else []
+
+    options_raw = obj.get("option_insights")
+    option_insights: List[OfferOptionInsight] = []
+    if isinstance(options_raw, list):
+        for it in options_raw:
+            if not isinstance(it, dict):
+                continue
+            option_insights.append(
+                OfferOptionInsight(
+                    option_name=str(it.get("option_name") or "").strip(),
+                    stability=str(it.get("stability") or "").strip(),
+                    growth=str(it.get("growth") or "").strip(),
+                    risk=str(it.get("risk") or "").strip(),
+                    long_term_space=str(it.get("long_term_space") or "").strip(),
+                    tech_value=str(it.get("tech_value") or "").strip(),
+                    team_industry_factor=str(it.get("team_industry_factor") or "").strip(),
+                )
+            )
+
+    # Backward compatibility for previous schema keys.
+    core_conflict = _list("core_conflict", 4) or _list("true_concerns", 4)
+    blind_spots = _list("blind_spots", 4) or _list("biggest_risks", 4)
+    fit_by_choice = _list("fit_by_choice", 6)
+    if not fit_by_choice:
+        growth = _list("growth_first", 3)
+        stability = _list("stability_first", 3)
+        fit_by_choice = [f"偏成长：{x}" for x in growth] + [f"偏稳定：{x}" for x in stability]
+
+    recommendation_raw = obj.get("recommendation")
+    recommendation = recommendation_raw if isinstance(recommendation_raw, str) else ""
+    return OfferDecisionData(
+        core_conflict=core_conflict,
+        option_insights=option_insights[:5],
+        blind_spots=blind_spots,
+        regret_after_3_months=_list("regret_after_3_months", 4),
+        fit_by_choice=fit_by_choice[:6],
+        questions_to_confirm=_list("questions_to_confirm", 6),
+        recommendation=recommendation.strip()[:500],
+    )
+
+
+def fallback_offer_decision_data(raw: str) -> OfferDecisionData:
+    text = (raw or "").strip()
+    lines = lines_from_plain_text(text, max_lines=20)
+    if not lines:
+        lines = ["（未解析到模型正文，请重试）"]
+    return OfferDecisionData(
+        core_conflict=lines[:2],
+        blind_spots=lines[2:4],
+        regret_after_3_months=lines[4:6],
+        fit_by_choice=lines[6:10],
+        questions_to_confirm=lines[10:15],
+        recommendation=text[:500] if text else "",
+    )
+
+
+def parse_offer_decision_model_output(raw: str) -> OfferDecisionData:
+    obj = try_parse_json_object(raw)
+    if obj is None:
+        obj = _extract_offer_decision_like_object(raw)
+    if obj is not None:
+        data = dict_to_offer_decision_data(obj)
+        if (
+            data.core_conflict
+            or data.option_insights
+            or data.blind_spots
+            or data.regret_after_3_months
+            or data.fit_by_choice
+            or data.questions_to_confirm
+            or data.recommendation
+        ):
+            return data
+    return fallback_offer_decision_data(raw)
+
+
+def _parse_list_like_text(v: str) -> List[str]:
+    text = (v or "").strip()
+    if not text:
+        return []
+    # First try strict JSON.
+    try:
+        arr = json.loads(text)
+        if isinstance(arr, list):
+            return [str(x).strip() for x in arr if str(x).strip()]
+    except Exception:
+        pass
+    # Then try Python-style list literals.
+    try:
+        arr2 = literal_eval(text)
+        if isinstance(arr2, list):
+            return [str(x).strip() for x in arr2 if str(x).strip()]
+    except Exception:
+        pass
+    # Try extracting quoted list items from malformed JSON-like strings.
+    quoted = re.findall(r'"([^"\n]+)"|\'([^\'\n]+)\'', text)
+    quoted_items = [a or b for a, b in quoted if (a or b)]
+    if quoted_items:
+        return [s.strip() for s in quoted_items if s.strip()]
+    # Finally split plain text.
+    cleaned = re.sub(r'^[\[\(\{\"\']+|[\]\)\}\",\']+$', "", text).strip()
+    return [x.strip() for x in re.split(r"[；;，,\n]+", cleaned) if x.strip()]
+
+
+def _extract_offer_decision_like_object(raw: str) -> Optional[Dict[str, Any]]:
+    text = strip_code_fences(raw or "")
+    if not text:
+        return None
+    fields = [
+        "core_conflict",
+        "option_insights",
+        "blind_spots",
+        "regret_after_3_months",
+        "fit_by_choice",
+        "questions_to_confirm",
+        "recommendation",
+    ]
+    out: Dict[str, Any] = {}
+    for idx, key in enumerate(fields):
+        next_part = "|".join(re.escape(k) for k in fields[idx + 1 :]) or r"\Z"
+        # Capture JSON-like value after key: ; tolerant to quote style and colon variants.
+        pattern = rf"[\"']?{re.escape(key)}[\"']?\s*[:：]\s*(.+?)(?=,\s*[\"']?(?:{next_part})[\"']?\s*[:：]|\n\s*[\"']?(?:{next_part})[\"']?\s*[:：]|\Z)"
+        m = re.search(pattern, text, flags=re.S)
+        if not m:
+            continue
+        raw_value = m.group(1).strip().rstrip(",")
+        if key == "recommendation":
+            if raw_value.startswith(("'", '"')) and raw_value.endswith(("'", '"')):
+                raw_value = raw_value[1:-1]
+            out[key] = raw_value.strip()
+        elif key == "option_insights":
+            parsed_options: Any = None
+            for candidate in (raw_value, fix_trailing_commas(raw_value)):
+                try:
+                    parsed_options = json.loads(candidate)
+                    break
+                except Exception:
+                    pass
+                try:
+                    parsed_options = literal_eval(candidate)
+                    break
+                except Exception:
+                    pass
+            out[key] = parsed_options if isinstance(parsed_options, list) else []
+        else:
+            out[key] = _parse_list_like_text(raw_value)
+    return out if out else None
 
 
 def dict_to_prepare_data(obj: Dict[str, Any]) -> PrepareConsultData:
