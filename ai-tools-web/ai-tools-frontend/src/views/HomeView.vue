@@ -1,36 +1,30 @@
 <script setup>
 import { RouterLink } from 'vue-router'
+import CareerHeroSection from '../components/CareerHeroSection.vue'
 </script>
 
 <template>
   <div class="page">
     <div class="brand-badge">AI 工具台</div>
 
-    <section class="card hero">
-      <div class="hero-glow" aria-hidden="true" />
-      <h1 class="h1">
-        <span class="gradient-text">把一段沟通</span>，变成你能直接发的高质量回复
-      </h1>
-      <p class="sub">
-        输出：意图 · 情绪 · 应对策略 · 可复制回复（适合职场沟通）
-      </p>
-    </section>
-
-    <RouterLink class="btn-link btn-gradient" to="/summary">
-      开始生成回复
-    </RouterLink>
-
-    <section class="card card-glass">
-      <h2 class="h2">它能帮你做什么？</h2>
-      <p class="sub">
-        1）看懂对方真实诉求　2）识别沟通情绪　3）给你可直接发送的回复话术
-      </p>
-    </section>
+    <CareerHeroSection />
 
     <div class="tools-section">
       <div class="section-title">
         <span class="section-dot" />场景工具
       </div>
+      <RouterLink class="tool-card-link" to="/summary">
+        <div class="tool-card">
+          <div class="tool-accent" aria-hidden="true" />
+          <div class="tool-row">
+            <span class="tool-title">职场沟通回复助手</span>
+            <span class="tool-tag">沟通</span>
+          </div>
+          <p class="tool-desc">
+            识别沟通意图、情绪与风险，生成更专业、更有边界感的回复建议。
+          </p>
+        </div>
+      </RouterLink>
       <RouterLink class="tool-card-link" to="/medical">
         <div class="tool-card">
           <div class="tool-accent" aria-hidden="true" />
@@ -122,84 +116,6 @@ import { RouterLink } from 'vue-router'
   border-radius: 999px;
 }
 
-.card {
-  position: relative;
-  overflow: hidden;
-  background: var(--surface-solid);
-  border-radius: var(--radius);
-  padding: 20px 18px;
-  margin: 0 12px 14px;
-  border: var(--border-soft);
-  box-shadow: var(--shadow-card);
-}
-
-.hero {
-  padding: 24px 20px;
-}
-
-.hero-glow {
-  position: absolute;
-  top: -40%;
-  right: -20%;
-  width: 70%;
-  height: 120%;
-  background: radial-gradient(
-    circle,
-    rgba(99, 102, 241, 0.18) 0%,
-    transparent 65%
-  );
-  pointer-events: none;
-}
-
-.h1 {
-  position: relative;
-  font-size: 22px;
-  font-weight: 800;
-  margin: 0 0 10px;
-  line-height: 1.35;
-  letter-spacing: -0.02em;
-  color: var(--text);
-}
-
-.gradient-text {
-  background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-}
-
-.h2 {
-  font-size: 16px;
-  font-weight: 700;
-  margin: 0 0 10px;
-  color: var(--text);
-}
-
-.sub {
-  position: relative;
-  color: var(--text-muted);
-  font-size: 14px;
-  line-height: 1.65;
-  margin: 0;
-}
-
-.card-glass {
-  background: rgba(255, 255, 255, 0.78);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-}
-
-.btn-link {
-  display: block;
-  margin: 8px 24px 22px;
-  padding: 14px 18px;
-  text-align: center;
-  border-radius: 14px;
-  text-decoration: none;
-  font-size: 16px;
-  font-weight: 600;
-}
-
 .tools-section {
   margin: 8px 12px 0;
 }
@@ -213,7 +129,7 @@ import { RouterLink } from 'vue-router'
   letter-spacing: 0.04em;
   color: var(--text-muted);
   text-transform: uppercase;
-  margin: 20px 4px 14px;
+  margin: 4px 4px 14px;
 }
 
 .section-dot {

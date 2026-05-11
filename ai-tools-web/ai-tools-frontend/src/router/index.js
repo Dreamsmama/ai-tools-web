@@ -11,11 +11,17 @@ import ModelCompareView from '../views/ModelCompareView.vue'
 import MemoryCompareView from '../views/MemoryCompareView.vue'
 import OfferDecisionView from '../views/OfferDecisionView.vue'
 import XiaohongshuAgentView from '../views/XiaohongshuAgentView.vue'
+import CareerTestPage from '../views/CareerTestPage.vue'
+import CareerLibraryPage from '../views/CareerLibraryPage.vue'
+import CareerDetailPage from '../views/CareerDetailPage.vue'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'home', component: HomeView },
+    { path: '/career-test', name: 'careerTest', component: CareerTestPage },
+    { path: '/career-library', name: 'careerLibrary', component: CareerLibraryPage },
+    { path: '/career/:id', name: 'careerDetail', component: CareerDetailPage },
     { path: '/summary', name: 'summary', component: ChatSummary },
     { path: '/medical', name: 'medical', component: MedicalForm },
     { path: '/medical/result', name: 'medicalResult', component: MedicalResult },
