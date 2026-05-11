@@ -30,6 +30,9 @@ const featureLabelMap = {
   career_test: '职业倾向测试',
   career_library: '职业观察库',
   career: '职业规划（首页 Hero）',
+  xiaohongshu_agent: '小红书内容生产 Agent',
+  model_compare: '模型优化实验 / 对比',
+  memory_compare: 'AI 记忆对比',
   unknown: '未分类',
 }
 
@@ -57,8 +60,38 @@ function errorLabel(raw) {
   return raw
 }
 
+/** 自定义 trackEvent 的 event 名 → 中文说明（便于看板阅读） */
+const eventLabelMap = {
+  page_view: '页面浏览',
+  submit_click: '提交点击',
+  api_success: '接口成功',
+  api_fail: '接口失败',
+  career_hero_test_click: '职业规划·Hero 点「开始职业测试」',
+  career_hero_library_click: '职业规划·Hero 点「职业观察库」',
+  career_test_result: '职业测试·生成结果',
+  career_test_restart: '职业测试·重新测试',
+  career_recommend_detail_click: '职业测试·从推荐进详情',
+  career_result_library_click: '职业测试·结果页进观察库',
+  career_library_view: '职业观察库·进入页面',
+  career_library_card_click: '职业观察库·点职业卡片',
+  career_library_to_test_click: '职业观察库·去做测试',
+  career_detail_view: '职业详情·查看',
+  offer_analysis_submit: 'Offer 分析·提交',
+  offer_analysis_result_view: 'Offer 分析·查看结果',
+  offer_analysis_copy: 'Offer 分析·复制',
+  offer_analysis_second_use: 'Offer 分析·二次使用',
+  offer_case_type: 'Offer 分析·案例类型',
+}
+
+function eventLabel(raw) {
+  if (!raw) return '未知'
+  return eventLabelMap[raw] || raw
+}
+
 const summary = computed(() => data.value?.summary || {})
 const featureUsage = computed(() => data.value?.feature_usage || [])
+const eventBreakdown = computed(() => data.value?.event_breakdown || [])
+const pageViewsByPath = computed(() => data.value?.page_views_by_path || [])
 const trend = computed(() => data.value?.trend || [])
 const recentFailures = computed(() => data.value?.recent_failures || [])
 const rangeText = computed(() => {
@@ -122,7 +155,9 @@ onMounted(() => {
 
     <section class="card">
       <h1 class="title">用户使用概览</h1>
-      <p class="sub">说明：独立用户按 IP 去重；成功率 = 调用成功次数 / 点击提交次数。</p>
+      <p class="sub">
+        说明：独立用户按 IP 去重；成功率 = 接口成功次数 / 提交点击次数。「功能使用排行」只含带提交的功能；浏览与职业规划等自定义事件见下方「埋点事件分布」。
+      </p>
     </section>
 
     <section class="card">
@@ -191,10 +226,38 @@ onMounted(() => {
 
     <section class="card">
       <h2 class="block-title">功能使用排行</h2>
+      <p class="hint-inline">本表仅统计 <code>submit_click</code>（例如 Offer、职场回复、模型对比等「点提交调接口」的功能）。职业测试完成提交也会记在这里。</p>
       <p v-if="featureUsage.length === 0" class="empty">当前区间暂无提交数据</p>
       <div v-else class="list">
         <div v-for="item in featureUsage" :key="item.feature" class="list-row">
           <span>{{ featureLabel(item.feature) }}</span>
+          <strong>{{ item.count }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="block-title">埋点事件分布</h2>
+      <p class="hint-inline">按事件名汇总（含页面浏览、提交、接口结果及职业规划等自定义事件）。老版本接口无此块时为空。</p>
+      <p v-if="eventBreakdown.length === 0" class="empty">暂无事件分布数据</p>
+      <div v-else class="list">
+        <div v-for="item in eventBreakdown" :key="item.event" class="list-row">
+          <span class="event-cell">
+            <span class="event-name">{{ eventLabel(item.event) }}</span>
+            <code class="event-raw">{{ item.event }}</code>
+          </span>
+          <strong>{{ item.count }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2 class="block-title">页面浏览 Top</h2>
+      <p class="hint-inline">仅 <code>page_view</code>，按路径聚合，便于看哪些路由被打开最多。</p>
+      <p v-if="pageViewsByPath.length === 0" class="empty">暂无页面浏览数据</p>
+      <div v-else class="list">
+        <div v-for="item in pageViewsByPath" :key="item.page" class="list-row">
+          <span class="page-path">{{ item.page || '/' }}</span>
           <strong>{{ item.count }}</strong>
         </div>
       </div>
@@ -248,7 +311,43 @@ onMounted(() => {
 .back { font-size: 14px; font-weight: 500; color: #6366f1; text-decoration: none; }
 .card { background: rgba(255,255,255,.9); border-radius: 18px; padding: 18px 16px; margin-bottom: 14px; border: 1px solid rgba(148,163,184,.22); box-shadow: 0 4px 24px rgba(15,23,42,.06); }
 .title { font-size: 21px; font-weight: 800; margin: 0 0 8px; }
-.sub { margin: 0; color: #64748b; font-size: 14px; }
+.sub { margin: 0; color: #64748b; font-size: 14px; line-height: 1.55; }
+.hint-inline {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.55;
+}
+.hint-inline code {
+  font-size: 12px;
+  padding: 1px 5px;
+  border-radius: 4px;
+  background: #f1f5f9;
+}
+.event-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  min-width: 0;
+}
+.event-name {
+  font-size: 14px;
+  color: #334155;
+}
+.event-raw {
+  font-size: 11px;
+  color: #94a3b8;
+  word-break: break-all;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+.page-path {
+  font-size: 13px;
+  word-break: break-all;
+  color: #334155;
+}
 .block-title { font-size: 15px; font-weight: 700; margin: 0 0 12px; color: #0f172a; }
 .filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
 .field { display: flex; flex-direction: column; gap: 6px; font-size: 12px; color: #475569; }

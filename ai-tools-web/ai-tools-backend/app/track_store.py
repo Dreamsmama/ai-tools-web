@@ -196,6 +196,32 @@ class TrackStore:
                 )
                 fail_rows = cur.fetchall()
 
+                cur.execute(
+                    f"""
+                    SELECT event, COUNT(*) AS total
+                    FROM analytics_events
+                    WHERE {where_sql}
+                    GROUP BY event
+                    ORDER BY total DESC
+                    LIMIT 40
+                    """,
+                    where_args,
+                )
+                event_rows = cur.fetchall()
+
+                cur.execute(
+                    f"""
+                    SELECT page, COUNT(*) AS total
+                    FROM analytics_events
+                    WHERE {where_sql} AND event = 'page_view'
+                    GROUP BY page
+                    ORDER BY total DESC
+                    LIMIT 25
+                    """,
+                    where_args,
+                )
+                page_view_rows = cur.fetchall()
+
         submit_clicks = int(core["submit_clicks"] or 0)
         api_success = int(core["api_success"] or 0)
         success_rate = 0.0 if submit_clicks <= 0 else round(api_success * 100.0 / submit_clicks, 2)
@@ -233,6 +259,14 @@ class TrackStore:
                     "page": str(row["page"] or ""),
                 }
                 for row in fail_rows
+            ],
+            "event_breakdown": [
+                {"event": str(row["event"] or "unknown"), "count": int(row["total"] or 0)}
+                for row in event_rows
+            ],
+            "page_views_by_path": [
+                {"page": str(row["page"] or ""), "count": int(row["total"] or 0)}
+                for row in page_view_rows
             ],
         }
 
