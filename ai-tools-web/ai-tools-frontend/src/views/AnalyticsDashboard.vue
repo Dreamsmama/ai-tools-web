@@ -107,6 +107,53 @@ const showZeroDataHint = computed(() => {
   return (Number(s.total_events) || 0) === 0
 })
 
+function countEventInBreakdown(events, eventName) {
+  const row = events.find((e) => e.event === eventName)
+  return row ? Number(row.count) || 0 : 0
+}
+
+/**
+ * 功能使用排行：在原有 submit_click 按 feature 聚合之上，
+ * 置顶两行「AI 职业成长平台」「AI 时代…」对应 Hero 点击与职业测试提交（与首页文案一致）。
+ */
+const mergedFeatureRanking = computed(() => {
+  if (!data.value) return []
+  const bd = eventBreakdown.value
+  const fu = featureUsage.value
+  const heroClicks =
+    countEventInBreakdown(bd, 'career_hero_test_click') +
+    countEventInBreakdown(bd, 'career_hero_library_click')
+  const careerSubmit = fu.find((x) => x.feature === 'career_test')?.count ?? 0
+
+  const rows = [
+    {
+      key: '_ai_career_platform',
+      title: 'AI 职业成长平台',
+      subtitle:
+        '首页 Hero：开始职业测试 + 查看职业观察库（点击次数，来自埋点事件 career_hero_*；无「事件分布」数据时可能为 0）',
+      count: heroClicks,
+    },
+    {
+      key: '_ai_career_test',
+      title: 'AI 时代，你适合什么样的工作？',
+      subtitle:
+        '职业倾向测试：卷末「提交并查看结果」次数（submit_click，feature=career_test）',
+      count: Number(careerSubmit) || 0,
+    },
+  ]
+
+  for (const item of fu) {
+    if (item.feature === 'career_test') continue
+    rows.push({
+      key: item.feature,
+      title: featureLabel(item.feature),
+      subtitle: '',
+      count: Number(item.count) || 0,
+    })
+  }
+  return rows
+})
+
 async function loadStats() {
   loading.value = true
   const params = new URLSearchParams()
@@ -226,11 +273,18 @@ onMounted(() => {
 
     <section class="card">
       <h2 class="block-title">功能使用排行</h2>
-      <p class="hint-inline">本表仅统计 <code>submit_click</code>（例如 Offer、职场回复、模型对比等「点提交调接口」的功能）。职业测试完成提交也会记在这里。</p>
-      <p v-if="featureUsage.length === 0" class="empty">当前区间暂无提交数据</p>
+      <p class="hint-inline">
+        前两行为职业规划模块：Hero 点击来自自定义事件汇总；职业测试来自
+        <code>submit_click</code>。其余行仍为各功能的提交次数（与旧版排行一致）。
+      </p>
+      <p v-if="!data" class="empty">请先加载统计</p>
+      <p v-else-if="mergedFeatureRanking.length === 0" class="empty">当前区间暂无数据</p>
       <div v-else class="list">
-        <div v-for="item in featureUsage" :key="item.feature" class="list-row">
-          <span>{{ featureLabel(item.feature) }}</span>
+        <div v-for="item in mergedFeatureRanking" :key="item.key" class="list-row">
+          <span class="rank-cell">
+            <span class="rank-title">{{ item.title }}</span>
+            <span v-if="item.subtitle" class="rank-sub">{{ item.subtitle }}</span>
+          </span>
           <strong>{{ item.count }}</strong>
         </div>
       </div>
@@ -347,6 +401,25 @@ onMounted(() => {
   font-size: 13px;
   word-break: break-all;
   color: #334155;
+}
+.rank-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  min-width: 0;
+  padding-right: 8px;
+}
+.rank-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #0f172a;
+  line-height: 1.35;
+}
+.rank-sub {
+  font-size: 12px;
+  line-height: 1.45;
+  color: #64748b;
 }
 .block-title { font-size: 15px; font-weight: 700; margin: 0 0 12px; color: #0f172a; }
 .filters { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-bottom: 10px; }
