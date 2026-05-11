@@ -67,6 +67,13 @@ const rangeText = computed(() => {
   return `${r.start_date} 至 ${r.end_date}`
 })
 
+/** 接口成功但区间内没有任何埋点事件（常见于反代未转发或库表为空） */
+const showZeroDataHint = computed(() => {
+  const s = data.value?.summary
+  if (!s) return false
+  return (Number(s.total_events) || 0) === 0
+})
+
 async function loadStats() {
   loading.value = true
   const params = new URLSearchParams()
@@ -165,6 +172,21 @@ onMounted(() => {
       <p class="meta">
         成功 {{ summary.api_success || 0 }} 次 ｜ 失败 {{ summary.api_fail || 0 }} 次
       </p>
+      <div v-if="showZeroDataHint" class="zero-hint" role="note">
+        <p class="zero-hint-title">当前区间总事件数为 0，常见原因如下：</p>
+        <ul class="zero-hint-list">
+          <li>
+            <strong>反代路径：</strong>前端请求的是 <code>/api/track/stats</code> 与
+            <code>/api/track/events</code>，后端实际路由为 <code>/track/stats</code>、
+            <code>/track/events</code>。Nginx 需把前缀 <code>/api</code> 去掉再转发（与本地 Vite
+            proxy 一致），例如：
+            <code class="zero-hint-code">location /api/track/ { proxy_pass http://127.0.0.1:8000/track/; }</code>
+          </li>
+          <li><strong>数据库：</strong>埋点写入 PostgreSQL（<code>ANALYTICS_DATABASE_URL</code> 未配时用 <code>RAG_DATABASE_URL</code>）。库连不上时接口会报错而非全 0。</li>
+          <li><strong>区间：</strong>可切换「全部时间」或拉大日期范围，排除时区/日期边界导致查不到数据。</li>
+          <li><strong>尚未产生数据：</strong>需有用户访问页面（<code>page_view</code>）或使用带提交的功能后才会出现非零统计。</li>
+        </ul>
+      </div>
     </section>
 
     <section class="card">
@@ -233,6 +255,29 @@ onMounted(() => {
 .input { width: 100%; border-radius: 12px; border: 1px solid rgba(148,163,184,.3); background: #f8fafc; color: #0f172a; padding: 10px 12px; }
 .btn { width: 100%; padding: 12px 14px; border-radius: 12px; font-size: 14px; font-weight: 600; }
 .meta { margin: 10px 0 0; font-size: 12px; color: #64748b; }
+.zero-hint {
+  margin-top: 14px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(238, 242, 255, 0.9), rgba(250, 245, 255, 0.85));
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  font-size: 13px;
+  line-height: 1.65;
+  color: #334155;
+}
+.zero-hint-title { margin: 0 0 8px; font-weight: 700; color: #4338ca; }
+.zero-hint-list { margin: 0; padding-left: 1.15rem; }
+.zero-hint-list li { margin-bottom: 8px; }
+.zero-hint-list li:last-child { margin-bottom: 0; }
+.zero-hint code {
+  font-size: 12px;
+  padding: 2px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  word-break: break-all;
+}
+.zero-hint-code { display: block; margin-top: 6px; white-space: pre-wrap; }
 .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
 .metric { border: 1px solid rgba(148,163,184,.2); border-radius: 12px; background: #f8fafc; padding: 12px; }
 .metric-label { font-size: 12px; color: #64748b; margin-bottom: 4px; }
