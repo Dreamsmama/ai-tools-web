@@ -1,5 +1,22 @@
 <script setup>
 import { RouterLink } from 'vue-router'
+import { trackEvent } from '../analytics.js'
+
+function onHeroTestClick() {
+  trackEvent('career_hero_test_click', {
+    feature: 'career',
+    page: '/',
+    props: { target: '/career-test' },
+  })
+}
+
+function onHeroLibraryClick() {
+  trackEvent('career_hero_library_click', {
+    feature: 'career',
+    page: '/',
+    props: { target: '/career-library' },
+  })
+}
 
 const careerTags = [
   '程序员',
@@ -28,10 +45,10 @@ const careerTags = [
     </p>
 
     <div class="career-hero-actions">
-      <RouterLink class="career-btn career-btn-primary btn-gradient" to="/career-test">
+      <RouterLink class="career-btn career-btn-primary btn-gradient" to="/career-test" @click="onHeroTestClick">
         开始职业测试
       </RouterLink>
-      <RouterLink class="career-btn career-btn-secondary" to="/career-library">
+      <RouterLink class="career-btn career-btn-secondary" to="/career-library" @click="onHeroLibraryClick">
         查看职业观察库
       </RouterLink>
     </div>

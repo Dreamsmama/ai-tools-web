@@ -1,8 +1,29 @@
 <script setup>
+import { onMounted } from 'vue'
 import { RouterLink } from 'vue-router'
+import { trackEvent } from '../analytics.js'
 import { listCareersForLibrary } from '../data/careersCatalog'
 
+const PAGE_PATH = '/career-library'
+const FEATURE = 'career_library'
+
 const careers = listCareersForLibrary()
+
+onMounted(() => {
+  trackEvent('career_library_view', { feature: FEATURE, page: PAGE_PATH })
+})
+
+function onCardClick(careerId) {
+  trackEvent('career_library_card_click', {
+    feature: FEATURE,
+    page: PAGE_PATH,
+    props: { career_id: careerId },
+  })
+}
+
+function onToTestClick() {
+  trackEvent('career_library_to_test_click', { feature: FEATURE, page: PAGE_PATH })
+}
 </script>
 
 <template>
@@ -15,7 +36,13 @@ const careers = listCareersForLibrary()
     </header>
 
     <div class="list">
-      <RouterLink v-for="c in careers" :key="c.id" class="article-link" :to="`/career/${c.id}`">
+      <RouterLink
+        v-for="c in careers"
+        :key="c.id"
+        class="article-link"
+        :to="`/career/${c.id}`"
+        @click="onCardClick(c.id)"
+      >
         <article class="article-card">
           <div class="accent" aria-hidden="true" />
           <div class="row">
@@ -27,7 +54,7 @@ const careers = listCareersForLibrary()
       </RouterLink>
     </div>
 
-    <RouterLink class="btn-outline" to="/career-test">去做职业倾向测试</RouterLink>
+    <RouterLink class="btn-outline" to="/career-test" @click="onToTestClick">去做职业倾向测试</RouterLink>
   </div>
 </template>
 

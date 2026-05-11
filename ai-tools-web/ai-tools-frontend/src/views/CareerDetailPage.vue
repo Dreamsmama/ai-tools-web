@@ -1,10 +1,25 @@
 <script setup>
-import { computed } from 'vue'
+import { computed, watch } from 'vue'
 import { useRoute, RouterLink } from 'vue-router'
+import { trackEvent } from '../analytics.js'
 import { getCareerById } from '../data/careersCatalog'
 
 const route = useRoute()
 const career = computed(() => getCareerById(String(route.params.id)))
+
+watch(
+  () => route.params.id,
+  (id) => {
+    if (!id) return
+    const sid = String(id)
+    trackEvent('career_detail_view', {
+      feature: 'career_library',
+      page: `/career/${sid}`,
+      props: { career_id: sid },
+    })
+  },
+  { immediate: true },
+)
 </script>
 
 <template>

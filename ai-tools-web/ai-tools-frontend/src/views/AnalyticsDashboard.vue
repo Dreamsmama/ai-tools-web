@@ -27,6 +27,9 @@ const featureLabelMap = {
   offer_decision: 'Offer / 职业决策辅助',
   rag_upload_ask: 'RAG 上传后提问',
   rag_official_ask: 'RAG 官方模板提问',
+  career_test: '职业倾向测试',
+  career_library: '职业观察库',
+  career: '职业规划（首页 Hero）',
   unknown: '未分类',
 }
 

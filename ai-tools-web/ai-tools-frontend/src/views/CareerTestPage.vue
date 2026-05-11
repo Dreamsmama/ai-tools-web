@@ -1,8 +1,12 @@
 <script setup>
 import { computed, ref } from 'vue'
 import { RouterLink } from 'vue-router'
+import { trackApiSuccess, trackEvent, trackSubmit } from '../analytics.js'
 import { careerTestQuestions, DIMENSION_ORDER, dimensionLabels } from '../data/careerTestQuestions'
 import { buildTestResult } from '../lib/careerTestEngine'
+
+const PAGE_PATH = '/career-test'
+const FEATURE = 'career_test'
 
 const phase = ref(/** @type {'quiz'|'result'} */ ('quiz'))
 const currentIndex = ref(0)
@@ -41,15 +45,40 @@ function goNext() {
 
 function submitQuiz() {
   if (!allAnswered.value) return
+  const started = Date.now()
+  const eventId = trackSubmit(FEATURE, PAGE_PATH)
   result.value = buildTestResult(answers.value)
   phase.value = 'result'
+  trackApiSuccess(FEATURE, PAGE_PATH, eventId, Date.now() - started)
+  trackEvent('career_test_result', {
+    feature: FEATURE,
+    page: PAGE_PATH,
+    props: {
+      primary: result.value.primaryLabel,
+      secondary: result.value.secondaryLabel,
+      blended: result.value.blended,
+    },
+  })
 }
 
 function restart() {
+  trackEvent('career_test_restart', { feature: FEATURE, page: PAGE_PATH })
   phase.value = 'quiz'
   currentIndex.value = 0
   answers.value = careerTestQuestions.map(() => null)
   result.value = null
+}
+
+function onRecommendDetailClick(careerId) {
+  trackEvent('career_recommend_detail_click', {
+    feature: FEATURE,
+    page: PAGE_PATH,
+    props: { career_id: careerId },
+  })
+}
+
+function onResultToLibraryClick() {
+  trackEvent('career_result_library_click', { feature: FEATURE, page: PAGE_PATH })
 }
 </script>
 
@@ -161,7 +190,13 @@ function restart() {
               <h3 class="rec-title">{{ r.name }}</h3>
               <p class="rec-reason"><strong>推荐原因：</strong>{{ r.recommendReason }}</p>
               <p class="rec-ai"><strong>AI 时代变化：</strong>{{ r.aiEraChange }}</p>
-              <RouterLink class="rec-link btn-gradient" :to="`/career/${r.careerId}`">查看详情</RouterLink>
+              <RouterLink
+                class="rec-link btn-gradient"
+                :to="`/career/${r.careerId}`"
+                @click="onRecommendDetailClick(r.careerId)"
+              >
+                查看详情
+              </RouterLink>
             </div>
           </li>
         </ul>
@@ -169,7 +204,9 @@ function restart() {
 
       <div class="footer-actions">
         <button type="button" class="btn-outline-block" @click="restart">重新测试</button>
-        <RouterLink class="btn-outline-block" to="/career-library">进入职业观察库</RouterLink>
+        <RouterLink class="btn-outline-block" to="/career-library" @click="onResultToLibraryClick">
+          进入职业观察库
+        </RouterLink>
       </div>
     </template>
   </div>
