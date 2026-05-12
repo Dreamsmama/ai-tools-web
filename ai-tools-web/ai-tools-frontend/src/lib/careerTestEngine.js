@@ -6,10 +6,10 @@ import { getCareerById } from '../data/careersCatalog'
 /** 各维度推荐职业 id（与职业库 id 一致，每维 5 个） */
 export const DIMENSION_CAREER_IDS = {
   technical: ['java-dev', 'frontend-dev', 'qa-engineer', 'ai-app-dev', 'devops-engineer'],
-  communication: ['hr', 'sales', 'customer-success', 'headhunter', 'project-manager'],
-  analysis: ['data-analyst', 'product-analyst', 'finance', 'project-manager', 'product-manager'],
-  creative: ['new-media-operations', 'ui-designer', 'content-planner', 'e-commerce-operations', 'teacher'],
-  organization: ['product-manager', 'project-manager', 'e-commerce-operations', 'admin', 'new-media-operations'],
+  communication: ['doctor', 'lawyer', 'hr', 'sales', 'civil-servant'],
+  analysis: ['doctor', 'lawyer', 'data-analyst', 'finance-practitioner', 'finance'],
+  creative: ['teacher', 'new-media-operations', 'ui-designer', 'content-planner', 'e-commerce-operations'],
+  organization: ['civil-servant', 'state-owned-enterprise', 'project-manager', 'product-manager', 'admin'],
 }
 
 function dedupeKeepOrder(ids) {
