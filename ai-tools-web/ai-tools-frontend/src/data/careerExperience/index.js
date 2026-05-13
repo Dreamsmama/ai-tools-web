@@ -1,7 +1,9 @@
 import { developerDayConfig } from './developerDay'
+import { hrDayConfig } from './hrDay'
 
 const REGISTRY = {
   developer: developerDayConfig,
+  hr: hrDayConfig,
 }
 
 const STAT_KEYS = ['stress', 'reputation', 'growth', 'mood']
@@ -50,9 +52,9 @@ export function listCareerExperienceHubItems() {
     {
       id: 'hr',
       title: 'HR 的一天',
-      subtitle: '开发中',
-      available: false,
-      to: '',
+      subtitle: '内测',
+      available: true,
+      to: '/career-experience/hr',
     },
   ]
 }

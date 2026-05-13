@@ -17,7 +17,7 @@ import CareerHeroSection from '../components/CareerHeroSection.vue'
             <span class="tool-title">AI 职业体验馆</span>
             <span class="tool-tag">体验</span>
           </div>
-          <p class="tool-desc">体验一次真实职业的一天。首期内测：程序员的一天。</p>
+          <p class="tool-desc">体验一次真实职业的一天。首期内测：程序员、HR 的一天。</p>
         </div>
       </RouterLink>
       <div class="section-title">
