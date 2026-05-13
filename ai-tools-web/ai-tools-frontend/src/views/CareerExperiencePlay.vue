@@ -17,7 +17,7 @@ const config = computed(() => getCareerExperienceConfig(careerId.value))
 /** @type {import('vue').Ref<'intro' | 'playing' | 'ended'>} */
 const phase = ref('intro')
 
-/** @type {import('vue').Ref<Array<{ key: string, role: string, text: string }>>} */
+/** @type {import('vue').Ref<Array<{ key: string, role: string, text: string, source?: string }>>} */
 const thread = ref([])
 
 const stats = ref({ stress: 0, reputation: 0, growth: 0, mood: 0 })
@@ -25,7 +25,7 @@ const stats = ref({ stress: 0, reputation: 0, growth: 0, mood: 0 })
 /** @type {import('vue').Ref<string | null>} */
 const currentSceneId = ref(null)
 
-/** @type {import('vue').Ref<{ id: string, label: string, summary: string } | null>} */
+/** @type {import('vue').Ref<{ id: string, label: string, summary: string, fitReason?: string, riskReason?: string } | null>} */
 const ending = ref(null)
 
 const chatRoot = ref(/** @type {HTMLElement | null} */ (null))
@@ -72,7 +72,7 @@ function pushScene(sceneId) {
   if (!scene) return
   thread.value.push({ key: nextKey(), role: 'time', text: scene.time })
   for (const m of scene.messages) {
-    thread.value.push({ key: nextKey(), role: 'system', text: m.text })
+    thread.value.push({ key: nextKey(), role: 'system', source: m.source, text: m.text })
   }
   currentSceneId.value = sceneId
   scrollChatToEnd()
@@ -150,17 +150,32 @@ const statRows = computed(() => {
     { key: 'mood', label: '情绪值', value: s.mood },
   ]
 })
+
+const atmosphereClass = computed(() => {
+  const s = stats.value
+  if (s.stress >= 72 || s.mood <= 36) return 'page--heavy'
+  if (s.stress >= 58 || s.mood <= 46) return 'page--tense'
+  return ''
+})
 </script>
 
 <template>
-  <div v-if="config" class="page">
+  <div v-if="config" class="page" :class="atmosphereClass">
     <div class="top-bar">
       <RouterLink class="back" to="/career-experience">← 职业体验馆</RouterLink>
     </div>
 
     <!-- 进行中：顶部状态 -->
     <div v-if="phase === 'playing'" class="stats" aria-label="当前状态">
-      <div v-for="row in statRows" :key="row.key" class="stat-pill">
+      <div
+        v-for="row in statRows"
+        :key="row.key"
+        class="stat-pill"
+        :class="{
+          'stat-pill--pressure': row.key === 'stress' && row.value >= 68,
+          'stat-pill--low-mood': row.key === 'mood' && row.value <= 42,
+        }"
+      >
         <span class="stat-l">{{ row.label }}</span>
         <span class="stat-v">{{ row.value }}</span>
       </div>
@@ -183,8 +198,14 @@ const statRows = computed(() => {
           :class="msg.role === 'user' ? 'msg-row--user' : 'msg-row--sys'"
         >
           <div v-if="msg.role === 'time'" class="bubble bubble--time">{{ msg.text }}</div>
-          <div v-else-if="msg.role === 'system'" class="bubble bubble--sys">{{ msg.text }}</div>
-          <div v-else class="bubble bubble--user">{{ msg.text }}</div>
+          <div v-else-if="msg.role === 'system'" class="bubble bubble--sys">
+            <span v-if="msg.source" class="bubble-source">【{{ msg.source }}】</span>
+            <span>{{ msg.text }}</span>
+          </div>
+          <div v-else class="bubble bubble--user">
+            <span class="bubble-source bubble-source--user">【你的选择】</span>
+            <span>{{ msg.text }}</span>
+          </div>
         </div>
       </div>
 
@@ -217,6 +238,17 @@ const statRows = computed(() => {
 
       <p class="summary">{{ ending?.summary }}</p>
 
+      <div v-if="ending?.fitReason || ending?.riskReason" class="end-reflection">
+        <div v-if="ending?.fitReason" class="reflection-card">
+          <span class="reflection-title">你可能适合的原因</span>
+          <p>{{ ending.fitReason }}</p>
+        </div>
+        <div v-if="ending?.riskReason" class="reflection-card reflection-card--risk">
+          <span class="reflection-title">你可能不适合的原因</span>
+          <p>{{ ending.riskReason }}</p>
+        </div>
+      </div>
+
       <div class="end-actions">
         <button type="button" class="btn-secondary" @click="playAgain">再体验一次</button>
         <RouterLink class="btn-outline" to="/career-experience">返回职业体验馆</RouterLink>
@@ -233,6 +265,17 @@ const statRows = computed(() => {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  transition:
+    background 180ms ease,
+    filter 180ms ease;
+}
+
+.page--tense {
+  background: linear-gradient(180deg, rgba(241, 245, 249, 0.28), rgba(226, 232, 240, 0.18));
+}
+
+.page--heavy {
+  background: linear-gradient(180deg, rgba(226, 232, 240, 0.5), rgba(203, 213, 225, 0.28));
 }
 
 .top-bar {
@@ -269,6 +312,16 @@ const statRows = computed(() => {
   background: rgba(15, 23, 42, 0.06);
   border: 1px solid rgba(148, 163, 184, 0.35);
   font-size: 12px;
+}
+
+.stat-pill--pressure {
+  background: rgba(71, 85, 105, 0.12);
+  border-color: rgba(71, 85, 105, 0.36);
+}
+
+.stat-pill--low-mood {
+  background: rgba(30, 41, 59, 0.1);
+  border-color: rgba(51, 65, 85, 0.32);
 }
 
 .stat-l {
@@ -333,6 +386,21 @@ const statRows = computed(() => {
   background: rgba(255, 255, 255, 0.55);
   border: var(--border-soft);
   margin-bottom: 12px;
+  transition:
+    background 180ms ease,
+    border-color 180ms ease,
+    box-shadow 180ms ease;
+}
+
+.page--tense .chat {
+  background: rgba(248, 250, 252, 0.72);
+  border-color: rgba(100, 116, 139, 0.42);
+}
+
+.page--heavy .chat {
+  background: linear-gradient(180deg, rgba(241, 245, 249, 0.92), rgba(226, 232, 240, 0.82));
+  border-color: rgba(71, 85, 105, 0.44);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 .msg-row {
@@ -357,6 +425,19 @@ const statRows = computed(() => {
   white-space: pre-wrap;
 }
 
+.bubble-source {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #64748b;
+}
+
+.bubble-source--user {
+  color: #4338ca;
+}
+
 .bubble--sys {
   background: #f1f5f9;
   border: 1px solid rgba(148, 163, 184, 0.35);
@@ -364,11 +445,21 @@ const statRows = computed(() => {
   border-bottom-left-radius: 4px;
 }
 
+.page--heavy .bubble--sys {
+  background: #e8edf4;
+  border-color: rgba(100, 116, 139, 0.42);
+}
+
 .bubble--user {
   background: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(168, 85, 247, 0.14));
   border: 1px solid rgba(99, 102, 241, 0.28);
   color: #1e1b4b;
   border-bottom-right-radius: 4px;
+}
+
+.page--heavy .bubble--user {
+  background: linear-gradient(135deg, rgba(79, 70, 229, 0.16), rgba(100, 116, 139, 0.16));
+  border-color: rgba(79, 70, 229, 0.22);
 }
 
 .bubble--time {
@@ -411,6 +502,11 @@ const statRows = computed(() => {
   transform: translateY(-1px);
 }
 
+.page--heavy .opt-btn {
+  border-color: rgba(100, 116, 139, 0.36);
+  background: rgba(255, 255, 255, 0.82);
+}
+
 .ending {
   padding: 26px 22px 28px;
 }
@@ -426,6 +522,39 @@ const statRows = computed(() => {
   margin: 0;
   font-size: 14px;
   line-height: 1.65;
+  color: var(--text-muted);
+}
+
+.end-reflection {
+  margin-top: 16px;
+  display: grid;
+  gap: 10px;
+}
+
+.reflection-card {
+  padding: 13px 14px;
+  border-radius: 14px;
+  background: rgba(99, 102, 241, 0.06);
+  border: 1px solid rgba(99, 102, 241, 0.16);
+}
+
+.reflection-card--risk {
+  background: rgba(71, 85, 105, 0.06);
+  border-color: rgba(100, 116, 139, 0.2);
+}
+
+.reflection-title {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.reflection-card p {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.6;
   color: var(--text-muted);
 }
 

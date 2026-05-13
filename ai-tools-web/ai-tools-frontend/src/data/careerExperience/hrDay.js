@@ -2,15 +2,14 @@
 export const hrDayConfig = {
   id: 'hr',
   title: 'HR 的一天',
-  subtitle:
-    '体验一次真实 HR 工作日：招聘、员工关系与组织节奏交织。你的选择会影响压力、信任感、专业成长与情绪。',
+  subtitle: '体验一次真实 HR 工作日。上面要结果，下面要说法，中间的人要把边界守住。',
   startCta: '开始上班',
   endingHeadline: '你的 HR 一天结束了',
   initialStats: {
-    stress: 32,
+    stress: 38,
     reputation: 52,
     growth: 22,
-    mood: 58,
+    mood: 56,
   },
   scenes: [
     {
@@ -19,183 +18,209 @@ export const hrDayConfig = {
       messages: [
         {
           role: 'system',
-          text: '周一 9:12，你刚打开电脑：用人部门负责人发来消息——「这个岗位这周必须到岗，候选人今天能面吗？」',
+          source: '业务群',
+          text: '负责人：这个岗位空了两周了，老板在看，今天必须给结果。',
         },
         {
           role: 'system',
-          text: '同时，有位员工在 IM 里问：「我的年假余额好像不对，能帮我查一下吗？」系统里还有两份待归档的入职材料。',
+          source: '候选人微信',
+          text: '不好意思，上午临时有事，面试能改到晚上吗？另外我手里还有一个 offer。',
         },
       ],
       options: [
         {
-          text: '先排面试，把用人部门稳住',
+          text: '先稳住候选人，重新协调面试官晚上面',
           nextSceneId: 'scene_2',
-          effects: { stress: 8, reputation: 6, growth: 4, mood: -4 },
+          effects: { stress: 16, reputation: 6, growth: 8, mood: -10 },
         },
         {
-          text: '先回复员工年假问题，避免舆情',
+          text: '告诉业务方候选人不稳定，先备选人',
           nextSceneId: 'scene_2',
-          effects: { stress: -6, reputation: 8, growth: 6, mood: 6 },
+          effects: { stress: 6, reputation: 4, growth: 6, mood: -4 },
         },
         {
-          text: '先处理入职归档，避免合规风险',
+          text: '压候选人今天必须面，不然默认放弃',
           nextSceneId: 'scene_2',
-          effects: { stress: 4, reputation: 4, growth: 10, mood: 2 },
+          effects: { stress: 2, reputation: -12, growth: -6, mood: -8 },
         },
       ],
     },
     {
       id: 'scene_2',
-      time: '10:35',
+      time: '10:47',
       messages: [
         {
           role: 'system',
-          text: '你协调好上午的节奏，面试官反馈来了：候选人沟通很强，但背调里有一条「与前主管关系紧张」的备注。',
+          source: '面试官私聊',
+          text: '我 11 点被拉去客户会了，面不了。你跟候选人说一下，后面再补。',
         },
         {
           role: 'system',
-          text: '用人部门负责人说：「业务急，先推进吧，细节后面再说。」',
+          source: '业务群',
+          text: '负责人：别卡流程。这个人如果没了，你帮我解释给老板？',
         },
       ],
       options: [
         {
-          text: '坚持补一轮结构化面试，再决定',
+          text: '临时找备选面试官，保住今天流程',
           nextSceneId: 'scene_3',
-          effects: { stress: -4, reputation: 10, growth: 12, mood: 4 },
+          effects: { stress: 18, reputation: 8, growth: 10, mood: -12 },
         },
         {
-          text: '按负责人意思先推进到谈薪',
+          text: '如实改期，并把面试官冲突同步给业务方',
           nextSceneId: 'scene_3',
-          effects: { stress: 10, reputation: -8, growth: -6, mood: -10 },
+          effects: { stress: 4, reputation: 6, growth: 8, mood: -4 },
         },
         {
-          text: '私下再联系背调联系人核实细节',
+          text: '先让候选人等着，等面试官会后再说',
           nextSceneId: 'scene_3',
-          effects: { stress: 6, reputation: 6, growth: 8, mood: -6 },
+          effects: { stress: 8, reputation: -14, growth: -6, mood: -10 },
         },
       ],
     },
     {
       id: 'scene_3',
-      time: '14:05',
+      time: '14:08',
       messages: [
         {
           role: 'system',
-          text: '午休刚过，一位员工把你拉到楼梯间：「我想离职，但能不能先别让我 leader 知道？我压力太大了。」',
+          source: '员工私聊',
+          text: '我其实不想把事情闹大，但我真的撑不住了。能不能先别让我 leader 知道？',
         },
         {
           role: 'system',
-          text: '你知道留面沟通能留住人，但也涉及信息边界与管理者知情权。',
+          source: '部门群',
+          text: '该员工 leader：下午帮我约他聊一下，最近状态不太对，别让团队受影响。',
         },
       ],
       options: [
         {
-          text: '先倾听并约定下次正式沟通时间',
+          text: '先接住情绪，约定哪些信息会保密、哪些必须升级',
           nextSceneId: 'scene_4',
-          effects: { stress: -8, reputation: 8, growth: 10, mood: 10 },
+          effects: { stress: 4, reputation: 12, growth: 12, mood: -2 },
         },
         {
-          text: '建议他直接和 leader 开诚布公谈一次',
+          text: '建议员工直接跟 leader 摊开说',
           nextSceneId: 'scene_4',
-          effects: { stress: 4, reputation: -6, growth: 4, mood: -8 },
+          effects: { stress: -2, reputation: -8, growth: 4, mood: -8 },
         },
         {
-          text: '当天就同步给其 leader（避免风险）',
+          text: '马上同步给 leader，避免管理风险',
           nextSceneId: 'scene_4',
-          effects: { stress: 12, reputation: -14, growth: -4, mood: -14 },
+          effects: { stress: 10, reputation: -16, growth: -4, mood: -16 },
         },
       ],
     },
     {
       id: 'scene_4',
-      time: '16:40',
+      time: '16:32',
       messages: [
         {
           role: 'system',
-          text: '管理层临时拉会：「这轮绩效沟通要更『激励』一点，评级分布能不能往高调？」',
+          source: '临时会议',
+          text: '老板：这轮绩效不能太难看，但预算也不能超。低绩效比例你们 HR 把一下。',
         },
         {
           role: 'system',
-          text: '你手里有校准规则与历史分布，改口径会影响公平感与员工信任。',
+          source: '业务负责人',
+          text: '我们组今年很辛苦，不能太低。你们别只看表格，要看业务感受。',
         },
       ],
       options: [
         {
-          text: '用数据说明调整对公平与留存的影响',
+          text: '拿历史分布和预算边界，推动正式校准',
           nextSceneId: 'scene_5',
-          effects: { stress: 6, reputation: 14, growth: 12, mood: 6 },
+          effects: { stress: 8, reputation: 14, growth: 12, mood: -4 },
         },
         {
-          text: '先口头答应，会后私下再争取规则',
+          text: '先按老板口径调分布，员工沟通后面再补',
           nextSceneId: 'scene_5',
-          effects: { stress: 14, reputation: -10, growth: -6, mood: -12 },
+          effects: { stress: 14, reputation: -10, growth: -8, mood: -14 },
         },
         {
-          text: '建议走正式校准流程，书面确认结论',
+          text: '帮业务方争取更好评级，同时提示预算风险',
           nextSceneId: 'scene_5',
-          effects: { stress: -6, reputation: 10, growth: 10, mood: 4 },
+          effects: { stress: 12, reputation: 4, growth: 8, mood: -8 },
         },
       ],
     },
     {
       id: 'scene_5',
-      time: '19:05',
+      time: '18:46',
       messages: [
         {
           role: 'system',
-          text: '快下班时，用人部门催你：「候选人手里有竞品 offer，今晚必须把邮件发出去。」',
+          source: '组织调整会',
+          text: '你刚听到名单：下午找你倾诉的那位员工，可能在下月优化范围里。现在不能外传。',
         },
         {
           role: 'system',
-          text: '法务还在邮件里标了一处薪酬结构表述，说「明天再确认更安全」。',
+          source: '员工私聊',
+          text: '他又发来：我准备报个课程，想在公司再坚持半年。你觉得我还有机会吗？',
         },
       ],
       options: [
         {
-          text: '等法务确认后再发，明确同步风险',
+          text: '提前暗示他多看机会，但不说名单',
           nextSceneId: '__end__',
-          effects: { stress: -12, reputation: 12, growth: 10, mood: 8 },
+          effects: { stress: 16, reputation: -8, growth: 8, mood: -18 },
         },
         {
-          text: '先发口头意向，书面 offer 跟法务后补',
+          text: '严格保密，只回应当下表现和沟通建议',
           nextSceneId: '__end__',
-          effects: { stress: 8, reputation: -12, growth: -8, mood: -10 },
+          effects: { stress: 10, reputation: 10, growth: 10, mood: -12 },
         },
         {
-          text: '加班拉着法务和负责人三方对齐一版',
+          text: '转移话题，等正式通知再处理',
           nextSceneId: '__end__',
-          effects: { stress: 18, reputation: 8, growth: 8, mood: -8 },
+          effects: { stress: 6, reputation: -14, growth: -6, mood: -10 },
         },
       ],
     },
   ],
   endings: [
     {
-      id: 'trust_risk',
-      label: '信任透支型',
+      id: 'relationship_keeper',
+      label: '关系维稳型',
       summary:
-        '你在多方拉扯里几次把「先稳住对方」放在事实与规则之前，短期能灭火，长期容易在员工与管理者心里留下「立场不清」的印象。可以试试：先写清事实与选项，再谈情绪与节奏。',
-      match: (s) => s.reputation <= 40 || (s.reputation < 48 && s.stress >= 70),
+        '你一直在帮所有人把话说得没那么难听，把流程推进得没那么难看。但一天结束后，没有人真正问过你累不累。',
+      fitReason:
+        '如果你能在多人诉求之间保持耐心，并愿意承担大量看不见的沟通成本，HR 会让你理解组织真实运转的方式。',
+      riskReason:
+        '如果你习惯用讨好换和平，HR 的夹层压力会很快把你的情绪余额耗光。',
+      match: (s) => s.reputation <= 42 || (s.reputation < 50 && s.stress >= 68),
     },
     {
       id: 'empathy_fatigue',
-      label: '共情耗竭型',
+      label: '情绪消耗型',
       summary:
-        '你承接了很多情绪与紧急事项，自己的恢复空间被挤占。HR 的价值也包括「可持续在场」。试着把倾听与行动拆开：共情可以即时，承诺与升级要有边界。',
-      match: (s) => s.stress >= 74 || (s.stress >= 60 && s.mood <= 38),
+        '你接住了候选人、员工、业务方和老板的情绪，却很难把自己的感受放进流程里。HR 最难的不是会聊天，而是聊天之后还要守住边界。',
+      fitReason:
+        '你适合需要高度共情和细腻判断的工作，尤其能听见别人没说出口的压力。',
+      riskReason:
+        '如果你没有清晰的信息边界和恢复方式，这份工作会让你把别人的焦虑带回家。',
+      match: (s) => s.stress >= 76 || (s.stress >= 62 && s.mood <= 36),
     },
     {
-      id: 'process_partner',
-      label: '流程伙伴型',
+      id: 'boundary_holder',
+      label: '边界清晰型',
       summary:
-        '你在招聘、员工关系与组织规则之间保持了相对清晰的节奏：该对齐数据就对齐，该留痕就留痕，也愿意为人的处境多留半步。这类风格通常更能建立长期信任。',
-      match: (s) => s.reputation >= 60 && s.stress <= 56 && s.mood >= 52,
+        '你没有把每个问题都做成「人情题」。你尽量让业务、员工和规则在同一张桌上说话，这很慢，也很费力，但能减少后面的二次伤害。',
+      fitReason:
+        '你可能适合 HR，因为你能承受不被所有人喜欢，也愿意把模糊的人情变成可解释的规则。',
+      riskReason:
+        '需要注意的是，过度强调边界也可能显得冷。HR 的专业感要和人的温度一起出现。',
+      match: (s) => s.reputation >= 60 && s.stress <= 60 && s.mood >= 42,
     },
     {
-      id: 'steady_balance',
-      label: '稳健平衡型',
+      id: 'organization_balancer',
+      label: '组织平衡型',
       summary:
-        '你没有追求「所有人都立刻满意」，而是在合规、业务与人之间做了可解释的选择。成长往往来自这种「说得清为什么」的日常。可以多复盘：哪些决定真正减少了二次沟通成本。',
+        '你没有轻松解决任何一个问题，只是在组织、风险和人的感受之间留下了还算可解释的选择。HR 的一天很多时候就是这样：不漂亮，但要尽量不伤人。',
+      fitReason:
+        '如果你能接受结果常常延迟显现，并愿意在灰度里做判断，这个职业会训练你看见更大的系统。',
+      riskReason:
+        '如果你只想做清晰、确定、立刻有反馈的工作，HR 的模糊边界和多方压力会让你很难放松。',
       match: () => true,
     },
   ],

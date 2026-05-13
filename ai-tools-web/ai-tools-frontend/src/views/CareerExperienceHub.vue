@@ -21,10 +21,10 @@ onMounted(() => {
     <header class="head">
       <p class="kicker">互动体验</p>
       <h1 class="h1">AI 职业体验馆</h1>
-      <p class="sub">体验一次真实职业的一天</p>
+      <p class="sub">像打开工作 IM 一样，体验一个职业真实的一天</p>
     </header>
 
-    <p class="hint">这不是职业测试或推荐，而是用剧情选择感受一天的工作节奏。</p>
+    <p class="hint">这不是职业测试。你只是在一天里不断收到消息，然后在没有完美答案的情况下做选择。</p>
 
     <ul class="list" role="list">
       <li v-for="item in items" :key="item.id" class="li">

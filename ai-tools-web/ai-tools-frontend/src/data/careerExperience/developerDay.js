@@ -2,14 +2,14 @@
 export const developerDayConfig = {
   id: 'developer',
   title: '程序员的一天',
-  subtitle: '体验一次真实程序员工作日。你做的每个选择，都会影响压力、评价和职业适配感。',
+  subtitle: '体验一次真实程序员工作日。线上、需求、人情和生活，会一起挤进同一天。',
   startCta: '开始上班',
   endingHeadline: '你的程序员一天结束了',
   initialStats: {
-    stress: 30,
+    stress: 36,
     reputation: 50,
     growth: 20,
-    mood: 60,
+    mood: 58,
   },
   scenes: [
     {
@@ -18,59 +18,63 @@ export const developerDayConfig = {
       messages: [
         {
           role: 'system',
-          text: '周一 9:08，你刚坐下，leader 在群里发来消息：线上接口 500，客户已经在催。',
+          source: '线上群',
+          text: 'leader：支付接口 500 又出现了，客户已经催了，工单标红。',
         },
         {
           role: 'system',
-          text: '同时，产品经理私聊你：上周那个需求今天还能上线吗？',
+          source: 'PM 私聊',
+          text: '昨晚说的那个改动，老板 11 点要看。你这边别卡流程，先推进一下？',
         },
       ],
       options: [
         {
-          text: '先修线上 bug',
+          text: '先止血线上，PM 那边晚点解释',
           nextSceneId: 'scene_2',
-          effects: { stress: -6, reputation: 8, growth: 8, mood: 4 },
+          effects: { stress: 8, reputation: 8, growth: 8, mood: -6 },
         },
         {
-          text: '先回复产品经理',
+          text: '先回 PM，承诺中午前给可看版本',
           nextSceneId: 'scene_2',
-          effects: { stress: 6, reputation: 5, growth: 3, mood: 2 },
+          effects: { stress: 14, reputation: 4, growth: 2, mood: -10 },
         },
         {
-          text: '先假装没看到，整理一下思路',
+          text: '先拉群同步优先级，让 leader 拍板',
           nextSceneId: 'scene_2',
-          effects: { stress: 16, reputation: -10, growth: -4, mood: -6 },
+          effects: { stress: 4, reputation: 6, growth: 6, mood: -4 },
         },
       ],
     },
     {
       id: 'scene_2',
-      time: '10:20',
+      time: '10:26',
       messages: [
         {
           role: 'system',
-          text: '你顺着日志把链路摸清了：线上 500 的改动，来自同事昨天合并的一段代码。',
+          source: '错误日志',
+          text: '你查到 500 来自昨晚合并的计费逻辑，提交人是隔壁组同事。',
         },
         {
           role: 'system',
-          text: '群里还在问「谁来看一下」，客户的工单已经标红了。',
+          source: '线上群',
+          text: '同事：这块我只是按需求改的，先别上升。现在谁能先把服务拉起来？',
         },
       ],
       options: [
         {
-          text: '直接在群里说明是同事代码导致',
+          text: '在群里说明根因和提交记录',
           nextSceneId: 'scene_3',
-          effects: { stress: 8, reputation: -16, growth: 4, mood: -12 },
+          effects: { stress: 6, reputation: -10, growth: 8, mood: -12 },
         },
         {
-          text: '先私聊同事确认',
+          text: '先私聊同事，一起回滚并补说明',
           nextSceneId: 'scene_3',
-          effects: { stress: -8, reputation: 10, growth: 10, mood: 8 },
+          effects: { stress: 10, reputation: 10, growth: 10, mood: -4 },
         },
         {
-          text: '自己先偷偷修掉',
+          text: '自己先打补丁，复盘会后面再补',
           nextSceneId: 'scene_3',
-          effects: { stress: 14, reputation: 4, growth: -6, mood: -14 },
+          effects: { stress: 16, reputation: 4, growth: -4, mood: -14 },
         },
       ],
     },
@@ -80,78 +84,96 @@ export const developerDayConfig = {
       messages: [
         {
           role: 'system',
-          text: '线上暂时稳住，产品经理又发来语音：「今天下班前必须能看到完整功能，老板在看。」',
+          source: 'PM 私聊',
+          text: 'PM：你上午一直在修 bug 我理解，但老板刚问了，今天必须给结果。',
+        },
+        {
+          role: 'system',
+          source: '测试群',
+          text: '测试：如果 16 点还不给包，今晚就不用提测了，大家都在等。',
         },
       ],
       options: [
         {
-          text: '直接答应今天上线',
+          text: '砍掉边缘逻辑，只交核心链路',
           nextSceneId: 'scene_4',
-          effects: { stress: 22, reputation: 2, growth: -8, mood: -14 },
+          effects: { stress: 10, reputation: 8, growth: 8, mood: -8 },
         },
         {
-          text: '说明线上问题优先，需求需要延期',
+          text: '坚持延期，把线上事故影响写清楚',
           nextSceneId: 'scene_4',
-          effects: { stress: -12, reputation: 10, growth: 8, mood: 10 },
+          effects: { stress: 2, reputation: 6, growth: 10, mood: -2 },
         },
         {
-          text: '让产品经理找 leader 排优先级',
+          text: '答应今晚提测，先把承诺顶住',
           nextSceneId: 'scene_4',
-          effects: { stress: -10, reputation: 6, growth: 6, mood: 4 },
+          effects: { stress: 24, reputation: 2, growth: -8, mood: -16 },
         },
       ],
     },
     {
       id: 'scene_4',
-      time: '17:30',
+      time: '17:32',
       messages: [
         {
           role: 'system',
-          text: 'leader 把你和几位相关同学叫进小会议室：「现在到底什么风险？今天能不能交付？」',
+          source: '临时会议',
+          text: 'leader：客户 escalated 到总监了。现在别讲过程，我只问一句，今晚能不能交？',
+        },
+        {
+          role: 'system',
+          source: 'PM',
+          text: 'PM：需求反复不是我一个人的问题，技术方案之前也说能做。',
         },
       ],
       options: [
         {
-          text: '如实说明风险',
+          text: '列出风险、缺口和今晚能交的范围',
           nextSceneId: 'scene_5',
-          effects: { stress: 6, reputation: 14, growth: 12, mood: 6 },
+          effects: { stress: 8, reputation: 14, growth: 12, mood: -4 },
         },
         {
-          text: '只说能解决，不讲细节',
+          text: '先说能交，细节会后自己补',
           nextSceneId: 'scene_5',
-          effects: { stress: 16, reputation: -10, growth: -4, mood: -12 },
+          effects: { stress: 20, reputation: -8, growth: -6, mood: -18 },
         },
         {
-          text: '把问题推给需求变更',
+          text: '当场指出需求变更多次导致延期',
           nextSceneId: 'scene_5',
-          effects: { stress: 4, reputation: -20, growth: -8, mood: -10 },
+          effects: { stress: 10, reputation: -14, growth: 6, mood: -10 },
         },
       ],
     },
     {
       id: 'scene_5',
-      time: '20:40',
+      time: '20:18',
       messages: [
         {
           role: 'system',
-          text: '晚上 8:40，线上 bug 终于修完，但需求里还有两块核心逻辑没写完，测试同学也在等你。',
+          source: '生活消息',
+          text: '女朋友：我已经到餐厅了，你昨天说今天一定不加班的。',
+        },
+        {
+          role: 'system',
+          source: '测试群',
+          text: '测试：包呢？再晚就没人回归了。老板也在群里。',
         },
       ],
       options: [
         {
-          text: '继续加班做需求',
+          text: '留下发包，跟她说今天真的走不开',
           nextSceneId: '__end__',
-          effects: { stress: 22, reputation: 4, growth: 10, mood: -22 },
+          effects: { stress: 20, reputation: 8, growth: 8, mood: -24 },
         },
         {
-          text: '明确说明今天不能完成',
+          text: '交接清楚先走，明早补完整回归',
           nextSceneId: '__end__',
-          effects: { stress: -16, reputation: 12, growth: 8, mood: 12 },
+          effects: { stress: -8, reputation: -8, growth: 6, mood: 8 },
         },
         {
-          text: '先糊一个临时版本上线',
+          text: '发一个临时包，赶去餐厅路上看问题',
           nextSceneId: '__end__',
-          effects: { stress: 10, reputation: -26, growth: -12, mood: -16 },
+          effects: { stress: 16, reputation: -18, growth: -8, mood: -14 },
         },
       ],
     },
@@ -161,28 +183,44 @@ export const developerDayConfig = {
       id: 'blame_risk',
       label: '背锅风险型',
       summary:
-        '你在协作里多次把压力转给「说不清的一方」，或过早给出难以兑现的承诺。短期看似混过去，长期容易在事故复盘里被点名。下一版可以试试：先对齐事实再表态，把「谁错了」换成「怎么止血」。',
+        '你把问题往前推了，但有几次选择让事实、责任和承诺混在一起。短期看像是有人接住了局面，长期可能变成事故复盘里那句「当时是谁说能上的」。',
+      fitReason:
+        '如果你能在压力下保留证据、同步边界，并接受协作里永远会有不完整信息，这类工作会逼你长得很快。',
+      riskReason:
+        '如果你很难承受被误解、被催促、被临时改优先级，程序员日常里的救火和甩锅会持续消耗你。',
       match: (s) => s.reputation <= 38 || (s.reputation < 46 && s.stress >= 68),
     },
     {
       id: 'high_pressure',
       label: '高压硬扛型',
       summary:
-        '你倾向于把问题扛在自己身上，情绪和体力消耗很大。能扛事是优点，但若长期缺少求助与排期，容易陷入「越忙越乱」。试着把「我能做完」拆成「今天能交付的切片」，并主动要资源。',
-      match: (s) => s.stress >= 72 || (s.stress >= 58 && s.mood <= 40),
+        '你把事情推进下来了，但代价是：你已经默认所有问题都该自己扛。没人明确要求你牺牲生活，可每个消息都在把你往那一步推。',
+      fitReason:
+        '你适合处理复杂问题和临场故障，尤其能在混乱里抓住最小可交付范围。',
+      riskReason:
+        '如果长期缺少求助、拆解和拒绝，你会把「靠谱」活成「永远在线」。',
+      match: (s) => s.stress >= 74 || (s.stress >= 60 && s.mood <= 38),
     },
     {
       id: 'clear_boundary',
       label: '边界清晰型',
       summary:
-        '你在冲突目标之间敢于说明取舍，也愿意同步风险。这样的节奏通常更可持续，团队对你的预期也会更稳定。继续保持：先同步事实与影响面，再谈日期。',
-      match: (s) => s.reputation >= 58 && s.stress <= 54 && s.mood >= 50,
+        '你没有让每个人都满意，但你把事实、风险和交付范围说清楚了。真实职场里，这往往比一句「我尽快」更难，也更值钱。',
+      fitReason:
+        '你能接受技术之外的沟通成本，并愿意把不确定性翻译成别人听得懂的取舍。',
+      riskReason:
+        '需要持续练习的是：边界清楚不等于情绪冷，技术判断也要留给关系一点缓冲。',
+      match: (s) => s.reputation >= 58 && s.stress <= 56 && s.mood >= 46,
     },
     {
       id: 'steady_growth',
       label: '稳健成长型',
       summary:
-        '你在救火与推进之间找到了相对平衡：该顶的时候顶上去，该说不的时候也能留痕。成长往往来自这种「可控的硬」——既不逃避，也不自我感动式加班。可以多复盘：哪些选择真正降低了系统风险。',
+        '你在救火、需求和生活之间做了几次不完美但能解释的选择。今天没有漂亮收尾，只有一个程序员很熟悉的晚上：事情还在，人也还在撑。',
+      fitReason:
+        '如果你能从每次混乱里复盘出规则、工具和沟通方式，这份职业会给你稳定的成长反馈。',
+      riskReason:
+        '如果你期待每次努力都被即时看见，程序员的成就感和委屈感可能会同时出现。',
       match: () => true,
     },
   ],
