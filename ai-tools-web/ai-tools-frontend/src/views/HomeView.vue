@@ -10,6 +10,16 @@ import CareerHeroSection from '../components/CareerHeroSection.vue'
     <CareerHeroSection />
 
     <div class="tools-section">
+      <RouterLink class="tool-card-link" to="/career-experience">
+        <div class="tool-card">
+          <div class="tool-accent" aria-hidden="true" />
+          <div class="tool-row">
+            <span class="tool-title">AI 职业体验馆</span>
+            <span class="tool-tag">体验</span>
+          </div>
+          <p class="tool-desc">体验一次真实职业的一天。首期内测：程序员的一天。</p>
+        </div>
+      </RouterLink>
       <div class="section-title">
         <span class="section-dot" />场景工具
       </div>

@@ -14,6 +14,8 @@ import XiaohongshuAgentView from '../views/XiaohongshuAgentView.vue'
 import CareerTestPage from '../views/CareerTestPage.vue'
 import CareerLibraryPage from '../views/CareerLibraryPage.vue'
 import CareerDetailPage from '../views/CareerDetailPage.vue'
+import CareerExperienceHub from '../views/CareerExperienceHub.vue'
+import CareerExperiencePlay from '../views/CareerExperiencePlay.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -22,6 +24,8 @@ const router = createRouter({
     { path: '/career-test', name: 'careerTest', component: CareerTestPage },
     { path: '/career-library', name: 'careerLibrary', component: CareerLibraryPage },
     { path: '/career/:id', name: 'careerDetail', component: CareerDetailPage },
+    { path: '/career-experience', name: 'careerExperienceHub', component: CareerExperienceHub },
+    { path: '/career-experience/:careerId', name: 'careerExperiencePlay', component: CareerExperiencePlay },
     { path: '/summary', name: 'summary', component: ChatSummary },
     { path: '/medical', name: 'medical', component: MedicalForm },
     { path: '/medical/result', name: 'medicalResult', component: MedicalResult },
