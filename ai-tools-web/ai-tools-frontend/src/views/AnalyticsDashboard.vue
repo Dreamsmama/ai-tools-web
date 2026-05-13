@@ -81,6 +81,9 @@ const eventLabelMap = {
   career_experience_pick: '职业体验馆·选择可玩剧情',
   career_experience_start: '职业体验馆·开始上班',
   career_experience_complete: '职业体验馆·完成一局',
+  career_experience_share_save_click: '职业体验馆·点击保存打工人格',
+  career_experience_share_save_success: '职业体验馆·保存打工人格成功',
+  career_experience_share_save_fail: '职业体验馆·保存打工人格失败',
   offer_analysis_submit: 'Offer 分析·提交',
   offer_analysis_result_view: 'Offer 分析·查看结果',
   offer_analysis_copy: 'Offer 分析·复制',
@@ -130,6 +133,8 @@ const mergedFeatureRanking = computed(() => {
     countEventInBreakdown(bd, 'career_hero_library_click')
   const careerSubmit = fu.find((x) => x.feature === 'career_test')?.count ?? 0
   const careerExperienceStarts = countEventInBreakdown(bd, 'career_experience_start')
+  const careerExperienceShareClicks = countEventInBreakdown(bd, 'career_experience_share_save_click')
+  const careerExperienceShareSuccess = countEventInBreakdown(bd, 'career_experience_share_save_success')
 
   const rows = [
     {
@@ -151,6 +156,12 @@ const mergedFeatureRanking = computed(() => {
       title: 'AI 职业体验馆',
       subtitle: '职业互动体验：「开始上班」次数（来自埋点事件 career_experience_start）',
       count: careerExperienceStarts,
+    },
+    {
+      key: '_ai_career_experience_share',
+      title: 'AI 职业体验馆·保存打工人格',
+      subtitle: `结局页「保存我的打工人格」点击次数；成功生成 ${careerExperienceShareSuccess} 次`,
+      count: careerExperienceShareClicks,
     },
   ]
 
@@ -286,7 +297,7 @@ onMounted(() => {
     <section class="card">
       <h2 class="block-title">功能使用排行</h2>
       <p class="hint-inline">
-        前三行为职业模块：职业成长平台与职业体验馆来自自定义事件汇总；职业测试来自
+        前几行为职业模块：职业成长平台与职业体验馆来自自定义事件汇总；职业测试来自
         <code>submit_click</code>。其余行仍为各功能的提交次数（与旧版排行一致）。
       </p>
       <p v-if="!data" class="empty">请先加载统计</p>

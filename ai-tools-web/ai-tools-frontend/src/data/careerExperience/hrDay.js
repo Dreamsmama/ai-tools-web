@@ -2,7 +2,7 @@
 export const hrDayConfig = {
   id: 'hr',
   title: 'HR 的一天',
-  subtitle: '体验一次真实 HR 工作日。上面要结果，下面要说法，中间的人要把边界守住。',
+  subtitle: '体验一次真实 HR 工作日。上面催指标，下面有情绪，中间的人还得记得自己也要吃饭。',
   startCta: '开始上班',
   endingHeadline: '你的 HR 一天结束了',
   initialStats: {
@@ -19,27 +19,27 @@ export const hrDayConfig = {
         {
           role: 'system',
           source: '用人部门群',
-          text: '用人部门负责人：这个岗位空了两周了，老板在看，今天必须给结果。',
+          text: '用人部门负责人：这个岗位空了两周了，老板在看。本周不到岗，我这边真不好交代。',
         },
         {
           role: 'system',
           source: '候选人微信',
-          text: '不好意思，上午临时有事，面试能改到晚上吗？另外我手里还有一个录用通知。',
+          text: '不好意思，上午突然有事，面试能改到晚上吗？另外我手里还有一个录用通知。',
         },
       ],
       options: [
         {
-          text: '先稳住候选人，重新协调面试官晚上面',
+          text: '先稳住候选人，再去求面试官晚上加一场',
           nextSceneId: 'scene_2',
           effects: { stress: 16, reputation: 6, growth: 8, mood: -10 },
         },
         {
-          text: '告诉用人部门候选人不稳定，先看备选人',
+          text: '告诉用人部门这个人有风险，先看备选人',
           nextSceneId: 'scene_2',
           effects: { stress: 6, reputation: 4, growth: 6, mood: -4 },
         },
         {
-          text: '压候选人今天必须面，不然默认放弃',
+          text: '直接要求候选人今天必须面，不然就算放弃',
           nextSceneId: 'scene_2',
           effects: { stress: 2, reputation: -12, growth: -6, mood: -8 },
         },
@@ -56,18 +56,18 @@ export const hrDayConfig = {
         },
         {
           role: 'system',
-          source: '业务群',
+          source: '用人部门群',
           text: '负责人：别卡流程。这个人如果没了，你帮我解释给老板？',
         },
       ],
       options: [
         {
-          text: '临时找备选面试官，保住今天流程',
+          text: '临时找备选面试官，先把今天这场保住',
           nextSceneId: 'scene_3',
           effects: { stress: 18, reputation: 8, growth: 10, mood: -12 },
         },
         {
-          text: '如实改期，并把面试官时间冲突同步给用人部门',
+          text: '如实改期，把面试官时间冲突同步给用人部门',
           nextSceneId: 'scene_3',
           effects: { stress: 4, reputation: 6, growth: 8, mood: -4 },
         },
@@ -85,17 +85,17 @@ export const hrDayConfig = {
         {
           role: 'system',
           source: '员工私聊',
-          text: '我其实不想把事情闹大，但我真的撑不住了。能不能先别让我主管知道？',
+          text: '我真的有点撑不住了。但能不能先别让我主管知道？我不想把事情闹大。',
         },
         {
           role: 'system',
           source: '部门群',
-          text: '该员工主管：下午帮我约他聊一下，最近状态不太对，别让团队受影响。',
+          text: '该员工主管：下午帮我约他聊一下，最近状态不太对。你先别说是我说的。',
         },
       ],
       options: [
         {
-          text: '先接住情绪，约定哪些信息会保密、哪些必须升级',
+          text: '先接住情绪，说明哪些能保密、哪些必须升级',
           nextSceneId: 'scene_4',
           effects: { stress: 4, reputation: 12, growth: 12, mood: -2 },
         },
@@ -105,7 +105,7 @@ export const hrDayConfig = {
           effects: { stress: -2, reputation: -8, growth: 4, mood: -8 },
         },
         {
-          text: '马上同步给主管，避免管理风险',
+          text: '马上同步给主管，避免事情继续扩大',
           nextSceneId: 'scene_4',
           effects: { stress: 10, reputation: -16, growth: -4, mood: -16 },
         },
@@ -118,27 +118,27 @@ export const hrDayConfig = {
         {
           role: 'system',
           source: '临时会议',
-          text: '老板：这轮绩效不能太难看，但奖金预算也不能超。低绩效比例你们 HR 把一下。',
+          text: '老板：这轮绩效不能太难看，奖金预算也不能超，离职率别再上去了。你们 HR 把一下。',
         },
         {
           role: 'system',
           source: '用人部门负责人',
-          text: '我们组今年很辛苦，不能太低。你们别只看表格，要看业务感受。',
+          text: '我们组今年真挺苦的，评级不能太低。你们别只看表格，也看看活是谁干的。',
         },
       ],
       options: [
         {
-          text: '拿历史数据和预算限制，推动大家正式对齐',
+          text: '拿历史数据和预算限制，推动大家当场对齐',
           nextSceneId: 'scene_5',
           effects: { stress: 8, reputation: 14, growth: 12, mood: -4 },
         },
         {
-          text: '先按老板口径调分布，员工沟通后面再补',
+          text: '先按老板口径调分布，员工沟通后面再慢慢解释',
           nextSceneId: 'scene_5',
           effects: { stress: 14, reputation: -10, growth: -8, mood: -14 },
         },
         {
-          text: '帮用人部门争取更好评级，同时提示预算风险',
+          text: '帮用人部门争取更好评级，同时提示预算会爆',
           nextSceneId: 'scene_5',
           effects: { stress: 12, reputation: 4, growth: 8, mood: -8 },
         },
@@ -151,29 +151,62 @@ export const hrDayConfig = {
         {
           role: 'system',
           source: '人员调整会',
-          text: '你刚听到名单：下午找你倾诉的那位员工，可能在下月岗位调整范围里。现在不能外传。',
+          text: '你刚听到名单：下午找你倾诉的那位员工，可能下个月会被裁掉。现在不能外传。',
         },
         {
           role: 'system',
           source: '员工私聊',
-          text: '他又发来：我准备报个课程，想在公司再坚持半年。你觉得我还有机会吗？',
+          text: '他又发来：我准备报个课，想在公司再拼半年。你觉得我还有机会吗？',
         },
       ],
       options: [
         {
           text: '提前暗示他多看机会，但不说名单',
-          nextSceneId: '__end__',
+          nextSceneId: 'scene_6',
           effects: { stress: 16, reputation: -8, growth: 8, mood: -18 },
         },
         {
           text: '严格保密，只回应当下表现和沟通建议',
-          nextSceneId: '__end__',
+          nextSceneId: 'scene_6',
           effects: { stress: 10, reputation: 10, growth: 10, mood: -12 },
         },
         {
           text: '转移话题，等正式通知再处理',
-          nextSceneId: '__end__',
+          nextSceneId: 'scene_6',
           effects: { stress: 6, reputation: -14, growth: -6, mood: -10 },
+        },
+      ],
+    },
+    {
+      id: 'scene_6',
+      time: '20:50',
+      messages: [
+        {
+          role: 'system',
+          source: '生活消息',
+          text: '朋友：你是不是又加班？电影都快开场了，你已经连续放我两次鸽子了。',
+        },
+        {
+          role: 'system',
+          source: '招聘负责人私聊',
+          text: '候选人现在想谈薪资，你能回一下吗？他说再晚就接受另一家公司了。',
+        },
+      ],
+      options: [
+        {
+          text: '先处理候选人，跟朋友说“马上马上”',
+          nextSceneId: '__end__',
+          effects: { stress: 18, reputation: 8, growth: 8, mood: -20 },
+        },
+        {
+          text: '先认真回朋友，候选人晚点再谈',
+          nextSceneId: '__end__',
+          effects: { stress: -6, reputation: -10, growth: 4, mood: 8 },
+        },
+        {
+          text: '两边都回一句“我看下”，然后原地发呆三十秒',
+          nextSceneId: '__end__',
+          effects: { stress: 10, reputation: -8, growth: -4, mood: -8 },
         },
       ],
     },
@@ -181,46 +214,74 @@ export const hrDayConfig = {
   endings: [
     {
       id: 'relationship_keeper',
-      label: '关系维稳型',
+      label: '组织润滑剂型 HR',
+      punchline: '你今天不是在上班，你是在给组织补漏洞。',
+      visual: {
+        symbol: '补',
+        name: '组织补丁人',
+        description: '一手胶带一手日程表，哪里漏水贴哪里，贴完还要微笑说“收到”。',
+        tags: ['流程补洞', '两边安抚', '微笑待机'],
+      },
       summary:
-        '你一直在帮所有人把话说得没那么难听，把流程推进得没那么难看。但一天结束后，没有人真正问过你累不累。',
+        '你今天把候选人哄住了，把用人部门稳住了，把员工情绪接住了，还顺手把朋友鸽了。\n\n每个人都觉得你应该再多理解一下他。\n\n很好，HR 的一天又成功证明：你不是万能的，但大家会先假装你是。',
       fitReason:
-        '如果你能在多人诉求之间保持耐心，并愿意承担大量看不见的沟通成本，HR 工作会让你理解一家公司真实运转的方式。',
+        '今天还算扛住的地方：你能把难听的话翻译得不那么难听，也能让快散架的流程继续往前走。',
       riskReason:
-        '如果你习惯用讨好换和平，HR 工作的夹层压力会很快把你的情绪余额耗光。',
+        '今天最扎心的地方：你照顾了很多人的感受，但你的感受排在待办事项最后一行。',
       match: (s) => s.reputation <= 42 || (s.reputation < 50 && s.stress >= 68),
     },
     {
       id: 'empathy_fatigue',
-      label: '情绪消耗型',
+      label: '情绪垃圾桶型 HR',
+      punchline: '团队觉得你很会沟通，但没人问你累不累。',
+      visual: {
+        symbol: '桶',
+        name: '情绪收纳桶',
+        description: '一边接电话，一边安慰员工，表情还在线，内存已经快满了。',
+        tags: ['接住情绪', '电话不断', '内心过载'],
+      },
       summary:
-        '你接住了候选人、员工、用人部门和老板的情绪，却很难把自己的感受放进流程里。HR 最难的不是会聊天，而是聊天之后还要守住边界。',
+        '你今天听了候选人的犹豫，员工的委屈，主管的压力，老板的指标。\n\n一天结束后，没有人问你：“那你还好吗？”\n\n系统没有崩，你快了。',
       fitReason:
-        '你适合需要高度共情和细腻判断的工作，尤其能听见别人没说出口的压力。',
+        '今天还算扛住的地方：你能听见别人没直接说出口的压力，也没有立刻把人推开。',
       riskReason:
-        '如果你没有清晰的信息边界和恢复方式，这份工作会让你把别人的焦虑带回家。',
+        '今天最扎心的地方：共情用多了，自己会变成情绪垃圾桶，还不一定有盖子。',
       match: (s) => s.stress >= 76 || (s.stress >= 62 && s.mood <= 36),
     },
     {
       id: 'boundary_holder',
-      label: '边界清晰型',
+      label: '夹层求生型 HR',
+      punchline: '你不是冷漠，你只是知道有些话说早了会炸。',
+      visual: {
+        symbol: '夹',
+        name: '夹心求生人',
+        description: '上面是老板，下面是员工，中间是你。每天的工作：让两边都别炸。',
+        tags: ['上压下顶', '谨慎措辞', '夹缝呼吸'],
+      },
       summary:
-        '你没有把每个问题都做成「人情题」。你尽量让业务、员工和规则在同一张桌上说话，这很慢，也很费力，但能减少后面的二次伤害。',
+        '你今天没有把每个问题都做成“帮个忙”。\n\n有人会觉得你冷，有人会觉得你不够灵活。\n\n但你至少没有把保密信息当人情送出去，也没有把自己的生活完全交出去。',
       fitReason:
-        '你可能适合 HR 工作，因为你能承受不被所有人喜欢，也愿意把模糊的人情变成可解释的规则。',
+        '今天还算扛住的地方：你知道边界不是摆架子，是为了别让事情以后更难看。',
       riskReason:
-        '需要注意的是，过度强调边界也可能显得冷。HR 的专业感要和人的温度一起出现。',
+        '今天最扎心的地方：守边界的人，常常要先承受别人失望的眼神。',
       match: (s) => s.reputation >= 60 && s.stress <= 60 && s.mood >= 42,
     },
     {
       id: 'organization_balancer',
-      label: '组织平衡型',
+      label: '微笑崩溃型 HR',
+      punchline: '你脸上写着“收到”，心里写着“救命”。',
+      visual: {
+        symbol: '笑',
+        name: '微笑乱码人',
+        description: '表面稳定输出，内心消息刷屏。你看起来没崩，只是熟练地崩着。',
+        tags: ['表面微笑', '内心乱码', '消息爆炸'],
+      },
       summary:
-        '你没有轻松解决任何一个问题，只是在组织、风险和人的感受之间留下了还算可解释的选择。HR 的一天很多时候就是这样：不漂亮，但要尽量不伤人。',
+        '你今天没有真正解决所有问题。\n\n候选人还在犹豫，员工还在难过，老板还要数字，朋友还在电影院门口看时间。\n\nHR 的一天很多时候就是这样：看起来在聊天，其实是在给组织漏水的地方贴胶带。',
       fitReason:
-        '如果你能接受结果常常延迟显现，并愿意在不完全清楚的情况下做判断，这个职业会训练你看见更大的系统。',
+        '今天还算扛住的地方：你能接受事情没有标准答案，也能在乱局里先做一个不太坏的选择。',
       riskReason:
-        '如果你只想做清晰、确定、立刻有反馈的工作，HR 工作的模糊边界和多方压力会让你很难放松。',
+        '今天最扎心的地方：很多 HR 的工作，做对了没人发现，做慢了所有人都发现。',
       match: () => true,
     },
   ],

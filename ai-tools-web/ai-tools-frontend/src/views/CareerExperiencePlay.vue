@@ -1,6 +1,7 @@
 <script setup>
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter, RouterLink } from 'vue-router'
+import html2canvas from 'html2canvas'
 import {
   applyStatEffects,
   getCareerExperienceConfig,
@@ -25,10 +26,13 @@ const stats = ref({ stress: 0, reputation: 0, growth: 0, mood: 0 })
 /** @type {import('vue').Ref<string | null>} */
 const currentSceneId = ref(null)
 
-/** @type {import('vue').Ref<{ id: string, label: string, summary: string, fitReason?: string, riskReason?: string } | null>} */
+/** @type {import('vue').Ref<{ id: string, label: string, punchline?: string, summary: string, fitReason?: string, riskReason?: string, visual?: { symbol: string, name: string, description: string, tags?: string[] } } | null>} */
 const ending = ref(null)
 
 const chatRoot = ref(/** @type {HTMLElement | null} */ (null))
+const shareCardRoot = ref(/** @type {HTMLElement | null} */ (null))
+const isSavingShare = ref(false)
+const shareSaveMessage = ref('')
 let keySeq = 0
 function nextKey() {
   keySeq += 1
@@ -61,6 +65,7 @@ function resetRun() {
   phase.value = 'intro'
   thread.value = []
   ending.value = null
+  shareSaveMessage.value = ''
   currentSceneId.value = null
   stats.value = { ...c.initialStats }
 }
@@ -89,6 +94,7 @@ function startWork() {
   phase.value = 'playing'
   thread.value = []
   ending.value = null
+  shareSaveMessage.value = ''
   stats.value = { ...c.initialStats }
   currentSceneId.value = null
   pushScene('scene_1')
@@ -127,6 +133,59 @@ function playAgain() {
   resetRun()
 }
 
+async function saveShareCard() {
+  const el = shareCardRoot.value
+  if (!el || isSavingShare.value) return
+
+  const startedAt = performance.now()
+  const eventProps = {
+    experience_id: config.value?.id ?? '',
+    ending_id: ending.value?.id ?? '',
+    ending_label: ending.value?.label ?? '',
+  }
+
+  trackEvent('career_experience_share_save_click', {
+    feature: 'career_experience',
+    page: route.path,
+    props: eventProps,
+  })
+
+  isSavingShare.value = true
+  shareSaveMessage.value = ''
+  try {
+    const canvas = await html2canvas(el, {
+      backgroundColor: null,
+      scale: Math.min(window.devicePixelRatio || 2, 3),
+      useCORS: true,
+    })
+    const filename = `打工人格-${ending.value?.label || '结果'}.png`
+    const link = document.createElement('a')
+    link.download = filename
+    link.href = canvas.toDataURL('image/png')
+    link.click()
+    shareSaveMessage.value = '已生成图片，可以发给朋友了。'
+    trackEvent('career_experience_share_save_success', {
+      feature: 'career_experience',
+      page: route.path,
+      duration_ms: performance.now() - startedAt,
+      props: eventProps,
+    })
+  } catch (err) {
+    console.error(err)
+    shareSaveMessage.value = '保存失败了，可以先截图分享。'
+    trackEvent('career_experience_share_save_fail', {
+      feature: 'career_experience',
+      page: route.path,
+      status: 'fail',
+      error_code: err?.name || 'share_save_failed',
+      duration_ms: performance.now() - startedAt,
+      props: eventProps,
+    })
+  } finally {
+    isSavingShare.value = false
+  }
+}
+
 onMounted(() => {
   if (!config.value) {
     router.replace('/career-experience')
@@ -149,6 +208,127 @@ const statRows = computed(() => {
     { key: 'growth', label: '成长值', value: s.growth },
     { key: 'mood', label: '情绪值', value: s.mood },
   ]
+})
+
+function describeEndingStat(key, value) {
+  if (key === 'stress') {
+    if (value <= 20) {
+      return {
+        state: '节奏稳定',
+        note: '今天事情不少，但还没把你整个人按进工位里。',
+      }
+    }
+    if (value <= 50) {
+      return {
+        state: '压力累积',
+        note: '你还撑得住，只是已经开始把“等会再休息”说得很顺口。',
+      }
+    }
+    if (value <= 80) {
+      return {
+        state: '明显紧绷',
+        note: '工作推进很快，但你的恢复空间正在被会议和消息慢慢挤没。',
+      }
+    }
+    return {
+      state: '长期高压',
+      note: '你已经开始默认：所有问题都应该自己扛。别人一句辛苦了，你就继续把活接下来。',
+    }
+  }
+
+  if (key === 'mood') {
+    if (value >= 80) {
+      return {
+        state: '状态轻松',
+        note: '你今天还能笑出来，而且不是那种“已读不回式微笑”。',
+      }
+    }
+    if (value >= 50) {
+      return {
+        state: '开始疲惫',
+        note: '你还能正常回消息，但心里已经在默默申请下班。',
+      }
+    }
+    if (value >= 20) {
+      return {
+        state: '情绪压抑',
+        note: '你还能继续做事，但很多反应已经不是热情，是职业惯性。',
+      }
+    }
+    return {
+      state: '明显透支',
+      note: '你已经不是在“坚持”，而是在靠惯性工作。情绪空间几乎被工作占满。',
+    }
+  }
+
+  if (key === 'reputation') {
+    if (value <= 20) {
+      return {
+        state: '边缘状态',
+        note: '今天大家暂时没太指望你，坏消息是你也没太刷到存在感。',
+      }
+    }
+    if (value <= 50) {
+      return {
+        state: '普通协作',
+        note: '你完成了该做的事，没有特别出圈，也没有被重点点名。',
+      }
+    }
+    if (value <= 80) {
+      return {
+        state: '被持续依赖',
+        note: '大家开始默认：有问题先找你。听起来像认可，也像新一轮待办。',
+      }
+    }
+    return {
+      state: '核心背锅位',
+      note: '你越来越像团队里的稳定处理器：别人更依赖你，也更容易把责任压到你身上。',
+    }
+  }
+
+  if (value <= 20) {
+    return {
+      state: '刚进入状态',
+      note: '今天更多是在认识混乱本人，成长还没来得及打招呼。',
+    }
+  }
+  if (value <= 50) {
+    return {
+      state: '开始成长',
+      note: '你开始更懂：职场里推进事情，不只是把事情做完。',
+    }
+  }
+  if (value <= 80) {
+    return {
+      state: '成熟推进者',
+      note: '你越来越习惯在压力里做决定，也知道什么时候该留一句说明。',
+    }
+  }
+  return {
+    state: '老油条预备役',
+    note: '你已经能在混乱里找路，顺便判断这口锅大概会从哪个群飞来。',
+  }
+}
+
+const endingStatCards = computed(() => {
+  const s = stats.value
+  return [
+    { key: 'stress', label: '压力值', value: s.stress },
+    { key: 'mood', label: '情绪值', value: s.mood },
+    { key: 'reputation', label: '职业评价', value: s.reputation },
+    { key: 'growth', label: '成长值', value: s.growth },
+  ].map((row) => ({ ...row, ...describeEndingStat(row.key, row.value) }))
+})
+
+const personaVisual = computed(() => {
+  return (
+    ending.value?.visual ?? {
+      symbol: '工',
+      name: '普通打工人',
+      description: '今天也在工位和消息之间反复横跳。',
+      tags: ['稳定上班', '稳定叹气'],
+    }
+  )
 })
 
 const atmosphereClass = computed(() => {
@@ -224,27 +404,88 @@ const atmosphereClass = computed(() => {
 
     <!-- 结局 -->
     <section v-else class="ending card-surface">
-      <h1 class="h1">{{ config.endingHeadline }}</h1>
-      <p class="end-type">{{ ending?.label }}</p>
+      <p class="end-label">{{ config.endingHeadline }}</p>
+      <h1 class="h1 ending-title">打工人格</h1>
 
-      <div class="stats stats--block" aria-label="最终数值">
-        <div class="stat-pill"><span class="stat-l">压力值</span><span class="stat-v">{{ stats.stress }}</span></div>
-        <div class="stat-pill">
-          <span class="stat-l">职业评价</span><span class="stat-v">{{ stats.reputation }}</span>
+      <div class="persona-hero">
+        <div class="persona-visual" aria-hidden="true">
+          <span class="persona-symbol">{{ personaVisual.symbol }}</span>
+          <span class="persona-shadow" />
         </div>
-        <div class="stat-pill"><span class="stat-l">成长值</span><span class="stat-v">{{ stats.growth }}</span></div>
-        <div class="stat-pill"><span class="stat-l">情绪值</span><span class="stat-v">{{ stats.mood }}</span></div>
+        <div class="persona-copy">
+          <p class="end-kicker">你的结果是</p>
+          <p class="end-type">{{ ending?.label }}</p>
+          <p class="persona-name">{{ personaVisual.name }}</p>
+        </div>
+      </div>
+
+      <p v-if="ending?.punchline" class="end-punchline">“{{ ending.punchline }}”</p>
+      <p class="persona-desc">{{ personaVisual.description }}</p>
+      <div v-if="personaVisual.tags?.length" class="persona-tags" aria-label="人格小形象特征">
+        <span v-for="tag in personaVisual.tags" :key="tag" class="persona-tag">{{ tag }}</span>
       </div>
 
       <p class="summary">{{ ending?.summary }}</p>
 
+      <section ref="shareCardRoot" class="share-card" aria-label="打工人格分享卡片">
+        <div class="share-card-top">
+          <span class="share-brand">AI 职业体验馆</span>
+          <span class="share-sub">体验一次真实职业的一天</span>
+        </div>
+
+        <div class="share-persona">
+          <div class="share-visual" aria-hidden="true">{{ personaVisual.symbol }}</div>
+          <div class="share-persona-copy">
+            <p class="share-persona-label">我的打工人格</p>
+            <h2 class="share-persona-title">{{ ending?.label }}</h2>
+            <p class="share-persona-name">{{ personaVisual.name }}</p>
+          </div>
+        </div>
+
+        <p v-if="ending?.punchline" class="share-punchline">“{{ ending.punchline }}”</p>
+
+        <div class="share-status-list" aria-label="状态标签">
+          <span v-for="card in endingStatCards" :key="card.key" class="share-status-tag">
+            <span>{{ card.state }}</span>
+            <small>{{ card.value }}</small>
+          </span>
+        </div>
+
+        <div class="share-card-bottom">
+          <div class="share-bottom-copy">
+            <p class="share-cta">来测测你是哪种打工人格</p>
+            <p class="share-url">47.116.6.242/career-experience</p>
+          </div>
+          <span class="share-entry-btn">进入体验馆</span>
+        </div>
+      </section>
+
+      <div class="share-actions">
+        <button type="button" class="share-save-btn" :disabled="isSavingShare" @click="saveShareCard">
+          <span>{{ isSavingShare ? '生成中...' : '保存我的打工人格' }}</span>
+          <small>{{ isSavingShare ? '正在生成分享海报' : '生成分享海报' }}</small>
+        </button>
+        <p v-if="shareSaveMessage" class="share-save-message">{{ shareSaveMessage }}</p>
+      </div>
+
+      <div class="ending-stats" aria-label="最终状态解释">
+        <article v-for="card in endingStatCards" :key="card.key" class="ending-stat-card">
+          <div class="ending-stat-head">
+            <span class="ending-stat-label">{{ card.label }}</span>
+            <span class="ending-stat-value">{{ card.value }}</span>
+          </div>
+          <p class="ending-stat-state">状态：{{ card.state }}</p>
+          <p class="ending-stat-note">{{ card.note }}</p>
+        </article>
+      </div>
+
       <div v-if="ending?.fitReason || ending?.riskReason" class="end-reflection">
         <div v-if="ending?.fitReason" class="reflection-card">
-          <span class="reflection-title">你可能适合的原因</span>
+          <span class="reflection-title">还算扛住的地方</span>
           <p>{{ ending.fitReason }}</p>
         </div>
         <div v-if="ending?.riskReason" class="reflection-card reflection-card--risk">
-          <span class="reflection-title">你可能不适合的原因</span>
+          <span class="reflection-title">扎心提示</span>
           <p>{{ ending.riskReason }}</p>
         </div>
       </div>
@@ -301,6 +542,262 @@ const atmosphereClass = computed(() => {
 
 .stats--block {
   margin: 16px 0;
+}
+
+.stats--soft {
+  opacity: 0.82;
+}
+
+.share-card {
+  margin: 18px auto 0;
+  width: min(100%, 380px);
+  padding: 18px 18px 16px;
+  border-radius: 26px;
+  background:
+    radial-gradient(circle at 16% 14%, rgba(255, 255, 255, 0.95), transparent 26%),
+    linear-gradient(160deg, #eef2ff 0%, #fdf4ff 52%, #f8fafc 100%);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  box-shadow: 0 20px 42px rgba(79, 70, 229, 0.18);
+  color: #1e1b4b;
+}
+
+.share-card-top {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.share-brand {
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.share-sub {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  text-align: right;
+}
+
+.share-persona {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 14px;
+  align-items: center;
+}
+
+.share-visual {
+  width: 96px;
+  height: 96px;
+  border-radius: 30px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 34% 24%, rgba(255, 255, 255, 0.95), transparent 30%),
+    linear-gradient(135deg, rgba(99, 102, 241, 0.34), rgba(168, 85, 247, 0.26));
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  box-shadow: 0 14px 28px rgba(79, 70, 229, 0.18);
+  font-size: 34px;
+  font-weight: 900;
+  color: #4c1d95;
+}
+
+.share-persona-label {
+  margin: 0;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 0.1em;
+  color: #64748b;
+}
+
+.share-persona-title {
+  margin: 6px 0 0;
+  font-size: 25px;
+  line-height: 1.12;
+  letter-spacing: -0.03em;
+  color: #312e81;
+}
+
+.share-persona-name {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 900;
+  color: #475569;
+}
+
+.share-punchline {
+  margin: 16px 0 0;
+  padding: 14px;
+  border-radius: 18px;
+  background: rgba(255, 255, 255, 0.76);
+  border: 1px solid rgba(99, 102, 241, 0.16);
+  font-size: 18px;
+  line-height: 1.55;
+  font-weight: 900;
+  color: #312e81;
+}
+
+.share-status-list {
+  margin-top: 12px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.share-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(148, 163, 184, 0.26);
+  font-size: 12px;
+  font-weight: 900;
+  color: #334155;
+}
+
+.share-status-tag small {
+  font-size: 10px;
+  color: #94a3b8;
+  font-variant-numeric: tabular-nums;
+}
+
+.share-card-bottom {
+  margin-top: 16px;
+  padding: 14px;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.72);
+  border-top: 1px dashed rgba(99, 102, 241, 0.24);
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  align-items: center;
+}
+
+.share-bottom-copy {
+  min-width: 0;
+}
+
+.share-cta {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.share-url {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 900;
+  color: #4f46e5;
+  word-break: break-all;
+}
+
+.share-entry-btn {
+  display: inline-flex;
+  flex: 0 0 auto;
+  padding: 9px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  color: #fff;
+  background: linear-gradient(135deg, #4f46e5, #9333ea);
+  box-shadow: 0 10px 18px rgba(79, 70, 229, 0.18);
+}
+
+.share-actions {
+  margin-top: 16px;
+  display: grid;
+  gap: 6px;
+}
+
+.share-save-btn {
+  width: 100%;
+  padding: 13px 16px 12px;
+  border: none;
+  border-radius: 16px;
+  color: white;
+  background: linear-gradient(135deg, #4f46e5, #9333ea);
+  box-shadow: 0 12px 24px rgba(79, 70, 229, 0.22);
+}
+
+.share-save-btn span,
+.share-save-btn small {
+  display: block;
+}
+
+.share-save-btn span {
+  font-size: 15px;
+  font-weight: 900;
+}
+
+.share-save-btn small {
+  margin-top: 3px;
+  font-size: 11px;
+  font-weight: 800;
+  opacity: 0.78;
+}
+
+.share-save-btn:disabled {
+  opacity: 0.7;
+}
+
+.share-save-message {
+  margin: 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 800;
+  color: #64748b;
+}
+
+.ending-stats {
+  margin: 18px 0 18px;
+  display: grid;
+  gap: 10px;
+}
+
+.ending-stat-card {
+  padding: 13px 14px;
+  border-radius: 16px;
+  background: rgba(248, 250, 252, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.28);
+}
+
+.ending-stat-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.ending-stat-label {
+  font-size: 13px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.ending-stat-value {
+  font-size: 16px;
+  font-weight: 900;
+  color: #475569;
+  font-variant-numeric: tabular-nums;
+}
+
+.ending-stat-state {
+  margin: 7px 0 0;
+  font-size: 14px;
+  font-weight: 800;
+  color: #5b21b6;
+}
+
+.ending-stat-note {
+  margin: 6px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
 }
 
 .stat-pill {
@@ -509,20 +1006,155 @@ const atmosphereClass = computed(() => {
 
 .ending {
   padding: 26px 22px 28px;
+  position: relative;
+  overflow: hidden;
+}
+
+.ending::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: 214px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.12), rgba(168, 85, 247, 0.1));
+  pointer-events: none;
+}
+
+.ending > * {
+  position: relative;
+}
+
+.end-label {
+  margin: 0;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--text-muted);
+}
+
+.ending-title {
+  margin-top: 8px;
+  font-size: 30px;
+}
+
+.persona-hero {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: 96px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+}
+
+.persona-visual {
+  position: relative;
+  width: 96px;
+  height: 96px;
+  border-radius: 28px;
+  display: grid;
+  place-items: center;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.86), transparent 34%),
+    linear-gradient(135deg, rgba(99, 102, 241, 0.26), rgba(168, 85, 247, 0.2));
+  border: 1px solid rgba(99, 102, 241, 0.22);
+  box-shadow: 0 18px 36px rgba(79, 70, 229, 0.16);
+}
+
+.persona-symbol {
+  position: relative;
+  z-index: 1;
+  width: 58px;
+  height: 58px;
+  border-radius: 999px;
+  display: grid;
+  place-items: center;
+  background: rgba(255, 255, 255, 0.84);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  color: #4c1d95;
+  font-size: 28px;
+  font-weight: 900;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
+}
+
+.persona-shadow {
+  position: absolute;
+  bottom: 14px;
+  width: 48px;
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(79, 70, 229, 0.18);
+  filter: blur(1px);
+}
+
+.persona-copy {
+  min-width: 0;
 }
 
 .end-type {
-  margin: 12px 0 0;
-  font-size: 18px;
+  margin: 8px 0 0;
+  font-size: 25px;
+  line-height: 1.18;
   font-weight: 800;
   color: #5b21b6;
 }
 
-.summary {
-  margin: 0;
-  font-size: 14px;
+.end-kicker {
+  margin: 18px 0 0;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.persona-hero .end-kicker {
+  margin-top: 0;
+}
+
+.persona-name {
+  margin: 8px 0 0;
+  font-size: 13px;
+  font-weight: 800;
+  color: #475569;
+}
+
+.end-punchline {
+  margin: 14px 0 0;
+  padding: 13px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(99, 102, 241, 0.18);
+  font-size: 15px;
+  line-height: 1.65;
+  font-weight: 800;
+  color: #312e81;
+}
+
+.persona-desc {
+  margin: 12px 0 0;
+  font-size: 13px;
   line-height: 1.65;
   color: var(--text-muted);
+}
+
+.persona-tags {
+  margin-top: 10px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+}
+
+.persona-tag {
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #4338ca;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px solid rgba(99, 102, 241, 0.16);
+}
+
+.summary {
+  margin: 16px 0 0;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--text);
 }
 
 .end-reflection {
@@ -548,7 +1180,7 @@ const atmosphereClass = computed(() => {
   margin-bottom: 6px;
   font-size: 13px;
   font-weight: 800;
-  color: var(--text);
+  color: #334155;
 }
 
 .reflection-card p {
@@ -556,6 +1188,41 @@ const atmosphereClass = computed(() => {
   font-size: 13px;
   line-height: 1.6;
   color: var(--text-muted);
+}
+
+.share-hint {
+  margin: 16px 0 0;
+  padding: 11px 12px;
+  border-radius: 999px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #4338ca;
+  background: rgba(99, 102, 241, 0.08);
+  border: 1px dashed rgba(99, 102, 241, 0.32);
+}
+
+@media (max-width: 420px) {
+  .persona-hero {
+    grid-template-columns: 82px minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .persona-visual {
+    width: 82px;
+    height: 82px;
+    border-radius: 24px;
+  }
+
+  .persona-symbol {
+    width: 50px;
+    height: 50px;
+    font-size: 24px;
+  }
+
+  .end-type {
+    font-size: 22px;
+  }
 }
 
 .end-actions {
