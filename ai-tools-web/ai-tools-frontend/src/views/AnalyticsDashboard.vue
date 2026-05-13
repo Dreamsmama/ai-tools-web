@@ -119,7 +119,7 @@ function countEventInBreakdown(events, eventName) {
 
 /**
  * 功能使用排行：在原有 submit_click 按 feature 聚合之上，
- * 置顶两行「AI 职业成长平台」「AI 时代…」对应 Hero 点击与职业测试提交（与首页文案一致）。
+ * 置顶职业模块的关键自定义事件，避免非接口型互动功能在排行中显示为 0。
  */
 const mergedFeatureRanking = computed(() => {
   if (!data.value) return []
@@ -129,6 +129,7 @@ const mergedFeatureRanking = computed(() => {
     countEventInBreakdown(bd, 'career_hero_test_click') +
     countEventInBreakdown(bd, 'career_hero_library_click')
   const careerSubmit = fu.find((x) => x.feature === 'career_test')?.count ?? 0
+  const careerExperienceStarts = countEventInBreakdown(bd, 'career_experience_start')
 
   const rows = [
     {
@@ -144,6 +145,12 @@ const mergedFeatureRanking = computed(() => {
       subtitle:
         '职业倾向测试：卷末「提交并查看结果」次数（submit_click，feature=career_test）',
       count: Number(careerSubmit) || 0,
+    },
+    {
+      key: '_ai_career_experience',
+      title: 'AI 职业体验馆',
+      subtitle: '职业互动体验：「开始上班」次数（来自埋点事件 career_experience_start）',
+      count: careerExperienceStarts,
     },
   ]
 
@@ -279,7 +286,7 @@ onMounted(() => {
     <section class="card">
       <h2 class="block-title">功能使用排行</h2>
       <p class="hint-inline">
-        前两行为职业规划模块：Hero 点击来自自定义事件汇总；职业测试来自
+        前三行为职业模块：职业成长平台与职业体验馆来自自定义事件汇总；职业测试来自
         <code>submit_click</code>。其余行仍为各功能的提交次数（与旧版排行一致）。
       </p>
       <p v-if="!data" class="empty">请先加载统计</p>
