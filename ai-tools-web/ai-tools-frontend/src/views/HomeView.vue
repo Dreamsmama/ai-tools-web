@@ -1,6 +1,7 @@
 <script setup>
 import { RouterLink } from 'vue-router'
 import CareerHeroSection from '../components/CareerHeroSection.vue'
+import WorkerPersonalityLabSection from '../components/WorkerPersonalityLabSection.vue'
 </script>
 
 <template>
@@ -9,17 +10,9 @@ import CareerHeroSection from '../components/CareerHeroSection.vue'
 
     <CareerHeroSection />
 
+    <WorkerPersonalityLabSection />
+
     <div class="tools-section">
-      <RouterLink class="tool-card-link" to="/career-experience">
-        <div class="tool-card">
-          <div class="tool-accent" aria-hidden="true" />
-          <div class="tool-row">
-            <span class="tool-title">AI 职业体验馆</span>
-            <span class="tool-tag">体验</span>
-          </div>
-          <p class="tool-desc">像打开工作聊天软件一样体验真实上班。会笑，但也会有点扎心。</p>
-        </div>
-      </RouterLink>
       <div class="section-title">
         <span class="section-dot" />场景工具
       </div>

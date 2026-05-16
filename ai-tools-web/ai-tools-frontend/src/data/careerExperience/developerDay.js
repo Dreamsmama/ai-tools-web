@@ -1,10 +1,17 @@
 /** 程序员一日体验（固定分支，不接大模型） */
 export const developerDayConfig = {
-  id: 'developer',
+  id: 'developer-ep01',
+  seriesId: 'developer',
+  episodeId: 'ep01',
+  episodeCode: 'EP01',
+  episodeLabel: 'EP01',
   title: '程序员的一天',
-  subtitle: '体验一次真实程序员工作日。线上 bug、临时需求、开会追责和生活消息，会在同一天排队找你。',
-  startCta: '开始上班',
-  endingHeadline: '你的程序员一天结束了',
+  subtitle: '今天到底是先修 bug，还是先回产品经理？线上群、临时需求和生活消息，会在同一天排队找你。',
+  startCta: '开始追剧',
+  endingHeadline: '🎬 EP01 · 收工',
+  endingSectionTitle: '本集状态',
+  endingKicker: '今天的你，更接近',
+  defaultAtmosphere: 'dev-desk',
   initialStats: {
     stress: 36,
     reputation: 50,
@@ -15,16 +22,23 @@ export const developerDayConfig = {
     {
       id: 'scene_1',
       time: '09:08',
+      sceneTitle: '线上群炸了',
+      atmosphere: 'dev-alert-desk',
+      sceneBg: '/drama/developer/scene-1.svg',
       messages: [
         {
           role: 'system',
           source: '线上群',
           text: '主管：谁来看一下支付页面？客户那边已经在群里@了，工单也标红了。',
+          tone: 'alert',
+          moment: 'ticket-red',
         },
         {
           role: 'system',
           source: '产品经理私聊',
           text: '昨晚说的那个改动，老板 11 点要看。你先推进一下，别让我一个人站在风里。',
+          tone: 'private',
+          moment: 'feishu-dot',
         },
       ],
       options: [
@@ -47,7 +61,10 @@ export const developerDayConfig = {
     },
     {
       id: 'scene_2',
-      time: '10:26',
+      time: '10:35',
+      sceneTitle: '临时会议室',
+      atmosphere: 'dev-meeting',
+      sceneBg: '/drama/developer/scene-2.svg',
       messages: [
         {
           role: 'system',
@@ -80,12 +97,17 @@ export const developerDayConfig = {
     },
     {
       id: 'scene_3',
-      time: '14:05',
+      time: '17:30',
+      sceneTitle: '工单还在标红',
+      atmosphere: 'dev-alert-desk',
+      sceneBg: '/drama/developer/scene-3.svg',
       messages: [
         {
           role: 'system',
           source: '产品经理私聊',
           text: '产品经理：你上午在修 bug 我理解，但老板刚问了，今天必须有结果。理解归理解，结果归结果。',
+          tone: 'private',
+          moment: 'voice-message',
         },
         {
           role: 'system',
@@ -113,12 +135,17 @@ export const developerDayConfig = {
     },
     {
       id: 'scene_4',
-      time: '17:46',
+      time: '20:40',
+      sceneTitle: '工位还亮着',
+      atmosphere: 'dev-night-office',
+      sceneBg: '/drama/developer/scene-4.svg',
       messages: [
         {
           role: 'system',
           source: '临时会议',
           text: '主管：客户电话打到总监那里了。现在别讲过程，我只问一句，今晚能不能交？',
+          tone: 'call',
+          moment: 'call-incoming',
         },
         {
           role: 'system',
@@ -147,16 +174,29 @@ export const developerDayConfig = {
     {
       id: 'scene_5',
       time: '21:15',
+      sceneTitle: '生活消息弹出来了',
+      atmosphere: 'dev-night-office',
+      sceneBg: '/drama/developer/scene-5.svg',
       messages: [
         {
           role: 'system',
           source: '生活消息',
-          text: '女朋友：你今天是不是又不来了？我已经把菜单翻到第三遍了。',
+          text: '女朋友：你今天是不是又不来了？我已经把菜单翻到第三遍了。你再不回，我就自己吃了。',
+          tone: 'life',
+          moment: 'phone-vibrate',
+        },
+        {
+          role: 'system',
+          source: '朋友微信',
+          text: '兄弟，说好今晚联机的，你不会又在公司修仙吧？工位灯还亮着。',
+          tone: 'life',
         },
         {
           role: 'system',
           source: '主管私聊',
           text: '今晚最好把需求一起补上，明早客户要看。辛苦一下，明天请你喝咖啡。',
+          tone: 'private',
+          moment: 'feishu-dot',
         },
       ],
       options: [
@@ -182,6 +222,8 @@ export const developerDayConfig = {
     {
       id: 'blame_risk',
       label: '成熟背锅侠型程序员',
+      episodeCoda:
+        '晚上 11:42，你终于关掉了电脑。\n\n但飞书最后一句：「明天再同步一下需求」，还是让你没敢真正下线。',
       punchline: '你不是不能拒绝，你只是每次都刚好心软。',
       visual: {
         symbol: '锅',
@@ -200,6 +242,8 @@ export const developerDayConfig = {
     {
       id: 'high_pressure',
       label: '救火队长型程序员',
+      episodeCoda:
+        '凌晨 1:17，工单终于绿了。\n\n你刚躺下，手机又震了一下——「线上好像还有点问题，能再看一眼吗？」',
       punchline: '哪里炸了，哪里就会出现你。',
       visual: {
         symbol: '火',
@@ -218,6 +262,8 @@ export const developerDayConfig = {
     {
       id: 'clear_boundary',
       label: '假装下班型程序员',
+      episodeCoda:
+        '你 19:03 准时关了电脑。\n\n群里没人@你，但你还是把飞书设成了「仅通知重要消息」——以防万一，也防自己心软。',
       punchline: '你不是不负责，你只是知道工作永远做不完。',
       visual: {
         symbol: '走',
@@ -236,6 +282,8 @@ export const developerDayConfig = {
     {
       id: 'steady_growth',
       label: '深夜补锅型程序员',
+      episodeCoda:
+        '晚上 11:42，你终于关掉了电脑。\n\n但飞书最后一句：「明天再同步一下需求」，还是让你没敢真正下线。',
       punchline: '你今天不是在写代码，你是在给白天留下的坑贴创可贴。',
       visual: {
         symbol: '夜',

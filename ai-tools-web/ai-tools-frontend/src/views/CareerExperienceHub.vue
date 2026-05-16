@@ -10,7 +10,11 @@ const FEATURE = 'career_experience'
 const items = listCareerExperienceHubItems()
 
 onMounted(() => {
-  trackEvent('career_experience_hub_view', { feature: FEATURE, page: PAGE })
+  trackEvent('career_experience_hub_view', {
+    feature: FEATURE,
+    page: PAGE,
+    props: { hub: 'career_experience' },
+  })
 })
 </script>
 
@@ -36,7 +40,7 @@ onMounted(() => {
             trackEvent('career_experience_pick', {
               feature: FEATURE,
               page: PAGE,
-              props: { experience_id: item.id },
+              props: { experience_id: item.id, hub: 'career_experience' },
             })
           "
         >

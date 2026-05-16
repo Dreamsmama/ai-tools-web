@@ -1,10 +1,17 @@
 /** HR 一日体验（固定分支，不接大模型） */
 export const hrDayConfig = {
-  id: 'hr',
+  id: 'hr-ep01',
+  seriesId: 'hr',
+  episodeId: 'ep01',
+  episodeCode: 'EP01',
+  episodeLabel: 'EP01',
   title: 'HR 的一天',
-  subtitle: '体验一次真实 HR 工作日。上面催指标，下面有情绪，中间的人还得记得自己也要吃饭。',
-  startCta: '开始上班',
-  endingHeadline: '你的 HR 一天结束了',
+  subtitle: '所有人都在找你解决问题，但没人问你累不累。指标、情绪和流程，会在同一天把你夹扁。',
+  startCta: '开始追剧',
+  endingHeadline: '🎬 EP01 · 收工',
+  endingSectionTitle: '本集状态',
+  endingKicker: '今天的你，更接近',
+  defaultAtmosphere: 'hr-office',
   initialStats: {
     stress: 38,
     reputation: 52,
@@ -15,16 +22,22 @@ export const hrDayConfig = {
     {
       id: 'scene_1',
       time: '09:12',
+      sceneTitle: '招聘群开始催人',
+      atmosphere: 'hr-inbox',
+      sceneBg: '/drama/hr/scene-1.svg',
       messages: [
         {
           role: 'system',
           source: '用人部门群',
           text: '用人部门负责人：这个岗位空了两周了，老板在看。本周不到岗，我这边真不好交代。',
+          tone: 'group',
+          moment: 'feishu-dot',
         },
         {
           role: 'system',
           source: '候选人微信',
           text: '不好意思，上午突然有事，面试能改到晚上吗？另外我手里还有一个录用通知。',
+          tone: 'private',
         },
       ],
       options: [
@@ -48,6 +61,9 @@ export const hrDayConfig = {
     {
       id: 'scene_2',
       time: '10:47',
+      sceneTitle: '面试临时崩盘',
+      atmosphere: 'hr-meeting',
+      sceneBg: '/drama/hr/scene-2.svg',
       messages: [
         {
           role: 'system',
@@ -80,12 +96,17 @@ export const hrDayConfig = {
     },
     {
       id: 'scene_3',
-      time: '14:08',
+      time: '14:20',
+      sceneTitle: '员工突然情绪崩溃',
+      atmosphere: 'hr-office',
+      sceneBg: '/drama/hr/scene-3.svg',
       messages: [
         {
           role: 'system',
           source: '员工私聊',
           text: '我真的有点撑不住了。但能不能先别让我主管知道？我不想把事情闹大。',
+          tone: 'private',
+          moment: 'phone-vibrate',
         },
         {
           role: 'system',
@@ -113,7 +134,10 @@ export const hrDayConfig = {
     },
     {
       id: 'scene_4',
-      time: '16:32',
+      time: '16:40',
+      sceneTitle: '绩效沟通会',
+      atmosphere: 'hr-meeting',
+      sceneBg: '/drama/hr/scene-4.svg',
       messages: [
         {
           role: 'system',
@@ -147,6 +171,9 @@ export const hrDayConfig = {
     {
       id: 'scene_5',
       time: '18:46',
+      sceneTitle: '名单不能外传',
+      atmosphere: 'hr-office',
+      sceneBg: '/drama/hr/scene-5.svg',
       messages: [
         {
           role: 'system',
@@ -180,16 +207,29 @@ export const hrDayConfig = {
     {
       id: 'scene_6',
       time: '20:50',
+      sceneTitle: '朋友问你为什么又加班',
+      atmosphere: 'hr-night-office',
+      sceneBg: '/drama/hr/scene-6.svg',
       messages: [
         {
           role: 'system',
           source: '生活消息',
-          text: '朋友：你是不是又加班？电影都快开场了，你已经连续放我两次鸽子了。',
+          text: '朋友：你是不是又加班？电影都快开场了，你已经连续放我两次鸽子了。我票都买了。',
+          tone: 'life',
+          moment: 'phone-vibrate',
         },
         {
           role: 'system',
           source: '招聘负责人私聊',
-          text: '候选人现在想谈薪资，你能回一下吗？他说再晚就接受另一家公司了。',
+          text: '候选人现在想谈薪资，你能回一下吗？他说再晚就接受另一家公司了。老板也在催到岗。',
+          tone: 'private',
+          moment: 'feishu-dot',
+        },
+        {
+          role: 'system',
+          source: '员工私聊',
+          text: '他又发来一句：在吗？今天聊完我感觉好一点了，谢谢你。……你还在公司吗？',
+          tone: 'private',
         },
       ],
       options: [
@@ -215,6 +255,8 @@ export const hrDayConfig = {
     {
       id: 'relationship_keeper',
       label: '组织润滑剂型 HR',
+      episodeCoda:
+        '晚上 9:51，你终于把今天的待办清到只剩一条：「回复自己」。\n\n但候选人又发来一句「在吗」，你还是点了已读。',
       punchline: '你今天不是在上班，你是在给组织补漏洞。',
       visual: {
         symbol: '补',
@@ -233,6 +275,8 @@ export const hrDayConfig = {
     {
       id: 'empathy_fatigue',
       label: '情绪垃圾桶型 HR',
+      episodeCoda:
+        '你关掉电脑的那一刻，微信还在闪。\n\n员工、候选人、用人部门——所有人都在找你，但没人问你累不累。',
       punchline: '团队觉得你很会沟通，但没人问你累不累。',
       visual: {
         symbol: '桶',
@@ -251,6 +295,8 @@ export const hrDayConfig = {
     {
       id: 'boundary_holder',
       label: '夹层求生型 HR',
+      episodeCoda:
+        '你 18:30 走出办公楼，手机静音，表情平静。\n\n你知道明天还会有人觉得「就帮个小忙」，但你至少今晚还属于自己。',
       punchline: '你不是冷漠，你只是知道有些话说早了会炸。',
       visual: {
         symbol: '夹',
@@ -269,6 +315,8 @@ export const hrDayConfig = {
     {
       id: 'organization_balancer',
       label: '微笑崩溃型 HR',
+      episodeCoda:
+        '晚上 10:18，你对着镜子练习了一下「收到」。\n\n表情很稳，内心消息已 99+。这一集，你活下来了，但下一集还没播。',
       punchline: '你脸上写着“收到”，心里写着“救命”。',
       visual: {
         symbol: '笑',

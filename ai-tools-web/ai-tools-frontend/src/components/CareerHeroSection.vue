@@ -18,6 +18,14 @@ function onHeroLibraryClick() {
   })
 }
 
+function onHeroExperienceClick() {
+  trackEvent('career_hero_experience_click', {
+    feature: 'career',
+    page: '/',
+    props: { target: '/career-experience' },
+  })
+}
+
 const careerTags = [
   '程序员',
   '产品经理',
@@ -41,7 +49,7 @@ const careerTags = [
       <span class="gradient-text">AI 时代</span>，你适合什么样的工作？
     </h1>
     <p class="career-hero-sub">
-      通过 3 分钟职业倾向测试，了解你可能感兴趣、擅长或更适合长期发展的职业方向。
+      通过 3 分钟职业倾向测试获得职业方向建议；也可进入 AI 职业体验馆感受真实上班，或浏览职业观察库。
     </p>
 
     <div class="career-hero-actions">
@@ -49,7 +57,10 @@ const careerTags = [
         开始职业测试
       </RouterLink>
       <RouterLink class="career-btn career-btn-secondary" to="/career-library" @click="onHeroLibraryClick">
-        查看职业观察库
+        职业观察库
+      </RouterLink>
+      <RouterLink class="career-btn career-btn-experience" to="/career-experience" @click="onHeroExperienceClick">
+        AI 职业体验馆
       </RouterLink>
     </div>
 
@@ -203,6 +214,20 @@ const careerTags = [
 
 .career-btn-secondary:active {
   transform: translateY(0);
+}
+
+.career-btn-experience {
+  color: #0f766e;
+  background: rgba(240, 253, 250, 0.95);
+  border: 1px solid rgba(20, 184, 166, 0.35);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.career-btn-experience:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(20, 184, 166, 0.5);
+  box-shadow: 0 8px 24px rgba(20, 184, 166, 0.12);
 }
 
 .career-tag-cloud {

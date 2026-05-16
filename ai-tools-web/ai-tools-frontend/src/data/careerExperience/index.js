@@ -1,7 +1,12 @@
 import { developerDayConfig } from './developerDay'
+import { developerIncidentNightConfig } from './developerIncidentNight'
 import { hrDayConfig } from './hrDay'
 
 const REGISTRY = {
+  'developer-ep01': developerDayConfig,
+  'developer-ep02': developerIncidentNightConfig,
+  'hr-ep01': hrDayConfig,
+  /** 职业体验馆沿用旧 id */
   developer: developerDayConfig,
   hr: hrDayConfig,
 }
@@ -10,6 +15,11 @@ const STAT_KEYS = ['stress', 'reputation', 'growth', 'mood']
 
 export function getCareerExperienceConfig(id) {
   return REGISTRY[id] ?? null
+}
+
+/** @param {string} seriesId @param {string} episodeId */
+export function getWorkerLabExperienceKey(seriesId, episodeId) {
+  return `${seriesId}-${episodeId}`
 }
 
 /** @param {Record<string, number>} base @param {Record<string, number>} delta */
@@ -32,7 +42,33 @@ export function resolveExperienceEnding(stats, endings) {
   return endings[endings.length - 1]
 }
 
-/** 体验馆首页列表（含未开放占位） */
+/** @deprecated 使用 workerLabSeries.js */
+export function listWorkerLabEpisodes() {
+  return [
+    {
+      id: 'developer-ep01',
+      episode: 1,
+      episodeLabel: 'EP01',
+      title: developerDayConfig.title,
+      tagline: developerDayConfig.subtitle,
+      posterEmoji: '💻',
+      available: true,
+      to: '/worker-lab/developer/ep01',
+    },
+    {
+      id: 'hr-ep01',
+      episode: 1,
+      episodeLabel: 'EP01',
+      title: hrDayConfig.title,
+      tagline: hrDayConfig.subtitle,
+      posterEmoji: '📋',
+      available: true,
+      to: '/worker-lab/hr/ep01',
+    },
+  ]
+}
+
+/** AI 职业体验馆 · 列表（与原体验馆一致） */
 export function listCareerExperienceHubItems() {
   return [
     {

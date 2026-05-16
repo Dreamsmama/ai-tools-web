@@ -15,6 +15,7 @@ import CareerTestPage from '../views/CareerTestPage.vue'
 import CareerLibraryPage from '../views/CareerLibraryPage.vue'
 import CareerDetailPage from '../views/CareerDetailPage.vue'
 import CareerExperienceHub from '../views/CareerExperienceHub.vue'
+import WorkerPersonalityLabHub from '../views/WorkerPersonalityLabHub.vue'
 import CareerExperiencePlay from '../views/CareerExperiencePlay.vue'
 
 const router = createRouter({
@@ -26,6 +27,16 @@ const router = createRouter({
     { path: '/career/:id', name: 'careerDetail', component: CareerDetailPage },
     { path: '/career-experience', name: 'careerExperienceHub', component: CareerExperienceHub },
     { path: '/career-experience/:careerId', name: 'careerExperiencePlay', component: CareerExperiencePlay },
+    { path: '/worker-lab', name: 'workerLabHub', component: WorkerPersonalityLabHub },
+    { path: '/worker-lab/:seriesId/:episodeId', name: 'workerLabPlay', component: CareerExperiencePlay },
+    {
+      path: '/worker-lab/:careerId',
+      redirect: (to) => {
+        const id = String(to.params.careerId || '')
+        if (id === 'developer' || id === 'hr') return { path: `/worker-lab/${id}/ep01` }
+        return { path: '/worker-lab' }
+      },
+    },
     { path: '/summary', name: 'summary', component: ChatSummary },
     { path: '/medical', name: 'medical', component: MedicalForm },
     { path: '/medical/result', name: 'medicalResult', component: MedicalResult },

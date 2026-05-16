@@ -30,7 +30,7 @@ const featureLabelMap = {
   career_test: '职业倾向测试',
   career_library: '职业观察库',
   career: '职业规划（首页 Hero）',
-  career_experience: 'AI 职业体验馆',
+  career_experience: 'AI 职业体验馆 / 打工人格实验室',
   xiaohongshu_agent: '小红书内容生产 Agent',
   model_compare: '模型优化实验 / 对比',
   memory_compare: 'AI 记忆对比',
@@ -69,6 +69,7 @@ const eventLabelMap = {
   api_fail: '接口失败',
   career_hero_test_click: '职业规划·Hero 点「开始职业测试」',
   career_hero_library_click: '职业规划·Hero 点「职业观察库」',
+  career_hero_experience_click: '职业规划·Hero 点「AI 职业体验馆」',
   career_test_result: '职业测试·生成结果',
   career_test_restart: '职业测试·重新测试',
   career_recommend_detail_click: '职业测试·从推荐进详情',
@@ -77,13 +78,13 @@ const eventLabelMap = {
   career_library_card_click: '职业观察库·点职业卡片',
   career_library_to_test_click: '职业观察库·去做测试',
   career_detail_view: '职业详情·查看',
-  career_experience_hub_view: '职业体验馆·进入首页',
-  career_experience_pick: '职业体验馆·选择可玩剧情',
-  career_experience_start: '职业体验馆·开始上班',
-  career_experience_complete: '职业体验馆·完成一局',
-  career_experience_share_save_click: '职业体验馆·点击保存打工人格',
-  career_experience_share_save_success: '职业体验馆·保存打工人格成功',
-  career_experience_share_save_fail: '职业体验馆·保存打工人格失败',
+  career_experience_hub_view: '打工人格实验室·进入首页',
+  career_experience_pick: '打工人格实验室·选择剧集',
+  career_experience_start: '打工人格实验室·开始追剧',
+  career_experience_complete: '打工人格实验室·看完一集',
+  career_experience_share_save_click: '打工人格实验室·点击保存打工人格',
+  career_experience_share_save_success: '打工人格实验室·保存打工人格成功',
+  career_experience_share_save_fail: '打工人格实验室·保存打工人格失败',
   offer_analysis_submit: 'Offer 分析·提交',
   offer_analysis_result_view: 'Offer 分析·查看结果',
   offer_analysis_copy: 'Offer 分析·复制',
@@ -153,13 +154,13 @@ const mergedFeatureRanking = computed(() => {
     },
     {
       key: '_ai_career_experience',
-      title: 'AI 职业体验馆',
-      subtitle: '职业互动体验：「开始上班」次数（来自埋点事件 career_experience_start）',
+      title: 'AI 职业体验馆 / 打工人格实验室',
+      subtitle: '职业互动体验：「开始上班/追剧」次数（来自埋点事件 career_experience_start）',
       count: careerExperienceStarts,
     },
     {
       key: '_ai_career_experience_share',
-      title: 'AI 职业体验馆·保存打工人格',
+      title: '打工人格实验室·保存打工人格',
       subtitle: `结局页「保存我的打工人格」点击次数；成功生成 ${careerExperienceShareSuccess} 次`,
       count: careerExperienceShareClicks,
     },
@@ -297,7 +298,7 @@ onMounted(() => {
     <section class="card">
       <h2 class="block-title">功能使用排行</h2>
       <p class="hint-inline">
-        前几行为职业模块：职业成长平台与职业体验馆来自自定义事件汇总；职业测试来自
+        前几行为职业模块：职业成长平台与打工人格实验室来自自定义事件汇总；职业测试来自
         <code>submit_click</code>。其余行仍为各功能的提交次数（与旧版排行一致）。
       </p>
       <p v-if="!data" class="empty">请先加载统计</p>

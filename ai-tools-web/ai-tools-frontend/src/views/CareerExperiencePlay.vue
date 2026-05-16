@@ -8,12 +8,54 @@ import {
   resolveExperienceEnding,
 } from '../data/careerExperience/index.js'
 import { trackEvent } from '../analytics.js'
+import {
+  DRAMA_MOMENTS,
+  dramaDelay,
+  formatSceneChapter,
+  inferMessageTone,
+  inferTypingName,
+} from '../lib/dramaPlayback.js'
+import { isSoundMuted, playDramaSound, setSoundMuted, unlockDramaAudio } from '../lib/dramaSounds.js'
+import { getSceneVisual } from '../data/careerExperience/sceneVisuals.js'
+import SceneCineIcon from '../components/SceneCineIcon.vue'
 
 const route = useRoute()
 const router = useRouter()
 
-const careerId = computed(() => String(route.params.careerId || ''))
-const config = computed(() => getCareerExperienceConfig(careerId.value))
+const isWorkerLab = computed(() => route.path.startsWith('/worker-lab'))
+const seriesId = computed(() => String(route.params.seriesId || route.params.careerId || ''))
+const episodeId = computed(() => String(route.params.episodeId || ''))
+const experienceKey = computed(() => {
+  if (isWorkerLab.value) {
+    if (episodeId.value) return `${seriesId.value}-${episodeId.value}`
+    return seriesId.value
+  }
+  return String(route.params.careerId || '')
+})
+const config = computed(() => getCareerExperienceConfig(experienceKey.value))
+/** @deprecated 追踪与兼容 */
+const careerId = computed(() => experienceKey.value)
+const hubPath = computed(() => (isWorkerLab.value ? '/worker-lab' : '/career-experience'))
+const hubLabel = computed(() => (isWorkerLab.value ? '打工人格实验室' : '职业体验馆'))
+const shareBrand = computed(() => (isWorkerLab.value ? '打工人格实验室' : 'AI 职业体验馆'))
+const shareSub = computed(() =>
+  isWorkerLab.value ? '互动职场连续剧 · 一集一个崩溃' : '体验一次真实职业的一天',
+)
+const shareCta = computed(() =>
+  isWorkerLab.value ? '来追一集打工连续剧' : '来体验一次真实职业的一天',
+)
+const shareUrl = computed(() =>
+  isWorkerLab.value ? '47.116.6.242/worker-lab' : '47.116.6.242/career-experience',
+)
+const startCtaLabel = computed(() => (isWorkerLab.value ? config.value?.startCta : '开始上班') ?? '开始上班')
+const endingHeadline = computed(() => {
+  const c = config.value
+  if (!c) return ''
+  if (isWorkerLab.value) return c.endingHeadline
+  if (c.id === 'developer') return '你的程序员一天结束了'
+  if (c.id === 'hr') return '你的 HR 一天结束了'
+  return `你的${c.title}结束了`
+})
 
 /** @type {import('vue').Ref<'intro' | 'playing' | 'ended'>} */
 const phase = ref('intro')
@@ -33,6 +75,19 @@ const chatRoot = ref(/** @type {HTMLElement | null} */ (null))
 const shareCardRoot = ref(/** @type {HTMLElement | null} */ (null))
 const isSavingShare = ref(false)
 const shareSaveMessage = ref('')
+const soundMuted = ref(isSoundMuted())
+/** @type {import('vue').Ref<{ name: string } | null>} */
+const typingIndicator = ref(null)
+const sceneRevealing = ref(false)
+const activeAtmosphere = ref('')
+const activeSceneBg = ref('')
+const sceneBgVisible = ref(false)
+/** 消息逐条播放时当前场景（选项出现前 currentSceneId 为空） */
+const revealingSceneId = ref(/** @type {string | null} */ (null))
+/** @type {import('vue').Ref<string | null>} */
+const activeMoment = ref(null)
+let revealGeneration = 0
+let momentTimer = /** @type {ReturnType<typeof setTimeout> | null} */ (null)
 let keySeq = 0
 function nextKey() {
   keySeq += 1
@@ -59,18 +114,52 @@ watch(
   () => scrollChatToEnd(),
 )
 
+function cancelReveal() {
+  revealGeneration += 1
+  typingIndicator.value = null
+  sceneRevealing.value = false
+  if (momentTimer) {
+    clearTimeout(momentTimer)
+    momentTimer = null
+  }
+  activeMoment.value = null
+}
+
 function resetRun() {
   const c = config.value
   if (!c) return
+  cancelReveal()
   phase.value = 'intro'
   thread.value = []
   ending.value = null
   shareSaveMessage.value = ''
   currentSceneId.value = null
+  revealingSceneId.value = null
+  activeAtmosphere.value = ''
+  activeSceneBg.value = ''
+  sceneBgVisible.value = false
   stats.value = { ...c.initialStats }
 }
 
-function pushScene(sceneId) {
+function applySceneAmbience(scene) {
+  if (!scene || !isWorkerLab.value) return
+  activeAtmosphere.value = scene.atmosphere || config.value?.defaultAtmosphere || ''
+  const nextBg = scene.sceneBg || ''
+  sceneBgVisible.value = false
+  activeSceneBg.value = nextBg
+  if (nextBg) {
+    nextTick(() => {
+      sceneBgVisible.value = true
+    })
+  }
+}
+
+function toggleSoundMuted() {
+  soundMuted.value = !soundMuted.value
+  setSoundMuted(soundMuted.value)
+}
+
+function pushSceneInstant(sceneId) {
   const c = config.value
   if (!c) return
   const scene = c.scenes.find((s) => s.id === sceneId)
@@ -83,9 +172,74 @@ function pushScene(sceneId) {
   scrollChatToEnd()
 }
 
+async function revealScene(sceneId) {
+  const c = config.value
+  if (!c) return
+  const scene = c.scenes.find((s) => s.id === sceneId)
+  if (!scene) return
+
+  if (!isWorkerLab.value) {
+    pushSceneInstant(sceneId)
+    return
+  }
+
+  const gen = ++revealGeneration
+  sceneRevealing.value = true
+  currentSceneId.value = null
+  revealingSceneId.value = sceneId
+  typingIndicator.value = null
+  applySceneAmbience(scene)
+
+  // 场景标题只在顶部环境条展示，避免聊天区重复
+  await dramaDelay(400, 600)
+  if (gen !== revealGeneration) return
+
+  for (const m of scene.messages) {
+    const tone = m.tone || inferMessageTone(m.source)
+    typingIndicator.value = { name: inferTypingName(m.source) }
+    await dramaDelay(520, 1100)
+    if (gen !== revealGeneration) return
+
+    typingIndicator.value = null
+
+    if (m.moment) {
+      activeMoment.value = m.moment
+      if (momentTimer) clearTimeout(momentTimer)
+      momentTimer = setTimeout(() => {
+        if (gen === revealGeneration) activeMoment.value = null
+        momentTimer = null
+      }, 2000)
+    }
+
+    thread.value.push({
+      key: nextKey(),
+      role: 'system',
+      source: m.source,
+      text: m.text,
+      tone,
+      enter: true,
+    })
+    playDramaSound(tone, soundMuted.value)
+    scrollChatToEnd()
+    await dramaDelay(820, 1180)
+    if (gen !== revealGeneration) return
+  }
+
+  typingIndicator.value = null
+  sceneRevealing.value = false
+  currentSceneId.value = sceneId
+  revealingSceneId.value = null
+  scrollChatToEnd()
+}
+
+function pushScene(sceneId) {
+  revealScene(sceneId)
+}
+
 function startWork() {
   const c = config.value
   if (!c) return
+  if (isWorkerLab.value) unlockDramaAudio()
   trackEvent('career_experience_start', {
     feature: 'career_experience',
     page: route.path,
@@ -97,6 +251,13 @@ function startWork() {
   shareSaveMessage.value = ''
   stats.value = { ...c.initialStats }
   currentSceneId.value = null
+  if (isWorkerLab.value) {
+    const first = c.scenes.find((s) => s.id === 'scene_1')
+    applySceneAmbience(first)
+  } else {
+    activeAtmosphere.value = ''
+    activeSceneBg.value = ''
+  }
   pushScene('scene_1')
 }
 
@@ -105,9 +266,10 @@ function startWork() {
  */
 function onChoose(opt) {
   const c = config.value
-  if (!c || phase.value !== 'playing' || !currentScene.value) return
+  if (!c || phase.value !== 'playing' || !currentScene.value || sceneRevealing.value) return
 
   thread.value.push({ key: nextKey(), role: 'user', text: opt.text })
+  scrollChatToEnd()
   stats.value = applyStatEffects(stats.value, opt.effects)
 
   if (opt.nextSceneId === '__end__') {
@@ -188,13 +350,13 @@ async function saveShareCard() {
 
 onMounted(() => {
   if (!config.value) {
-    router.replace('/career-experience')
+    router.replace(hubPath.value)
   }
 })
 
-watch(careerId, () => {
+watch(experienceKey, () => {
   if (!config.value) {
-    router.replace('/career-experience')
+    router.replace(hubPath.value)
     return
   }
   resetRun()
@@ -204,7 +366,7 @@ const statRows = computed(() => {
   const s = stats.value
   return [
     { key: 'stress', label: '压力值', value: s.stress },
-    { key: 'reputation', label: '职业评价', value: s.reputation },
+    { key: 'reputation', label: '靠谱度', value: s.reputation },
     { key: 'growth', label: '成长值', value: s.growth },
     { key: 'mood', label: '情绪值', value: s.mood },
   ]
@@ -315,7 +477,7 @@ const endingStatCards = computed(() => {
   return [
     { key: 'stress', label: '压力值', value: s.stress },
     { key: 'mood', label: '情绪值', value: s.mood },
-    { key: 'reputation', label: '职业评价', value: s.reputation },
+    { key: 'reputation', label: '靠谱度', value: s.reputation },
     { key: 'growth', label: '成长值', value: s.growth },
   ].map((row) => ({ ...row, ...describeEndingStat(row.key, row.value) }))
 })
@@ -332,17 +494,54 @@ const personaVisual = computed(() => {
 })
 
 const atmosphereClass = computed(() => {
+  // 连续剧模式用 page--drama + 场景氛围，不再叠加 page--heavy（否则会冲掉深色气泡文字色）
+  if (isWorkerLab.value) return ''
   const s = stats.value
   if (s.stress >= 72 || s.mood <= 36) return 'page--heavy'
   if (s.stress >= 58 || s.mood <= 46) return 'page--tense'
   return ''
 })
+
+const activeScene = computed(() => {
+  const c = config.value
+  const sid = currentSceneId.value || revealingSceneId.value
+  if (!c || !sid) return null
+  return c.scenes.find((s) => s.id === sid) ?? null
+})
+
+const currentSceneChapter = computed(() => {
+  if (activeScene.value) return formatSceneChapter(activeScene.value)
+  return ''
+})
+
+const activeSceneVisual = computed(() => {
+  const c = config.value
+  const scene = activeScene.value
+  if (!c || !scene) return { label: '工位现场', tint: 'default' }
+  return getSceneVisual(c.id, scene.id)
+})
+
+const showSceneCine = computed(() => isWorkerLab.value && !!activeScene.value)
 </script>
 
 <template>
-  <div v-if="config" class="page" :class="atmosphereClass">
+  <div
+    v-if="config"
+    class="page"
+    :class="[atmosphereClass, isWorkerLab && phase === 'playing' ? `page--drama page--${activeAtmosphere}` : '']"
+  >
     <div class="top-bar">
-      <RouterLink class="back" to="/career-experience">← 职业体验馆</RouterLink>
+      <RouterLink class="back" :to="hubPath">← {{ hubLabel }}</RouterLink>
+      <button
+        v-if="isWorkerLab && phase === 'playing'"
+        type="button"
+        class="sound-toggle"
+        :aria-pressed="soundMuted"
+        :title="soundMuted ? '开启消息提示音' : '关闭消息提示音'"
+        @click="toggleSoundMuted"
+      >
+        {{ soundMuted ? '🔇' : '🔊' }}
+      </button>
     </div>
 
     <!-- 进行中：顶部状态 -->
@@ -363,22 +562,67 @@ const atmosphereClass = computed(() => {
 
     <!-- 开场 -->
     <section v-if="phase === 'intro'" class="intro card-surface">
+      <p v-if="isWorkerLab && config.episodeCode" class="intro-episode">
+        🎬 {{ config.episodeCode }} · {{ config.title }}
+      </p>
       <h1 class="h1">{{ config.title }}</h1>
       <p class="sub">{{ config.subtitle }}</p>
-      <button type="button" class="btn-start btn-gradient" @click="startWork">{{ config.startCta }}</button>
+      <button type="button" class="btn-start btn-gradient" @click="startWork">{{ startCtaLabel }}</button>
     </section>
 
     <!-- 剧情 -->
-    <section v-else-if="phase === 'playing'" class="play">
-      <div ref="chatRoot" class="chat" role="log" aria-live="polite">
+    <section v-else-if="phase === 'playing'" class="play" :class="{ 'play--drama': isWorkerLab }">
+      <div
+        v-if="showSceneCine"
+        class="scene-cine"
+        :class="[
+          `scene-cine--${activeSceneVisual.tint}`,
+          { 'scene-cine--revealing': sceneRevealing },
+        ]"
+        role="img"
+        :aria-label="currentSceneChapter || '当前场景氛围'"
+      >
+        <div class="scene-cine-art" aria-hidden="true">
+          <span class="scene-cine-glow" />
+          <SceneCineIcon :name="activeSceneVisual.tint" />
+        </div>
+        <div class="scene-cine-copy">
+          <span class="scene-cine-tag">{{ activeSceneVisual.label }}</span>
+          <p v-if="currentSceneChapter" class="scene-cine-title">{{ currentSceneChapter }}</p>
+        </div>
+      </div>
+
+      <div
+        v-if="isWorkerLab && activeMoment && DRAMA_MOMENTS[activeMoment]"
+        class="drama-moment"
+        :class="`drama-moment--${activeMoment}`"
+        aria-live="assertive"
+      >
+        <span class="drama-moment-emoji">{{ DRAMA_MOMENTS[activeMoment].emoji }}</span>
+        <span>{{ DRAMA_MOMENTS[activeMoment].label }}</span>
+      </div>
+
+      <div ref="chatRoot" class="chat" :class="{ 'chat--drama': isWorkerLab }" role="log" aria-live="polite">
         <div
           v-for="msg in thread"
           :key="msg.key"
           class="msg-row"
-          :class="msg.role === 'user' ? 'msg-row--user' : 'msg-row--sys'"
+          :class="{
+            'msg-row--user': msg.role === 'user',
+            'msg-row--sys': msg.role === 'system',
+            'msg-row--scene': msg.role === 'scene',
+          }"
         >
-          <div v-if="msg.role === 'time'" class="bubble bubble--time">{{ msg.text }}</div>
-          <div v-else-if="msg.role === 'system'" class="bubble bubble--sys">
+          <div v-if="msg.role === 'scene'" class="scene-chapter">{{ msg.text }}</div>
+          <div v-else-if="msg.role === 'time'" class="bubble bubble--time">{{ msg.text }}</div>
+          <div
+            v-else-if="msg.role === 'system'"
+            class="bubble bubble--sys"
+            :class="[
+              msg.tone ? `bubble--tone-${msg.tone}` : '',
+              msg.enter && isWorkerLab ? 'bubble--enter' : '',
+            ]"
+          >
             <span v-if="msg.source" class="bubble-source">【{{ msg.source }}】</span>
             <span>{{ msg.text }}</span>
           </div>
@@ -387,9 +631,18 @@ const atmosphereClass = computed(() => {
             <span>{{ msg.text }}</span>
           </div>
         </div>
+
+        <div v-if="isWorkerLab && typingIndicator" class="typing-row" aria-live="polite">
+          <div class="typing-bubble">
+            <span class="typing-dots" aria-hidden="true"><i /><i /><i /></span>
+            <span>{{ typingIndicator.name }}正在输入…</span>
+          </div>
+        </div>
       </div>
 
-      <div v-if="currentScene" class="opts">
+      <p v-if="isWorkerLab && sceneRevealing" class="scene-wait">消息陆续到达中…</p>
+
+      <div v-if="currentScene && !sceneRevealing" class="opts">
         <button
           v-for="(opt, idx) in currentScene.options"
           :key="idx"
@@ -404,8 +657,14 @@ const atmosphereClass = computed(() => {
 
     <!-- 结局 -->
     <section v-else class="ending card-surface">
-      <p class="end-label">{{ config.endingHeadline }}</p>
-      <h1 class="h1 ending-title">打工人格</h1>
+      <p class="end-label">{{ endingHeadline }}</p>
+      <p v-if="isWorkerLab && ending?.episodeCoda" class="episode-coda">{{ ending.episodeCoda }}</p>
+
+      <div v-if="isWorkerLab" class="persona-divider" aria-hidden="true">
+        <span>{{ config?.endingRevealLabel ?? '本集结算' }}</span>
+      </div>
+
+      <h1 class="h1 ending-title">{{ config?.endingSectionTitle ?? '打工人格' }}</h1>
 
       <div class="persona-hero">
         <div class="persona-visual" aria-hidden="true">
@@ -413,7 +672,7 @@ const atmosphereClass = computed(() => {
           <span class="persona-shadow" />
         </div>
         <div class="persona-copy">
-          <p class="end-kicker">你的结果是</p>
+          <p class="end-kicker">{{ config?.endingKicker ?? (isWorkerLab ? '今晚的你，更接近' : '你的结果是') }}</p>
           <p class="end-type">{{ ending?.label }}</p>
           <p class="persona-name">{{ personaVisual.name }}</p>
         </div>
@@ -429,8 +688,8 @@ const atmosphereClass = computed(() => {
 
       <section ref="shareCardRoot" class="share-card" aria-label="打工人格分享卡片">
         <div class="share-card-top">
-          <span class="share-brand">AI 职业体验馆</span>
-          <span class="share-sub">体验一次真实职业的一天</span>
+          <span class="share-brand">{{ shareBrand }}</span>
+          <span class="share-sub">{{ shareSub }}</span>
         </div>
 
         <div class="share-persona">
@@ -453,10 +712,10 @@ const atmosphereClass = computed(() => {
 
         <div class="share-card-bottom">
           <div class="share-bottom-copy">
-            <p class="share-cta">来测测你是哪种打工人格</p>
-            <p class="share-url">47.116.6.242/career-experience</p>
+            <p class="share-cta">{{ shareCta }}</p>
+            <p class="share-url">{{ shareUrl }}</p>
           </div>
-          <span class="share-entry-btn">进入体验馆</span>
+          <span class="share-entry-btn">{{ isWorkerLab ? '进入实验室' : '进入体验馆' }}</span>
         </div>
       </section>
 
@@ -481,18 +740,20 @@ const atmosphereClass = computed(() => {
 
       <div v-if="ending?.fitReason || ending?.riskReason" class="end-reflection">
         <div v-if="ending?.fitReason" class="reflection-card">
-          <span class="reflection-title">还算扛住的地方</span>
+          <span class="reflection-title">{{ isWorkerLab ? '本集高光' : '还算扛住的地方' }}</span>
           <p>{{ ending.fitReason }}</p>
         </div>
         <div v-if="ending?.riskReason" class="reflection-card reflection-card--risk">
-          <span class="reflection-title">扎心提示</span>
+          <span class="reflection-title">{{ isWorkerLab ? '本集扎心' : '扎心提示' }}</span>
           <p>{{ ending.riskReason }}</p>
         </div>
       </div>
 
       <div class="end-actions">
-        <button type="button" class="btn-secondary" @click="playAgain">再体验一次</button>
-        <RouterLink class="btn-outline" to="/career-experience">返回职业体验馆</RouterLink>
+        <button type="button" class="btn-secondary" @click="playAgain">
+          {{ isWorkerLab ? '再看一集' : '再体验一次' }}
+        </button>
+        <RouterLink class="btn-outline" :to="hubPath">返回{{ hubLabel }}</RouterLink>
       </div>
     </section>
   </div>
@@ -519,8 +780,99 @@ const atmosphereClass = computed(() => {
   background: linear-gradient(180deg, rgba(226, 232, 240, 0.5), rgba(203, 213, 225, 0.28));
 }
 
+.page--drama {
+  position: relative;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+.page--drama::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.15;
+  background-size: cover;
+  background-position: center top;
+  transition: background-image 0.6s ease, opacity 0.4s ease;
+}
+
+.page--dev-desk::before {
+  background-image:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.55), rgba(15, 23, 42, 0.92)),
+    radial-gradient(ellipse at 70% 20%, rgba(99, 102, 241, 0.35), transparent 50%),
+    radial-gradient(ellipse at 20% 80%, rgba(30, 58, 95, 0.5), transparent 45%);
+}
+
+.page--dev-alert-desk::before {
+  background-image:
+    linear-gradient(180deg, rgba(69, 10, 10, 0.35), rgba(15, 23, 42, 0.92)),
+    radial-gradient(ellipse at 60% 30%, rgba(239, 68, 68, 0.28), transparent 55%);
+}
+
+.page--dev-meeting::before {
+  background-image:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.94)),
+    radial-gradient(ellipse at 50% 0%, rgba(148, 163, 184, 0.25), transparent 60%);
+}
+
+.page--dev-night-office::before {
+  background-image:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.35), rgba(2, 6, 23, 0.96)),
+    radial-gradient(ellipse at 80% 70%, rgba(59, 130, 246, 0.22), transparent 50%);
+}
+
+.page--hr-office::before,
+.page--hr-inbox::before {
+  background-image:
+    linear-gradient(180deg, rgba(30, 27, 75, 0.45), rgba(15, 23, 42, 0.94)),
+    radial-gradient(ellipse at 40% 30%, rgba(168, 85, 247, 0.2), transparent 55%);
+}
+
+.page--hr-meeting::before {
+  background-image:
+    linear-gradient(180deg, rgba(49, 46, 129, 0.4), rgba(15, 23, 42, 0.95)),
+    radial-gradient(ellipse at 50% 10%, rgba(244, 114, 182, 0.15), transparent 50%);
+}
+
+.page--hr-night-office::before {
+  background-image:
+    linear-gradient(180deg, rgba(15, 23, 42, 0.4), rgba(2, 6, 23, 0.97)),
+    radial-gradient(ellipse at 30% 80%, rgba(251, 113, 133, 0.18), transparent 45%);
+}
+
+.page--drama > * {
+  position: relative;
+  z-index: 1;
+}
+
 .top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-bottom: 12px;
+}
+
+.sound-toggle {
+  flex-shrink: 0;
+  padding: 6px 10px;
+  border-radius: 999px;
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(15, 23, 42, 0.6);
+  color: #e2e8f0;
+  font-size: 16px;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.page--drama .back {
+  color: rgba(203, 213, 225, 0.85);
+}
+
+.page--drama .back:hover {
+  color: #fda4af;
 }
 
 .back {
@@ -873,6 +1225,352 @@ const atmosphereClass = computed(() => {
   min-height: 0;
 }
 
+.play--drama {
+  position: relative;
+  isolation: isolate;
+}
+
+/* 聊天区上方：场景镜头条（语义图标 + 标签） */
+.scene-cine {
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0;
+  display: flex;
+  align-items: stretch;
+  min-height: 88px;
+  margin-bottom: 12px;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1px solid rgba(148, 163, 184, 0.28);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.4);
+  transition:
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
+}
+
+.scene-cine--revealing {
+  box-shadow: 0 10px 32px rgba(99, 102, 241, 0.22);
+}
+
+.scene-cine--alert {
+  background: linear-gradient(120deg, #7f1d1d 0%, #312e81 55%, #0f172a 100%);
+}
+
+.scene-cine--meeting {
+  background: linear-gradient(120deg, #4338ca 0%, #1e3a5f 50%, #0f172a 100%);
+}
+
+.scene-cine--chaos {
+  background: linear-gradient(120deg, #b91c1c 0%, #4c1d95 50%, #0f172a 100%);
+}
+
+.scene-cine--night {
+  background: linear-gradient(120deg, #0369a1 0%, #1e1b4b 55%, #020617 100%);
+}
+
+.scene-cine--life {
+  background: linear-gradient(120deg, #9d174d 0%, #4c1d95 50%, #0f172a 100%);
+}
+
+.scene-cine--inbox {
+  background: linear-gradient(120deg, #6d28d9 0%, #334155 50%, #0f172a 100%);
+}
+
+.scene-cine--emotion {
+  background: linear-gradient(120deg, #7e22ce 0%, #4338ca 50%, #0f172a 100%);
+}
+
+.scene-cine--pressure {
+  background: linear-gradient(120deg, #475569 0%, #1e293b 55%, #020617 100%);
+}
+
+.scene-cine--default {
+  background: linear-gradient(120deg, #475569 0%, #1e293b 55%, #0f172a 100%);
+}
+
+.scene-cine-art {
+  position: relative;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 96px;
+  min-height: 88px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.28);
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.scene-cine-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 50% 45%, rgba(255, 255, 255, 0.22) 0%, transparent 62%);
+  pointer-events: none;
+}
+
+.scene-cine-art :deep(.scene-cine-icon) {
+  position: relative;
+  z-index: 1;
+}
+
+.scene-cine-copy {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 6px;
+  padding: 14px 16px;
+  min-width: 0;
+}
+
+.scene-cine-tag {
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: none;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.45);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
+
+.scene-cine-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: 0.02em;
+  color: #f8fafc;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.5);
+}
+
+.drama-moment {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  z-index: 4;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: rgba(15, 23, 42, 0.88);
+  border: 1px solid rgba(251, 113, 133, 0.45);
+  color: #fecdd3;
+  font-size: 13px;
+  font-weight: 700;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35);
+  animation: moment-pop 0.35s ease;
+}
+
+.drama-moment--ticket-red {
+  border-color: rgba(239, 68, 68, 0.55);
+  color: #fecaca;
+}
+
+.drama-moment--call-incoming {
+  animation: moment-shake 0.5s ease, moment-pop 0.35s ease;
+}
+
+.drama-moment-emoji {
+  font-size: 18px;
+}
+
+@keyframes moment-pop {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes moment-shake {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  25% {
+    transform: translateX(-4px);
+  }
+  75% {
+    transform: translateX(4px);
+  }
+}
+
+.scene-chapter {
+  width: 100%;
+  margin: 10px 0 16px;
+  padding: 10px 14px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #fecdd3;
+  background: rgba(15, 23, 42, 0.72);
+  border: 1px solid rgba(251, 113, 133, 0.28);
+  border-radius: 999px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  animation: chapter-in 0.45s ease;
+}
+
+@keyframes chapter-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.scene-wait {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: rgba(203, 213, 225, 0.7);
+  text-align: center;
+}
+
+.typing-row {
+  display: flex;
+  justify-content: flex-start;
+  margin-bottom: 8px;
+}
+
+.typing-bubble {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 14px;
+  background: rgba(30, 41, 59, 0.85);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  font-size: 12px;
+  color: rgba(203, 213, 225, 0.9);
+}
+
+.typing-dots {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.typing-dots i {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #94a3b8;
+  animation: typing-bounce 1s infinite ease-in-out;
+}
+
+.typing-dots i:nth-child(2) {
+  animation-delay: 0.15s;
+}
+
+.typing-dots i:nth-child(3) {
+  animation-delay: 0.3s;
+}
+
+@keyframes typing-bounce {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.45;
+  }
+  40% {
+    transform: translateY(-4px);
+    opacity: 1;
+  }
+}
+
+.chat--drama {
+  position: relative;
+  z-index: 2;
+  background: rgba(15, 23, 42, 0.58);
+  border-color: rgba(148, 163, 184, 0.28);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35);
+}
+
+.play--drama .opts {
+  position: relative;
+  z-index: 2;
+}
+
+.page--drama .bubble--sys {
+  background: rgba(30, 41, 59, 0.92);
+  border-color: rgba(148, 163, 184, 0.32);
+  color: #e2e8f0;
+}
+
+.page--drama .bubble-source {
+  color: #94a3b8;
+}
+
+.bubble--tone-life {
+  border-color: rgba(251, 191, 36, 0.35);
+  box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.12);
+}
+
+.bubble--tone-private {
+  border-color: rgba(96, 165, 250, 0.35);
+}
+
+.bubble--tone-alert {
+  border-color: rgba(248, 113, 113, 0.45);
+  background: rgba(69, 10, 10, 0.35);
+}
+
+.bubble--tone-call {
+  border-color: rgba(52, 211, 153, 0.35);
+}
+
+.bubble--enter {
+  animation: bubble-in 0.32s ease;
+}
+
+@keyframes bubble-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.page--drama .stat-pill {
+  background: rgba(15, 23, 42, 0.55);
+  border-color: rgba(148, 163, 184, 0.28);
+  color: #e2e8f0;
+}
+
+.page--drama .stat-l {
+  color: rgba(203, 213, 225, 0.75);
+}
+
+.page--drama .stat-v {
+  color: #f8fafc;
+}
+
+.page--drama .opt-btn {
+  background: rgba(30, 41, 59, 0.9);
+  border-color: rgba(148, 163, 184, 0.35);
+  color: #f1f5f9;
+}
+
+.page--drama .opt-btn:hover {
+  border-color: rgba(251, 113, 133, 0.5);
+  background: rgba(49, 46, 129, 0.55);
+}
+
 .chat {
   flex: 1;
   min-height: 220px;
@@ -959,6 +1657,42 @@ const atmosphereClass = computed(() => {
   border-color: rgba(79, 70, 229, 0.22);
 }
 
+/* 连续剧模式优先：避免与 page--heavy 叠加后气泡变白、文字变浅 */
+.page--drama.page--heavy .chat,
+.page--drama.page--tense .chat,
+.page--drama .chat.chat--drama {
+  background: rgba(15, 23, 42, 0.72);
+  border-color: rgba(148, 163, 184, 0.28);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.page--drama.page--heavy .bubble--sys,
+.page--drama.page--tense .bubble--sys,
+.page--drama .bubble--sys {
+  background: rgba(30, 41, 59, 0.92);
+  border-color: rgba(148, 163, 184, 0.32);
+  color: #e2e8f0;
+}
+
+.page--drama.page--heavy .bubble-source,
+.page--drama.page--tense .bubble-source,
+.page--drama .bubble-source {
+  color: #94a3b8;
+}
+
+.page--drama.page--heavy .bubble--user,
+.page--drama.page--tense .bubble--user,
+.page--drama .bubble--user {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.35), rgba(168, 85, 247, 0.28));
+  border-color: rgba(129, 140, 248, 0.45);
+  color: #f8fafc;
+}
+
+.page--drama.page--heavy .bubble-source--user,
+.page--drama .bubble-source--user {
+  color: #c4b5fd;
+}
+
 .bubble--time {
   margin: 8px auto 4px;
   max-width: 100%;
@@ -1023,11 +1757,47 @@ const atmosphereClass = computed(() => {
   position: relative;
 }
 
+.intro-episode {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #7c3aed;
+  letter-spacing: 0.04em;
+}
+
 .end-label {
   margin: 0;
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 800;
+  color: #5b21b6;
+}
+
+.episode-coda {
+  margin: 14px 0 0;
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--text);
+  white-space: pre-line;
+}
+
+.persona-divider {
+  margin: 22px 0 4px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
   color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.persona-divider::before,
+.persona-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(99, 102, 241, 0.35), transparent);
 }
 
 .ending-title {
