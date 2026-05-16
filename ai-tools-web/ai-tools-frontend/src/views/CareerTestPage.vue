@@ -1,12 +1,23 @@
 <script setup>
 import { computed, ref } from 'vue'
-import { RouterLink } from 'vue-router'
+import { RouterLink, useRoute } from 'vue-router'
 import { trackApiSuccess, trackEvent, trackSubmit } from '../analytics.js'
 import { careerTestQuestions, DIMENSION_ORDER, dimensionLabels } from '../data/careerTestQuestions'
 import { buildTestResult } from '../lib/careerTestEngine'
+import { buildGaokaoTestResult } from '../lib/gaokaoTestEngine'
 
-const PAGE_PATH = '/career-test'
-const FEATURE = 'career_test'
+const props = defineProps({
+  testMode: { type: String, default: 'career' },
+})
+
+const route = useRoute()
+const isGaokaoMode = computed(
+  () => props.testMode === 'gaokao' || route.path === '/gaokao/test' || route.query.mode === 'gaokao',
+)
+
+const PAGE_PATH = computed(() => (isGaokaoMode.value ? '/gaokao/test' : '/career-test'))
+const FEATURE = computed(() => (isGaokaoMode.value ? 'gaokao_test' : 'career_test'))
+const backPath = computed(() => (isGaokaoMode.value ? '/gaokao' : '/'))
 
 const phase = ref(/** @type {'quiz'|'result'} */ ('quiz'))
 const currentIndex = ref(0)
@@ -46,13 +57,15 @@ function goNext() {
 function submitQuiz() {
   if (!allAnswered.value) return
   const started = Date.now()
-  const eventId = trackSubmit(FEATURE, PAGE_PATH)
-  result.value = buildTestResult(answers.value)
+  const eventId = trackSubmit(FEATURE.value, PAGE_PATH.value)
+  result.value = isGaokaoMode.value
+    ? buildGaokaoTestResult(answers.value)
+    : buildTestResult(answers.value)
   phase.value = 'result'
-  trackApiSuccess(FEATURE, PAGE_PATH, eventId, Date.now() - started)
-  trackEvent('career_test_result', {
-    feature: FEATURE,
-    page: PAGE_PATH,
+  trackApiSuccess(FEATURE.value, PAGE_PATH.value, eventId, Date.now() - started)
+  trackEvent(isGaokaoMode.value ? 'gaokao_test_result' : 'career_test_result', {
+    feature: FEATURE.value,
+    page: PAGE_PATH.value,
     props: {
       primary: result.value.primaryLabel,
       secondary: result.value.secondaryLabel,
@@ -61,8 +74,14 @@ function submitQuiz() {
   })
 }
 
+/** @type {import('vue').ComputedRef<any>} */
+const gaokaoResult = computed(() => (isGaokaoMode.value && result.value?.mode === 'gaokao' ? result.value : null))
+
 function restart() {
-  trackEvent('career_test_restart', { feature: FEATURE, page: PAGE_PATH })
+  trackEvent(isGaokaoMode.value ? 'gaokao_test_restart' : 'career_test_restart', {
+    feature: FEATURE.value,
+    page: PAGE_PATH.value,
+  })
   phase.value = 'quiz'
   currentIndex.value = 0
   answers.value = careerTestQuestions.map(() => null)
@@ -71,26 +90,38 @@ function restart() {
 
 function onRecommendDetailClick(careerId) {
   trackEvent('career_recommend_detail_click', {
-    feature: FEATURE,
-    page: PAGE_PATH,
+    feature: FEATURE.value,
+    page: PAGE_PATH.value,
     props: { career_id: careerId },
   })
 }
 
 function onResultToLibraryClick() {
-  trackEvent('career_result_library_click', { feature: FEATURE, page: PAGE_PATH })
+  trackEvent('career_result_library_click', { feature: FEATURE.value, page: PAGE_PATH.value })
+}
+
+function aiRiskLabel(level) {
+  if (level === 'high') return '偏高'
+  if (level === 'low') return '偏低'
+  return '中等'
 }
 </script>
 
 <template>
   <div class="page">
-    <RouterLink class="back" to="/">← 返回首页</RouterLink>
+    <RouterLink class="back" :to="backPath">← {{ isGaokaoMode ? '返回高考生专区' : '返回首页' }}</RouterLink>
 
     <template v-if="phase === 'quiz'">
       <header class="intro card">
-        <p class="kicker">职业倾向测试</p>
+        <p class="kicker">{{ isGaokaoMode ? '🎓 高考 / 专业方向测试' : '职业倾向测试' }}</p>
         <h1 class="h1">共 {{ total }} 题，约 3 分钟</h1>
-        <p class="sub">每题单选，需选择后才能进入下一题；可随时返回修改。</p>
+        <p class="sub">
+          {{
+            isGaokaoMode
+              ? '复用职业倾向题库，从性格与做事风格推导适合的专业与职业方向（非志愿填报）。'
+              : '每题单选，需选择后才能进入下一题；可随时返回修改。'
+          }}
+        </p>
       </header>
 
       <section class="card quiz-card">
@@ -145,9 +176,9 @@ function onResultToLibraryClick() {
 
     <template v-else-if="result">
       <section class="card result-hero">
-        <p class="kicker">测试结果</p>
-        <h1 class="h1">你的职业倾向画像</h1>
-        <p class="sub">以下为本地规则根据你的选择生成，仅供参考，不构成职业或心理诊断。</p>
+        <p class="kicker">{{ isGaokaoMode ? '专业方向测试结果' : '测试结果' }}</p>
+        <h1 class="h1">{{ isGaokaoMode ? '你的专业与职业方向画像' : '你的职业倾向画像' }}</h1>
+        <p class="sub">以下为本地规则根据你的选择生成，仅供参考，不构成职业、心理诊断或志愿填报建议。</p>
       </section>
 
       <section class="card">
@@ -164,12 +195,79 @@ function onResultToLibraryClick() {
       </section>
 
       <section class="card highlight">
-        <h2 class="h2">主要职业倾向</h2>
+        <h2 class="h2">{{ isGaokaoMode ? '主要倾向维度' : '主要职业倾向' }}</h2>
         <p class="lead">{{ result.primaryLabel }}</p>
-        <h2 class="h2 mt">第二职业倾向</h2>
+        <h2 class="h2 mt">{{ isGaokaoMode ? '次要倾向维度' : '第二职业倾向' }}</h2>
         <p class="lead">{{ result.secondaryLabel }}</p>
         <p v-if="result.blended" class="blend-note">前两项得分接近，推荐列表已为你做混合匹配。</p>
       </section>
+
+      <template v-if="gaokaoResult">
+        <section class="card highlight highlight--gaokao">
+          <h2 class="h2">推荐专业 Top 5</h2>
+          <ul class="major-list">
+            <li v-for="(m, i) in gaokaoResult.recommendedMajors" :key="m.id" class="major-item">
+              <span class="major-rank">{{ i + 1 }}</span>
+              <div>
+                <h3 class="major-name">{{ m.name }}</h3>
+                <p class="major-line"><strong>未来方向：</strong>{{ m.futureDirection }}</p>
+                <p class="major-line">
+                  <strong>AI 风险：</strong>
+                  <span class="risk-pill" :class="`risk-pill--${m.aiRiskLevel}`">
+                    {{ aiRiskLabel(m.aiRiskLevel) }}
+                  </span>
+                  {{ m.aiRisk }}
+                </p>
+                <p v-if="m.caution" class="major-caution">{{ m.caution }}</p>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <section class="card">
+          <h2 class="h2">不建议专业</h2>
+          <ul class="avoid-list">
+            <li v-for="m in gaokaoResult.notRecommendedMajors" :key="m.id" class="avoid-item">
+              <span class="avoid-name">{{ m.name }}</span>
+              <span class="avoid-reason">{{ m.reason }}</span>
+            </li>
+          </ul>
+        </section>
+
+        <section class="card">
+          <h2 class="h2">专业 / 行业未来方向</h2>
+          <p v-for="(line, idx) in gaokaoResult.industryDirections" :key="idx" class="para">{{ line }}</p>
+        </section>
+
+        <section class="card">
+          <h2 class="h2">AI 时代风险分析</h2>
+          <p class="para">{{ gaokaoResult.aiEraAnalysis.summary }}</p>
+          <ul class="ai-risk-list">
+            <li v-for="r in gaokaoResult.aiEraAnalysis.risks" :key="r.major" class="ai-risk-item">
+              <span class="ai-risk-major">{{ r.major }}</span>
+              <span class="risk-pill" :class="`risk-pill--${r.level}`">{{ aiRiskLabel(r.level) }}</span>
+              <p class="ai-risk-text">{{ r.text }}</p>
+            </li>
+          </ul>
+          <p class="para muted">{{ gaokaoResult.aiEraAnalysis.highRiskNote }}</p>
+        </section>
+
+        <section class="card">
+          <h2 class="h2">对应职业发展方向</h2>
+          <div class="career-chips">
+            <RouterLink
+              v-for="p in gaokaoResult.careerPaths"
+              :key="p.careerId"
+              class="career-chip"
+              :to="`/career/${p.careerId}`"
+              @click="onRecommendDetailClick(p.careerId)"
+            >
+              {{ p.careerName }}
+              <small v-if="p.majorName">· 来自 {{ p.majorName }}</small>
+            </RouterLink>
+          </div>
+        </section>
+      </template>
 
       <section class="card">
         <h2 class="h2">你可能喜欢的工作方式</h2>
@@ -181,7 +279,7 @@ function onResultToLibraryClick() {
         <p class="para">{{ result.unsuitableText }}</p>
       </section>
 
-      <section class="card">
+      <section v-if="!isGaokaoMode" class="card">
         <h2 class="h2">推荐职业 Top 5</h2>
         <ul class="rec-list">
           <li v-for="(r, i) in result.recommendations" :key="r.id" class="rec-item">
@@ -204,7 +302,8 @@ function onResultToLibraryClick() {
 
       <div class="footer-actions">
         <button type="button" class="btn-outline-block" @click="restart">重新测试</button>
-        <RouterLink class="btn-outline-block" to="/career-library" @click="onResultToLibraryClick">
+        <RouterLink v-if="isGaokaoMode" class="btn-outline-block" to="/gaokao">返回高考生专区</RouterLink>
+        <RouterLink v-else class="btn-outline-block" to="/career-library" @click="onResultToLibraryClick">
           进入职业观察库
         </RouterLink>
       </div>
@@ -566,5 +665,166 @@ function onResultToLibraryClick() {
 
 .btn-outline-block:hover {
   transform: translateY(-1px);
+}
+
+.highlight--gaokao {
+  background: linear-gradient(135deg, rgba(224, 242, 254, 0.95), rgba(237, 233, 254, 0.9));
+}
+
+.major-list,
+.avoid-list,
+.ai-risk-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.major-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.2);
+}
+
+.major-item:first-child {
+  border-top: none;
+  padding-top: 0;
+}
+
+.major-rank {
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 800;
+  color: #0891b2;
+  background: rgba(6, 182, 212, 0.12);
+}
+
+.major-name {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.major-line {
+  margin: 0 0 8px;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.major-caution {
+  margin: 0;
+  font-size: 12px;
+  color: #b45309;
+  line-height: 1.5;
+}
+
+.avoid-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 10px 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.avoid-item:first-child {
+  border-top: none;
+}
+
+.avoid-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.avoid-reason {
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.risk-pill {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.risk-pill--low {
+  color: #047857;
+  background: rgba(209, 250, 229, 0.9);
+}
+
+.risk-pill--medium {
+  color: #b45309;
+  background: rgba(254, 243, 199, 0.9);
+}
+
+.risk-pill--high {
+  color: #b91c1c;
+  background: rgba(254, 226, 226, 0.9);
+}
+
+.ai-risk-item {
+  padding: 12px 0;
+  border-top: 1px solid rgba(148, 163, 184, 0.15);
+}
+
+.ai-risk-item:first-child {
+  border-top: none;
+}
+
+.ai-risk-major {
+  font-size: 14px;
+  font-weight: 700;
+  margin-right: 8px;
+}
+
+.ai-risk-text {
+  margin: 8px 0 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.para.muted {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.career-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.career-chip {
+  display: inline-flex;
+  flex-direction: column;
+  padding: 10px 14px;
+  border-radius: 12px;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 700;
+  color: #5b21b6;
+  background: rgba(99, 102, 241, 0.1);
+  border: 1px solid rgba(99, 102, 241, 0.22);
+}
+
+.career-chip small {
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 500;
+  color: var(--text-muted);
 }
 </style>

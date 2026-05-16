@@ -2,11 +2,14 @@
 import { RouterLink } from 'vue-router'
 import CareerHeroSection from '../components/CareerHeroSection.vue'
 import WorkerPersonalityLabSection from '../components/WorkerPersonalityLabSection.vue'
+import GaokaoZoneSection from '../components/GaokaoZoneSection.vue'
 </script>
 
 <template>
   <div class="page">
     <div class="brand-badge">AI 工具台</div>
+
+    <GaokaoZoneSection />
 
     <CareerHeroSection />
 

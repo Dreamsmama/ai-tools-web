@@ -25,11 +25,19 @@ onMounted(() => {
     <header class="head">
       <p class="kicker">互动体验</p>
       <h1 class="h1">AI 职业体验馆</h1>
-      <p class="sub">像打开工作聊天软件一样，体验一个职业真实又荒诞的一天</p>
+      <p class="sub">体验「已经上班以后」真实又荒诞的一天——职场人视角，不是校园视角。</p>
     </header>
 
-    <p class="hint">这不是职业测试。你只是在一天里不断收到消息，然后在没有完美答案的情况下，选一个没那么崩的。</p>
+    <p class="hint">这不是职业测试。你只是在工作消息里，选一个没那么崩的。</p>
 
+    <RouterLink class="gaokao-banner" to="/gaokao">
+      <span class="gaokao-banner-kicker">🎓 高考生专区</span>
+      <span class="gaokao-banner-title">想体验「学这个专业以后」？</span>
+      <span class="gaokao-banner-sub">法学 / 金融 / 医学等专业在读视角，与下方职场体验不同 ›</span>
+    </RouterLink>
+
+    <h2 class="section-h2">职场一日体验</h2>
+    <p class="section-sub">程序员、律师、医生、金融从业者……已执业或在职的某一天。</p>
     <ul class="list" role="list">
       <li v-for="item in items" :key="item.id" class="li">
         <RouterLink
@@ -40,7 +48,7 @@ onMounted(() => {
             trackEvent('career_experience_pick', {
               feature: FEATURE,
               page: PAGE,
-              props: { experience_id: item.id, hub: 'career_experience' },
+              props: { experience_id: item.id, hub: 'career_workplace' },
             })
           "
         >
@@ -108,7 +116,7 @@ onMounted(() => {
 }
 
 .hint {
-  margin: 0 4px 20px;
+  margin: 0 4px 16px;
   padding: 12px 14px;
   border-radius: var(--radius-sm);
   background: rgba(99, 102, 241, 0.08);
@@ -116,6 +124,55 @@ onMounted(() => {
   font-size: 13px;
   color: var(--text-muted);
   line-height: 1.55;
+}
+
+.gaokao-banner {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 0 4px 20px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  text-decoration: none;
+  color: inherit;
+  background: linear-gradient(135deg, rgba(224, 242, 254, 0.9), rgba(237, 233, 254, 0.85));
+  border: 1px solid rgba(6, 182, 212, 0.3);
+  transition: transform var(--transition);
+}
+
+.gaokao-banner:hover {
+  transform: translateY(-2px);
+}
+
+.gaokao-banner-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  color: #0891b2;
+}
+
+.gaokao-banner-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.gaokao-banner-sub {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.45;
+}
+
+.section-h2 {
+  margin: 0 4px 6px;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.section-sub {
+  margin: 0 4px 12px;
+  font-size: 13px;
+  color: var(--text-muted);
 }
 
 .list {

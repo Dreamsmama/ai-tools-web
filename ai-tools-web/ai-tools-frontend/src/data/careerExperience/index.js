@@ -1,14 +1,27 @@
 import { developerDayConfig } from './developerDay'
 import { developerIncidentNightConfig } from './developerIncidentNight'
 import { hrDayConfig } from './hrDay'
+import { lawStudentDayConfig } from './lawStudentDay'
+import { financeStudentDayConfig } from './financeStudentDay'
+import { medicineStudentDayConfig } from './medicineStudentDay'
+import { lawyerDayConfig } from './lawyerDay'
+import { doctorDayConfig } from './doctorDay'
+import { financePractitionerDayConfig } from './financePractitionerDay'
 
 const REGISTRY = {
   'developer-ep01': developerDayConfig,
   'developer-ep02': developerIncidentNightConfig,
   'hr-ep01': hrDayConfig,
-  /** 职业体验馆沿用旧 id */
+  /** 职业体验馆 · 职场一日 */
   developer: developerDayConfig,
   hr: hrDayConfig,
+  lawyer: lawyerDayConfig,
+  doctor: doctorDayConfig,
+  'finance-practitioner': financePractitionerDayConfig,
+  /** 高考生专区 · 学这个专业以后（与职场版剧情不同） */
+  'major-law': lawStudentDayConfig,
+  'major-finance': financeStudentDayConfig,
+  'major-medicine': medicineStudentDayConfig,
 }
 
 const STAT_KEYS = ['stress', 'reputation', 'growth', 'mood']
@@ -68,15 +81,43 @@ export function listWorkerLabEpisodes() {
   ]
 }
 
-/** AI 职业体验馆 · 列表（与原体验馆一致） */
+/** AI 职业体验馆 · 职场人一日（与高考「学专业以后」分开） */
 export function listCareerExperienceHubItems() {
   return [
     {
       id: 'developer',
       title: '程序员的一天',
-      subtitle: '内测',
+      subtitle: '可体验',
       available: true,
       to: '/career-experience/developer',
+    },
+    {
+      id: 'hr',
+      title: 'HR 的一天',
+      subtitle: '可体验',
+      available: true,
+      to: '/career-experience/hr',
+    },
+    {
+      id: 'lawyer',
+      title: '律师的一天',
+      subtitle: '可体验',
+      available: true,
+      to: '/career-experience/lawyer',
+    },
+    {
+      id: 'doctor',
+      title: '医生的一天',
+      subtitle: '可体验',
+      available: true,
+      to: '/career-experience/doctor',
+    },
+    {
+      id: 'finance-practitioner',
+      title: '金融从业者的一天',
+      subtitle: '可体验',
+      available: true,
+      to: '/career-experience/finance-practitioner',
     },
     {
       id: 'pm',
@@ -84,13 +125,6 @@ export function listCareerExperienceHubItems() {
       subtitle: '开发中',
       available: false,
       to: '',
-    },
-    {
-      id: 'hr',
-      title: 'HR 的一天',
-      subtitle: '内测',
-      available: true,
-      to: '/career-experience/hr',
     },
   ]
 }

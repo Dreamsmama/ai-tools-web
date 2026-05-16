@@ -17,12 +17,22 @@ import CareerDetailPage from '../views/CareerDetailPage.vue'
 import CareerExperienceHub from '../views/CareerExperienceHub.vue'
 import WorkerPersonalityLabHub from '../views/WorkerPersonalityLabHub.vue'
 import CareerExperiencePlay from '../views/CareerExperiencePlay.vue'
+import GaokaoZonePage from '../views/GaokaoZonePage.vue'
+import GaokaoHotTopicPage from '../views/GaokaoHotTopicPage.vue'
 
 const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'home', component: HomeView },
     { path: '/career-test', name: 'careerTest', component: CareerTestPage },
+    { path: '/gaokao', name: 'gaokaoZone', component: GaokaoZonePage },
+    { path: '/gaokao/topics/:slug', name: 'gaokaoHotTopic', component: GaokaoHotTopicPage },
+    {
+      path: '/gaokao/test',
+      name: 'gaokaoTest',
+      component: CareerTestPage,
+      props: { testMode: 'gaokao' },
+    },
     { path: '/career-library', name: 'careerLibrary', component: CareerLibraryPage },
     { path: '/career/:id', name: 'careerDetail', component: CareerDetailPage },
     { path: '/career-experience', name: 'careerExperienceHub', component: CareerExperienceHub },

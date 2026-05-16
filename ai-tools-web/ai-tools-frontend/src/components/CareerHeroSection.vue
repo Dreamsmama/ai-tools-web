@@ -1,6 +1,9 @@
 <script setup>
 import { RouterLink } from 'vue-router'
+import { homeCareerTags } from '../data/homeCareerTags.js'
 import { trackEvent } from '../analytics.js'
+
+const careerTags = homeCareerTags
 
 function onHeroTestClick() {
   trackEvent('career_hero_test_click', {
@@ -26,16 +29,13 @@ function onHeroExperienceClick() {
   })
 }
 
-const careerTags = [
-  '程序员',
-  '产品经理',
-  'HR',
-  '测试工程师',
-  'AI应用开发',
-  '运营',
-  '数据分析',
-  '销售',
-]
+function onHeroGaokaoClick() {
+  trackEvent('career_hero_gaokao_click', {
+    feature: 'gaokao',
+    page: '/',
+    props: { target: '/gaokao' },
+  })
+}
 </script>
 
 <template>
@@ -46,10 +46,10 @@ const careerTags = [
 
     <p class="career-hero-kicker">AI 职业成长平台</p>
     <h1 id="career-hero-title" class="career-hero-title">
-      <span class="gradient-text">AI 时代</span>，你适合什么样的工作？
+      <span class="gradient-text">AI 时代</span>，你适合什么专业和职业？
     </h1>
     <p class="career-hero-sub">
-      通过 3 分钟职业倾向测试获得职业方向建议；也可进入 AI 职业体验馆感受真实上班，或浏览职业观察库。
+      通过 3 分钟职业倾向测试，获得适合你的专业方向、职业建议与未来发展分析。
     </p>
 
     <div class="career-hero-actions">
@@ -61,6 +61,9 @@ const careerTags = [
       </RouterLink>
       <RouterLink class="career-btn career-btn-experience" to="/career-experience" @click="onHeroExperienceClick">
         AI 职业体验馆
+      </RouterLink>
+      <RouterLink class="career-btn career-btn-gaokao" to="/gaokao" @click="onHeroGaokaoClick">
+        高考生专区
       </RouterLink>
     </div>
 
@@ -230,15 +233,38 @@ const careerTags = [
   box-shadow: 0 8px 24px rgba(20, 184, 166, 0.12);
 }
 
+.career-btn-gaokao {
+  color: #0e7490;
+  background: rgba(224, 242, 254, 0.95);
+  border: 1px solid rgba(6, 182, 212, 0.35);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+
+.career-btn-gaokao:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.98);
+  border-color: rgba(6, 182, 212, 0.5);
+  box-shadow: 0 8px 24px rgba(6, 182, 212, 0.12);
+}
+
 .career-tag-cloud {
   position: relative;
   display: flex;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.career-tag-cloud::-webkit-scrollbar {
+  display: none;
 }
 
 .career-tag {
   display: inline-block;
+  flex-shrink: 0;
   padding: 6px 12px;
   font-size: 12px;
   font-weight: 600;

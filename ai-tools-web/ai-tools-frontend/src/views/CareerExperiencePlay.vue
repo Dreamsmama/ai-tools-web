@@ -35,8 +35,17 @@ const experienceKey = computed(() => {
 const config = computed(() => getCareerExperienceConfig(experienceKey.value))
 /** @deprecated 追踪与兼容 */
 const careerId = computed(() => experienceKey.value)
-const hubPath = computed(() => (isWorkerLab.value ? '/worker-lab' : '/career-experience'))
-const hubLabel = computed(() => (isWorkerLab.value ? '打工人格实验室' : '职业体验馆'))
+const isGaokaoMajor = computed(() => String(experienceKey.value || '').startsWith('major-'))
+const hubPath = computed(() => {
+  if (isWorkerLab.value) return '/worker-lab'
+  if (isGaokaoMajor.value) return '/gaokao'
+  return '/career-experience'
+})
+const hubLabel = computed(() => {
+  if (isWorkerLab.value) return '打工人格实验室'
+  if (isGaokaoMajor.value) return '高考生专区'
+  return '职业体验馆'
+})
 const shareBrand = computed(() => (isWorkerLab.value ? '打工人格实验室' : 'AI 职业体验馆'))
 const shareSub = computed(() =>
   isWorkerLab.value ? '互动职场连续剧 · 一集一个崩溃' : '体验一次真实职业的一天',
