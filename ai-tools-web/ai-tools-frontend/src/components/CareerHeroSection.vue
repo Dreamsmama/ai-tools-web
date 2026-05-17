@@ -3,6 +3,15 @@ import { RouterLink } from 'vue-router'
 import { homeCareerTags } from '../data/homeCareerTags.js'
 import { trackEvent } from '../analytics.js'
 
+const props = defineProps({
+  /** product: 产品首页主 Hero；full: 工具库页完整按钮组 */
+  variant: {
+    type: String,
+    default: 'full',
+    validator: (v) => ['product', 'full'].includes(v),
+  },
+})
+
 const careerTags = homeCareerTags
 
 function onHeroTestClick() {
@@ -44,27 +53,47 @@ function onHeroGaokaoClick() {
     <div class="career-hero-glow career-hero-glow-b" aria-hidden="true" />
     <div class="career-hero-grid" aria-hidden="true" />
 
-    <p class="career-hero-kicker">AI 职业成长平台</p>
+    <p class="career-hero-kicker">AI 职场成长平台</p>
     <h1 id="career-hero-title" class="career-hero-title">
-      <span class="gradient-text">AI 时代</span>，你适合什么专业和职业？
+      <template v-if="variant === 'product'">
+        <span class="gradient-text">AI 时代</span>，你适合什么职业与人生方向？
+      </template>
+      <template v-else>
+        <span class="gradient-text">AI 时代</span>，你适合什么专业和职业？
+      </template>
     </h1>
     <p class="career-hero-sub">
-      通过 3 分钟职业倾向测试，获得适合你的专业方向、职业建议与未来发展分析。
+      <template v-if="variant === 'product'">
+        通过 3 分钟职业倾向测试，找到适合你的专业方向、职业建议与未来成长路线。
+      </template>
+      <template v-else>
+        通过 3 分钟职业倾向测试，获得适合你的专业方向、职业建议与未来发展分析。
+      </template>
     </p>
 
-    <div class="career-hero-actions">
+    <div class="career-hero-actions" :class="{ 'career-hero-actions--product': variant === 'product' }">
       <RouterLink class="career-btn career-btn-primary btn-gradient" to="/career-test" @click="onHeroTestClick">
         开始职业测试
       </RouterLink>
-      <RouterLink class="career-btn career-btn-secondary" to="/career-library" @click="onHeroLibraryClick">
-        职业观察库
+      <RouterLink
+        v-if="variant === 'product'"
+        class="career-btn career-btn-gaokao"
+        to="/gaokao"
+        @click="onHeroGaokaoClick"
+      >
+        进入高考生专区
       </RouterLink>
-      <RouterLink class="career-btn career-btn-experience" to="/career-experience" @click="onHeroExperienceClick">
-        AI 职业体验馆
-      </RouterLink>
-      <RouterLink class="career-btn career-btn-gaokao" to="/gaokao" @click="onHeroGaokaoClick">
-        高考生专区
-      </RouterLink>
+      <template v-else>
+        <RouterLink class="career-btn career-btn-secondary" to="/career-library" @click="onHeroLibraryClick">
+          职业观察库
+        </RouterLink>
+        <RouterLink class="career-btn career-btn-experience" to="/career-experience" @click="onHeroExperienceClick">
+          AI 职业体验馆
+        </RouterLink>
+        <RouterLink class="career-btn career-btn-gaokao" to="/gaokao" @click="onHeroGaokaoClick">
+          高考生专区
+        </RouterLink>
+      </template>
     </div>
 
     <div class="career-tag-cloud" role="list" aria-label="热门职业方向">
@@ -174,6 +203,14 @@ function onHeroGaokaoClick() {
     flex-direction: row;
     flex-wrap: wrap;
     align-items: stretch;
+  }
+
+  .career-hero-actions--product .career-btn-primary {
+    flex: 1.2;
+  }
+
+  .career-hero-actions--product .career-btn-gaokao {
+    flex: 1;
   }
 }
 

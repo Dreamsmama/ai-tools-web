@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import HomeView from '../views/HomeView.vue'
+import ToolsListView from '../views/ToolsListView.vue'
 import ChatSummary from '../views/ChatSummary.vue'
 import MedicalForm from '../views/MedicalForm.vue'
 import MedicalResult from '../views/MedicalResult.vue'
@@ -26,6 +27,7 @@ const router = createRouter({
   history: createWebHistory(),
   routes: [
     { path: '/', name: 'home', component: HomeView },
+    { path: '/tools', name: 'toolsList', component: ToolsListView },
     { path: '/career-test', name: 'careerTest', component: CareerTestPage },
     { path: '/gaokao', name: 'gaokaoZone', component: GaokaoZonePage },
     { path: '/gaokao/topics/:slug', name: 'gaokaoHotTopic', component: GaokaoHotTopicPage },

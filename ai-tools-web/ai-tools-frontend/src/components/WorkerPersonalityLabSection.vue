@@ -25,9 +25,9 @@ function onEpisodeClick(seriesId, episode) {
     <div class="lab-glow lab-glow-b" aria-hidden="true" />
 
     <header class="lab-head">
-      <p class="lab-kicker">🎭 打工人格实验室</p>
+      <p class="lab-kicker">🎭 打工人体验实验室</p>
       <h2 id="worker-lab-title" class="lab-title">像追剧一样，体验真实又荒诞的打工人生</h2>
-      <p class="lab-sub">按系列追更：程序员、HR……一集一集看消息怎么把人逼到墙角。</p>
+      <p class="lab-sub">程序员、HR、产品经理……一集一集看清职场里的真实处境。</p>
     </header>
 
     <div v-for="series in seriesList" :key="series.id" class="series-block">
@@ -67,7 +67,7 @@ function onEpisodeClick(seriesId, episode) {
       </ul>
     </div>
 
-    <RouterLink class="lab-more" to="/worker-lab">查看全部剧集 ›</RouterLink>
+    <RouterLink class="lab-more" to="/worker-lab">查看更多剧集 ›</RouterLink>
   </section>
 </template>
 
