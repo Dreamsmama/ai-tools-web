@@ -10,7 +10,20 @@ import re
 from ast import literal_eval
 from typing import Any, Dict, List, Optional
 
-from app.schemas import OfferDecisionData, OfferOptionInsight, PrepareConsultData, SummaryData
+from app.schemas import (
+    EveningLazyFallback,
+    EveningPlanData,
+    EveningPlanItem,
+    InterestExplorerData,
+    InterestExplorerItem,
+    InterestExplorerLazyFallback,
+    InterestExplorerPersonality,
+    InterestExplorerWeekItem,
+    OfferDecisionData,
+    OfferOptionInsight,
+    PrepareConsultData,
+    SummaryData,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -348,3 +361,215 @@ def parse_prepare_model_output(raw: str) -> PrepareConsultData:
         if data.summary or data.questions or data.notes:
             return data
     return fallback_prepare_data(raw)
+
+
+def dict_to_evening_plan_data(obj: Dict[str, Any]) -> EveningPlanData:
+    def _list(key: str, limit: int) -> List[str]:
+        raw = obj.get(key)
+        return [str(x).strip() for x in raw if str(x).strip()][:limit] if isinstance(raw, list) else []
+
+    plans_raw = obj.get("plans")
+    plans: List[EveningPlanItem] = []
+    if isinstance(plans_raw, list):
+        for it in plans_raw:
+            if not isinstance(it, dict):
+                continue
+            actions_raw = it.get("actions")
+            actions = (
+                [str(x).strip() for x in actions_raw if str(x).strip()]
+                if isinstance(actions_raw, list)
+                else []
+            )
+            fit_raw = it.get("fit_score", 3)
+            try:
+                fit_score = int(fit_raw)
+            except (TypeError, ValueError):
+                fit_score = 3
+            plans.append(
+                EveningPlanItem(
+                    plan_type=str(it.get("plan_type") or "").strip(),
+                    title=str(it.get("title") or "").strip(),
+                    reason=str(it.get("reason") or "").strip(),
+                    actions=actions[:5],
+                    cost=str(it.get("cost") or "").strip(),
+                    duration=str(it.get("duration") or "").strip(),
+                    fit_score=fit_score,
+                )
+            )
+
+    lazy_raw = obj.get("lazy_fallback")
+    lazy = EveningLazyFallback()
+    if isinstance(lazy_raw, dict):
+        lazy = EveningLazyFallback(
+            title=str(lazy_raw.get("title") or "").strip(),
+            description=str(lazy_raw.get("description") or "").strip(),
+        )
+
+    return EveningPlanData(
+        mode=str(obj.get("mode") or "").strip(),
+        plans=plans[:3],
+        avoid=_list("avoid", 3),
+        lazy_fallback=lazy,
+        tomorrow_tips=_list("tomorrow_tips", 2),
+    )
+
+
+def fallback_evening_plan_data(raw: str) -> EveningPlanData:
+    text = (raw or "").strip()
+    lines = lines_from_plain_text(text, max_lines=24)
+    if not lines:
+        lines = ["（未解析到模型正文，请重试）"]
+    return EveningPlanData(
+        mode=lines[0][:40] if lines else "低消耗恢复型",
+        plans=[
+            EveningPlanItem(
+                plan_type="方案一：吃什么",
+                title=lines[1] if len(lines) > 1 else "简单热食",
+                reason=lines[2] if len(lines) > 2 else "先填饱肚子，别折腾。",
+                actions=lines[3:5] or ["点一份外卖或下楼买热食"],
+                cost="约 30-80 元",
+                duration="约 30 分钟",
+                fit_score=4,
+            )
+        ],
+        avoid=lines[5:8] if len(lines) > 5 else ["别硬撑社交", "别熬太晚"],
+        lazy_fallback=EveningLazyFallback(
+            title="躺平也行",
+            description=text[:300] if text else "今晚允许低电量模式。",
+        ),
+        tomorrow_tips=lines[8:10] if len(lines) > 8 else ["早点睡"],
+    )
+
+
+def parse_evening_plan_model_output(raw: str) -> EveningPlanData:
+    obj = try_parse_json_object(raw)
+    if obj is not None:
+        data = dict_to_evening_plan_data(obj)
+        if data.mode or data.plans:
+            return data
+    return fallback_evening_plan_data(raw)
+
+
+def _norm_level(v: Any, default: str = "低") -> str:
+    s = str(v or "").strip()
+    if s in ("低", "中", "高"):
+        return s
+    low = s.lower()
+    if low in ("low", "l"):
+        return "低"
+    if low in ("medium", "mid", "m", "中"):
+        return "中"
+    if low in ("high", "h"):
+        return "高"
+    return default
+
+
+def dict_to_interest_explorer_data(obj: Dict[str, Any]) -> InterestExplorerData:
+    def _list(key: str, limit: int) -> List[str]:
+        raw = obj.get(key)
+        return [str(x).strip() for x in raw if str(x).strip()][:limit] if isinstance(raw, list) else []
+
+    personality_raw = obj.get("personality")
+    personality = InterestExplorerPersonality()
+    if isinstance(personality_raw, dict):
+        personality = InterestExplorerPersonality(
+            type_title=str(personality_raw.get("type_title") or "").strip(),
+            analysis=str(personality_raw.get("analysis") or "").strip(),
+            why_past_failed=str(personality_raw.get("why_past_failed") or "").strip(),
+        )
+
+    interests: List[InterestExplorerItem] = []
+    interests_raw = obj.get("interests")
+    if isinstance(interests_raw, list):
+        for it in interests_raw:
+            if not isinstance(it, dict):
+                continue
+            try:
+                difficulty = int(it.get("difficulty", 3))
+            except (TypeError, ValueError):
+                difficulty = 3
+            difficulty = min(5, max(1, difficulty))
+            interests.append(
+                InterestExplorerItem(
+                    name=str(it.get("name") or "").strip(),
+                    why_fit=str(it.get("why_fit") or "").strip(),
+                    difficulty=difficulty,
+                    cost_level=_norm_level(it.get("cost_level")),
+                    social_level=_norm_level(it.get("social_level")),
+                    long_term=str(it.get("long_term") or "").strip(),
+                    best_time=str(it.get("best_time") or "").strip(),
+                    starter_tip=str(it.get("starter_tip") or "").strip(),
+                )
+            )
+
+    week_plan: List[InterestExplorerWeekItem] = []
+    week_raw = obj.get("week_plan")
+    if isinstance(week_raw, list):
+        for it in week_raw:
+            if not isinstance(it, dict):
+                continue
+            week_plan.append(
+                InterestExplorerWeekItem(
+                    day=str(it.get("day") or "").strip(),
+                    activity=str(it.get("activity") or "").strip(),
+                )
+            )
+
+    lazy_raw = obj.get("lazy_fallback")
+    lazy = InterestExplorerLazyFallback()
+    if isinstance(lazy_raw, dict):
+        lazy = InterestExplorerLazyFallback(
+            title=str(lazy_raw.get("title") or "").strip(),
+            description=str(lazy_raw.get("description") or "").strip(),
+        )
+
+    return InterestExplorerData(
+        personality=personality,
+        interests=interests[:5],
+        avoid=_list("avoid", 3),
+        week_plan=week_plan[:4],
+        lazy_fallback=lazy,
+    )
+
+
+def fallback_interest_explorer_data(raw: str) -> InterestExplorerData:
+    text = (raw or "").strip()
+    lines = lines_from_plain_text(text, max_lines=30)
+    if not lines:
+        lines = ["（未解析到模型正文，请重试）"]
+    return InterestExplorerData(
+        personality=InterestExplorerPersonality(
+            type_title=lines[0][:30] if lines else "安静探索型",
+            analysis=lines[1] if len(lines) > 1 else "你更适合低压力、能慢慢进入状态的兴趣。",
+            why_past_failed=lines[2] if len(lines) > 2 else "以前可能选错了强度和社交成本。",
+        ),
+        interests=[
+            InterestExplorerItem(
+                name=lines[3] if len(lines) > 3 else "阅读",
+                why_fit="门槛低，适合先找回节奏。",
+                difficulty=2,
+                cost_level="低",
+                social_level="低",
+                long_term="适合长期坚持",
+                best_time="睡前或周末",
+                starter_tip="从一本薄书或一篇短文开始，别定太高目标。",
+            )
+        ],
+        avoid=lines[4:7] if len(lines) > 4 else ["高强度社交型俱乐部", "需要大量装备的极限运动"],
+        week_plan=[
+            InterestExplorerWeekItem(day="周末", activity="选一件最小的事试 30 分钟")
+        ],
+        lazy_fallback=InterestExplorerLazyFallback(
+            title="今晚先别逼自己",
+            description=text[:280] if text else "出门散步 15 分钟也算开始。",
+        ),
+    )
+
+
+def parse_interest_explorer_model_output(raw: str) -> InterestExplorerData:
+    obj = try_parse_json_object(raw)
+    if obj is not None:
+        data = dict_to_interest_explorer_data(obj)
+        if data.personality.type_title or data.interests:
+            return data
+    return fallback_interest_explorer_data(raw)

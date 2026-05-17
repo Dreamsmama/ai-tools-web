@@ -32,6 +32,16 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: () => '/offer-decision',
       },
+      '/api/evening-plan': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        rewrite: () => '/evening-plan',
+      },
+      '/api/interest-explorer': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        rewrite: () => '/interest-explorer',
+      },
       '/api/memory/compare': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,

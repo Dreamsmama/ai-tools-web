@@ -19,6 +19,8 @@ import WorkerPersonalityLabHub from '../views/WorkerPersonalityLabHub.vue'
 import CareerExperiencePlay from '../views/CareerExperiencePlay.vue'
 import GaokaoZonePage from '../views/GaokaoZonePage.vue'
 import GaokaoHotTopicPage from '../views/GaokaoHotTopicPage.vue'
+import EveningPlanPage from '../views/EveningPlanPage.vue'
+import InterestExplorerPage from '../views/InterestExplorerPage.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -58,6 +60,8 @@ const router = createRouter({
     { path: '/tools/memory-compare', name: 'memoryCompare', component: MemoryCompareView },
     { path: '/tools/offer-decision', name: 'offerDecision', component: OfferDecisionView },
     { path: '/xiaohongshu-agent', name: 'xiaohongshuAgent', component: XiaohongshuAgentView },
+    { path: '/tools/evening-plan', name: 'eveningPlan', component: EveningPlanPage },
+    { path: '/tools/interest-explorer', name: 'interestExplorer', component: InterestExplorerPage },
   ],
 })
 

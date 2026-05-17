@@ -9,12 +9,18 @@ from typing import Dict
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.evening_plan_service import evening_plan_recommend
+from app.interest_explorer_service import interest_explorer_recommend
 from app.memory_compare_service import memory_compare
 from app.model_compare_service import compare_model_output
 from app.offer_decision_service import offer_decision_analyze
 from app.prepare_consult_service import prepare_consult
 from app.rag.api import router as rag_router
 from app.schemas import (
+    EveningPlanEnvelope,
+    EveningPlanRequest,
+    InterestExplorerEnvelope,
+    InterestExplorerRequest,
     MemoryCompareEnvelope,
     MemoryCompareRequest,
     ModelCompareEnvelope,
@@ -71,6 +77,24 @@ async def summary(body: SummaryRequest) -> SummaryEnvelope:
 )
 async def offer_decision(body: OfferDecisionRequest) -> OfferDecisionEnvelope:
     return await offer_decision_analyze(body.input_text)
+
+
+@app.post(
+    "/evening-plan",
+    response_model=EveningPlanEnvelope,
+    response_model_exclude_none=True,
+)
+async def evening_plan(body: EveningPlanRequest) -> EveningPlanEnvelope:
+    return await evening_plan_recommend(body)
+
+
+@app.post(
+    "/interest-explorer",
+    response_model=InterestExplorerEnvelope,
+    response_model_exclude_none=True,
+)
+async def interest_explorer(body: InterestExplorerRequest) -> InterestExplorerEnvelope:
+    return await interest_explorer_recommend(body)
 
 
 @app.post(

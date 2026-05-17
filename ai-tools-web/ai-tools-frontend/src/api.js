@@ -16,6 +16,8 @@ export const API = {
   medicalAssistant: '/api/medical-assistant',
   modelCompare: '/api/model-compare',
   offerDecision: '/api/offer-decision',
+  eveningPlan: '/api/evening-plan',
+  interestExplorer: '/api/interest-explorer',
   memoryCompare: '/api/memory/compare',
   xiaohongshuAgentGenerate: '/api/tools/xiaohongshu-agent/generate',
   health: '/api/health',

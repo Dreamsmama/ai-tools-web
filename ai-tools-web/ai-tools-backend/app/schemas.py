@@ -158,3 +158,106 @@ class MemoryCompareEnvelope(BaseModel):
     data: Optional[MemoryCompareData] = None
 
     model_config = {"extra": "allow"}
+
+
+class EveningPlanRequest(BaseModel):
+    """下班后不知道干什么 — 用户表单。"""
+
+    city: str = Field(default="", description="当前城市")
+    current_time: str = Field(default="", description="现在时间 HH:mm")
+    energy_level: str = Field(default="", description="今天状态")
+    mood: str = Field(default="", description="今天心情")
+    go_out: str = Field(default="", description="是否想出门")
+    social: str = Field(default="", description="是否想社交")
+    budget: str = Field(default="", description="预算")
+    interests: List[str] = Field(default_factory=list, description="今天更想做什么")
+    extra_notes: str = Field(default="", description="额外补充")
+
+
+class EveningPlanItem(BaseModel):
+    plan_type: str = ""
+    title: str = ""
+    reason: str = ""
+    actions: List[str] = Field(default_factory=list)
+    cost: str = ""
+    duration: str = ""
+    fit_score: int = 3
+
+
+class EveningLazyFallback(BaseModel):
+    title: str = ""
+    description: str = ""
+
+
+class EveningPlanData(BaseModel):
+    mode: str = ""
+    plans: List[EveningPlanItem] = Field(default_factory=list)
+    avoid: List[str] = Field(default_factory=list)
+    lazy_fallback: EveningLazyFallback = Field(default_factory=EveningLazyFallback)
+    tomorrow_tips: List[str] = Field(default_factory=list)
+
+
+class EveningPlanEnvelope(BaseModel):
+    code: int
+    message: Optional[str] = None
+    data: Optional[EveningPlanData] = None
+
+    model_config = {"extra": "allow"}
+
+
+class InterestExplorerRequest(BaseModel):
+    """AI 兴趣推荐 — 用户表单。"""
+
+    life_stage: str = Field(default="", description="当前阶段")
+    work_state: str = Field(default="", description="工作/学习状态")
+    social_style: str = Field(default="", description="社交倾向")
+    preferences: List[str] = Field(default_factory=list, description="更喜欢")
+    budget: str = Field(default="", description="预算")
+    weekend_state: str = Field(default="", description="周末一般状态")
+    goals: List[str] = Field(default_factory=list, description="最想获得什么")
+    extra_notes: str = Field(default="", description="最近的状态/想法")
+
+
+class InterestExplorerPersonality(BaseModel):
+    type_title: str = ""
+    analysis: str = ""
+    why_past_failed: str = ""
+
+
+class InterestExplorerItem(BaseModel):
+    name: str = ""
+    why_fit: str = ""
+    difficulty: int = 3
+    cost_level: str = "低"
+    social_level: str = "低"
+    long_term: str = ""
+    best_time: str = ""
+    starter_tip: str = ""
+
+
+class InterestExplorerWeekItem(BaseModel):
+    day: str = ""
+    activity: str = ""
+
+
+class InterestExplorerLazyFallback(BaseModel):
+    title: str = ""
+    description: str = ""
+
+
+class InterestExplorerData(BaseModel):
+    personality: InterestExplorerPersonality = Field(default_factory=InterestExplorerPersonality)
+    interests: List[InterestExplorerItem] = Field(default_factory=list)
+    avoid: List[str] = Field(default_factory=list)
+    week_plan: List[InterestExplorerWeekItem] = Field(default_factory=list)
+    lazy_fallback: InterestExplorerLazyFallback = Field(
+        default_factory=InterestExplorerLazyFallback
+    )
+
+
+class InterestExplorerEnvelope(BaseModel):
+    code: int
+    message: Optional[str] = None
+    data: Optional[InterestExplorerData] = None
+
+    model_config = {"extra": "allow"}
