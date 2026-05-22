@@ -9,7 +9,7 @@ import logging
 import time
 from collections.abc import AsyncIterator, Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any, TypeVar
+from typing import Any, Dict, TypeVar
 
 import httpx
 
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 
 _T = TypeVar("_T")
 
-ProgressCallback = Callable[[dict[str, Any]], Awaitable[None]]
+ProgressCallback = Callable[[Dict[str, Any]], Awaitable[None]]
 
 STEP_LABELS = step_labels()
 
