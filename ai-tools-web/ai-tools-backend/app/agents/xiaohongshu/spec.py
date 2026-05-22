@@ -7,7 +7,7 @@ Edit step order, labels, prompt paths, and response field bindings here.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Literal
+from typing import Any, Dict, List, Literal, Optional, Tuple, Union
 
 from app.schemas import XiaohongshuAgentData
 from app.utils.llm_json import lines_from_plain_text
@@ -21,11 +21,11 @@ class LlmStepSpec:
 
     id: str
     label: str
-    output_fields: tuple[str, ...]
-    system_prompt: str | None = None
-    user_prompt: str | None = None
-    system_inline: str | None = None
-    skill: str | None = None
+    output_fields: Tuple[str, ...]
+    system_prompt: Optional[str] = None
+    user_prompt: Optional[str] = None
+    system_inline: Optional[str] = None
+    skill: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -43,13 +43,13 @@ class ResponseFieldBinding:
     field: str
     step_id: str
     json_key: str
-    limit: int | None = None
+    limit: Optional[int] = None
     limit_from_count: bool = False
 
 
 # --- Pipeline (order = execution order) ---
 
-LLM_PIPELINE: tuple[LlmStepSpec, ...] = (
+LLM_PIPELINE: Tuple[LlmStepSpec, ...] = (
     LlmStepSpec(
         id="topic_analyzer",
         label="主题分析",
@@ -91,11 +91,11 @@ LLM_PIPELINE: tuple[LlmStepSpec, ...] = (
     ),
 )
 
-OPTIONAL_TOOL_STEPS: tuple[ToolStepSpec, ...] = (
+OPTIONAL_TOOL_STEPS: Tuple[ToolStepSpec, ...] = (
     ToolStepSpec(id="image_provider", label="配图生成"),
 )
 
-RESPONSE_BINDINGS: tuple[ResponseFieldBinding, ...] = (
+RESPONSE_BINDINGS: Tuple[ResponseFieldBinding, ...] = (
     ResponseFieldBinding("titles", "copywriter", "titles", limit_from_count=True),
     ResponseFieldBinding("content", "copywriter", "content"),
     ResponseFieldBinding(
@@ -108,7 +108,7 @@ RESPONSE_BINDINGS: tuple[ResponseFieldBinding, ...] = (
     ResponseFieldBinding("risks", "risk_checker", "risks", limit=5),
 )
 
-STEP_BY_ID: dict[str, LlmStepSpec | ToolStepSpec] = {
+STEP_BY_ID: Dict[str, Union[LlmStepSpec, ToolStepSpec]] = {
     **{s.id: s for s in LLM_PIPELINE},
     **{s.id: s for s in OPTIONAL_TOOL_STEPS},
 }
@@ -119,18 +119,18 @@ def step_label(step_id: str) -> str:
     return spec.label if spec else step_id
 
 
-def step_labels() -> dict[str, str]:
+def step_labels() -> Dict[str, str]:
     return {step_id: step_label(step_id) for step_id in STEP_BY_ID}
 
 
-def pipeline_step_ids(*, generate_images: bool) -> list[str]:
+def pipeline_step_ids(*, generate_images: bool) -> List[str]:
     ids = [s.id for s in LLM_PIPELINE]
     if generate_images:
         ids.extend(s.id for s in OPTIONAL_TOOL_STEPS)
     return ids
 
 
-def _list_of_str(obj: dict[str, Any], key: str, fallback_text: str = "") -> list[str]:
+def _list_of_str(obj: Dict[str, Any], key: str, fallback_text: str = "") -> List[str]:
     raw = obj.get(key)
     if isinstance(raw, list):
         items = [str(x).strip() for x in raw if str(x).strip()]
@@ -143,7 +143,7 @@ def _list_of_str(obj: dict[str, Any], key: str, fallback_text: str = "") -> list
     return []
 
 
-def _str_value(obj: dict[str, Any], key: str, fallback_text: str = "") -> str:
+def _str_value(obj: Dict[str, Any], key: str, fallback_text: str = "") -> str:
     raw = obj.get(key)
     if isinstance(raw, str) and raw.strip():
         return raw.strip()
@@ -153,11 +153,11 @@ def _str_value(obj: dict[str, Any], key: str, fallback_text: str = "") -> str:
 
 
 def assemble_response_data(
-    outputs: dict[str, dict[str, Any]],
+    outputs: Dict[str, Dict[str, Any]],
     count: int,
 ) -> XiaohongshuAgentData:
     """Merge per-step JSON into the API response model (see RESPONSE_BINDINGS)."""
-    kwargs: dict[str, Any] = {}
+    kwargs: Dict[str, Any] = {}
     for binding in RESPONSE_BINDINGS:
         step_out = outputs.get(binding.step_id) or {}
         if binding.field in ("titles", "image_prompts", "publish_tips", "risks"):

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Dict
 
 from app.agents.xiaohongshu.prompt_loader import load_prompt
 from app.agents.xiaohongshu.spec import LlmStepSpec, STEP_BY_ID
@@ -13,7 +13,7 @@ from app.skills.loader import load_skill_markdown
 from app.utils.llm_json import try_parse_json_object
 
 
-def _parse_json_or_raise(raw: str) -> dict[str, Any]:
+def _parse_json_or_raise(raw: str) -> Dict[str, Any]:
     obj = try_parse_json_object(raw)
     if obj is None:
         raise ValueError("模型返回内容不是合法 JSON")
@@ -34,21 +34,21 @@ class PipelineContext:
     audience: str
     style: str
     count: int
-    outputs: dict[str, dict[str, Any]]
+    outputs: Dict[str, Dict[str, Any]]
 
-    def analysis(self) -> dict[str, Any]:
+    def analysis(self) -> Dict[str, Any]:
         return self.outputs["topic_analyzer"]
 
-    def plan(self) -> dict[str, Any]:
+    def plan(self) -> Dict[str, Any]:
         return self.outputs["content_planner"]
 
-    def copywriting(self) -> dict[str, Any]:
+    def copywriting(self) -> Dict[str, Any]:
         return self.outputs["copywriter"]
 
 
 @dataclass
 class TopicAnalyzer:
-    async def run(self, topic: str, product: str, audience: str, style: str) -> dict[str, Any]:
+    async def run(self, topic: str, product: str, audience: str, style: str) -> Dict[str, Any]:
         spec = _llm_spec("topic_analyzer")
         messages = [
             {"role": "system", "content": load_prompt(spec.system_prompt or "")},
@@ -68,7 +68,7 @@ class TopicAnalyzer:
 
 @dataclass
 class ContentPlanner:
-    async def run(self, analysis: dict[str, Any], count: int) -> dict[str, Any]:
+    async def run(self, analysis: Dict[str, Any], count: int) -> Dict[str, Any]:
         spec = _llm_spec("content_planner")
         messages = [
             {"role": "system", "content": spec.system_inline or ""},
@@ -92,7 +92,7 @@ analysis={analysis}
 
 @dataclass
 class Copywriter:
-    async def run(self, analysis: dict[str, Any], plan: dict[str, Any], count: int) -> dict[str, Any]:
+    async def run(self, analysis: Dict[str, Any], plan: Dict[str, Any], count: int) -> Dict[str, Any]:
         spec = _llm_spec("copywriter")
         messages = [
             {"role": "system", "content": load_prompt(spec.system_prompt or "")},
@@ -113,10 +113,10 @@ class Copywriter:
 class ImagePromptGenerator:
     async def run(
         self,
-        analysis: dict[str, Any],
-        copywriting: dict[str, Any],
+        analysis: Dict[str, Any],
+        copywriting: Dict[str, Any],
         count: int,
-    ) -> dict[str, Any]:
+    ) -> Dict[str, Any]:
         spec = _llm_spec("image_prompt_generator")
         messages = [
             {"role": "system", "content": spec.system_inline or ""},
@@ -142,7 +142,7 @@ copywriting={copywriting}
 
 @dataclass
 class RiskChecker:
-    async def run(self, copywriting: dict[str, Any]) -> dict[str, Any]:
+    async def run(self, copywriting: Dict[str, Any]) -> Dict[str, Any]:
         spec = _llm_spec("risk_checker")
         scan = scan_copywriting(copywriting)
         skill_block = load_skill_markdown(spec.skill or "content_compliance")
@@ -182,7 +182,7 @@ class StepRunners:
     image_prompt_generator: ImagePromptGenerator
     risk_checker: RiskChecker
 
-    async def run_llm_step(self, step_id: str, ctx: PipelineContext) -> dict[str, Any]:
+    async def run_llm_step(self, step_id: str, ctx: PipelineContext) -> Dict[str, Any]:
         if step_id == "topic_analyzer":
             return await self.topic_analyzer.run(
                 ctx.topic, ctx.product, ctx.audience, ctx.style

@@ -7,9 +7,9 @@ from __future__ import annotations
 import asyncio
 import logging
 import time
-from collections.abc import AsyncIterator, Awaitable, Callable
+from collections.abc import AsyncIterator
 from dataclasses import dataclass
-from typing import Any, Dict, TypeVar
+from typing import Any, Awaitable, Callable, Dict, List, Optional, Tuple, TypeVar
 
 import httpx
 
@@ -37,17 +37,17 @@ STEP_LABELS = step_labels()
 
 
 async def _emit_progress(
-    callback: ProgressCallback | None,
+    callback: Optional[ProgressCallback],
     *,
     phase: str,
     step: str,
     index: int,
     total: int,
-    elapsed_ms: int | None = None,
+    elapsed_ms: Optional[int] = None,
 ) -> None:
     if not callback:
         return
-    payload: dict[str, Any] = {
+    payload: Dict[str, Any] = {
         "type": "step",
         "phase": phase,
         "step": step,
@@ -64,7 +64,7 @@ async def _logged_step(
     step: str,
     awaitable: Awaitable[_T],
     *,
-    progress: ProgressCallback | None = None,
+    progress: Optional[ProgressCallback] = None,
     step_index: int = 0,
     step_total: int = 0,
 ) -> _T:
@@ -118,14 +118,14 @@ async def _logged_step(
 class ImageProvider:
     """Extension point for image generation (see JimengImageProvider)."""
 
-    async def generate(self, prompts: list[str]) -> list[str]:
+    async def generate(self, prompts: List[str]) -> List[str]:
         return []
 
 
 class JimengImageProvider(ImageProvider):
     """Generate xiaohongshu note images via Jimeng (R7)."""
 
-    async def generate(self, prompts: list[str]) -> list[str]:
+    async def generate(self, prompts: List[str]) -> List[str]:
         from app.providers.xiaohongshu_image_provider import generate_xiaohongshu_images
 
         return await generate_xiaohongshu_images(prompts)
@@ -134,7 +134,7 @@ class JimengImageProvider(ImageProvider):
 class VideoProvider:
     """Reserved extension point for video generation."""
 
-    async def generate(self, script: str) -> list[str]:
+    async def generate(self, script: str) -> List[str]:
         return []
 
 
@@ -153,8 +153,8 @@ def _clamp_count(count: int) -> int:
 @dataclass
 class XiaohongshuAgentService:
     runners: StepRunners
-    image_provider: ImageProvider | None = None
-    video_provider: VideoProvider | None = None
+    image_provider: Optional[ImageProvider] = None
+    video_provider: Optional[VideoProvider] = None
 
     async def run(
         self,
@@ -165,7 +165,7 @@ class XiaohongshuAgentService:
         count: int,
         generate_images: bool = False,
         *,
-        progress: ProgressCallback | None = None,
+        progress: Optional[ProgressCallback] = None,
     ) -> XiaohongshuAgentEnvelope:
         return await self._run_core(
             topic,
@@ -186,7 +186,7 @@ class XiaohongshuAgentService:
         count: int,
         generate_images: bool,
         *,
-        progress: ProgressCallback | None = None,
+        progress: Optional[ProgressCallback] = None,
     ) -> XiaohongshuAgentEnvelope:
         topic = _safe_trim(topic)
         if not topic:
@@ -230,7 +230,7 @@ class XiaohongshuAgentService:
             raw_data = assemble_response_data(ctx.outputs, normalized_count)
             data, _validator_fixes = validate_xiaohongshu_output(raw_data, normalized_count)
 
-            image_urls: list[str] = []
+            image_urls: List[str] = []
             if generate_images and self.image_provider and data.image_prompts:
                 tool_spec = OPTIONAL_TOOL_STEPS[0]
                 image_urls = await _logged_step(
@@ -301,9 +301,9 @@ class XiaohongshuAgentService:
         generate_images: bool = False,
     ) -> AsyncIterator[str]:
         """Yield Server-Sent Events for step progress and final envelope (R8)."""
-        queue: asyncio.Queue[tuple[str, Any] | None] = asyncio.Queue()
+        queue: asyncio.Queue[Optional[Tuple[str, Any]]] = asyncio.Queue()
 
-        async def on_progress(payload: dict[str, Any]) -> None:
+        async def on_progress(payload: Dict[str, Any]) -> None:
             await queue.put(("progress", payload))
 
         async def worker() -> None:

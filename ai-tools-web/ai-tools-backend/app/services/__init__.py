@@ -7,7 +7,6 @@ from app.services.model_compare_service import compare_model_output
 from app.services.offer_decision_service import offer_decision_analyze
 from app.services.prepare_consult_service import prepare_consult
 from app.services.summarize_service import summarize_chat
-from app.services.xiaohongshu_agent_service import xiaohongshu_agent_service
 
 __all__ = [
     "compare_model_output",
@@ -17,5 +16,4 @@ __all__ = [
     "offer_decision_analyze",
     "prepare_consult",
     "summarize_chat",
-    "xiaohongshu_agent_service",
 ]

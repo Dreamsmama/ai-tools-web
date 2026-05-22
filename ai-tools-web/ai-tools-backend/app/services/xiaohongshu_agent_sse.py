@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import Any
+from typing import Any, Dict
 
 from app.agents.xiaohongshu.spec import pipeline_step_ids, step_labels
 
@@ -11,6 +11,6 @@ from app.agents.xiaohongshu.spec import pipeline_step_ids, step_labels
 STEP_LABELS = step_labels()
 
 
-def format_sse_message(event: str, payload: dict[str, Any]) -> str:
+def format_sse_message(event: str, payload: Dict[str, Any]) -> str:
     body = json.dumps(payload, ensure_ascii=False)
     return f"event: {event}\ndata: {body}\n\n"
