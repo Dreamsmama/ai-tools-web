@@ -10,10 +10,10 @@ from app.rag.constants import (
 )
 from app.rag.embedding_service import embedding_service
 from app.rag.parser_service import parser_service
-from app.rag.repository import rag_repository
+from app.repositories.rag import rag_repository
 from app.rag.scope import RequestScope
 from app.rag.status_manager import ensure_transition
-from app.rag.text_cleaner import clean_text
+from app.utils.text_cleaner import clean_text
 from app.rag.storage import storage_provider
 from app.rag.vector_store import vector_store
 

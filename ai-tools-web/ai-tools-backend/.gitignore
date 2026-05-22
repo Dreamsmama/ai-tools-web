@@ -1,6 +1,10 @@
 .venv/
 __pycache__/
+*.pyc
 *.py[cod]
 .env
 *.egg-info/
 .pytest_cache/
+generated/
+uploads/
+data/short_drama_materials.json

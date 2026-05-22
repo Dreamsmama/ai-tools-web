@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from app.rag.ingest_service import ingest_service
-from app.rag.repository import rag_repository
+from app.repositories.rag import rag_repository
 from app.rag.scope import RequestScope
 from app.rag.storage import storage_provider
 

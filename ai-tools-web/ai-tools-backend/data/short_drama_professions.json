@@ -1,0 +1,110 @@
+[
+  {
+    "id": "prof_programmer",
+    "roleKey": "programmer",
+    "name": "程序员",
+    "description": "",
+    "styleHint": "",
+    "builtIn": true,
+    "createdAt": "2026-05-18 18:33:12"
+  },
+  {
+    "id": "prof_product_manager",
+    "roleKey": "product_manager",
+    "name": "产品经理",
+    "description": "",
+    "styleHint": "",
+    "builtIn": true,
+    "createdAt": "2026-05-18 18:33:12"
+  },
+  {
+    "id": "prof_hr",
+    "roleKey": "hr",
+    "name": "HR",
+    "description": "",
+    "styleHint": "",
+    "builtIn": true,
+    "createdAt": "2026-05-18 18:33:12"
+  },
+  {
+    "id": "prof_tester",
+    "roleKey": "tester",
+    "name": "测试",
+    "description": "",
+    "styleHint": "",
+    "builtIn": true,
+    "createdAt": "2026-05-18 18:33:12"
+  },
+  {
+    "id": "prof_devops",
+    "roleKey": "devops",
+    "name": "运维",
+    "description": "",
+    "styleHint": "",
+    "builtIn": true,
+    "createdAt": "2026-05-18 18:33:12"
+  },
+  {
+    "id": "prof_sales",
+    "roleKey": "sales",
+    "name": "销售",
+    "description": "",
+    "styleHint": "",
+    "builtIn": true,
+    "createdAt": "2026-05-18 18:33:12"
+  },
+  {
+    "id": "prof_5fce00a040",
+    "roleKey": "prof_5338258d",
+    "name": "前端开发",
+    "description": "",
+    "styleHint": "",
+    "builtIn": false,
+    "createdAt": "2026-05-18 19:41:41"
+  },
+  {
+    "id": "prof_09b95b5ca1",
+    "roleKey": "prof_cbb78e8a",
+    "name": "猎头",
+    "description": "",
+    "styleHint": "",
+    "builtIn": false,
+    "createdAt": "2026-05-18 21:20:44"
+  },
+  {
+    "id": "prof_1e2e194625",
+    "roleKey": "ui",
+    "name": "ui设计师",
+    "description": "",
+    "styleHint": "",
+    "builtIn": false,
+    "createdAt": "2026-05-19 11:07:22"
+  },
+  {
+    "id": "prof_03df76a6b1",
+    "roleKey": "prof_795c7abc",
+    "name": "行政",
+    "description": "",
+    "styleHint": "",
+    "builtIn": false,
+    "createdAt": "2026-05-19 11:40:24"
+  },
+  {
+    "id": "prof_fbf8d5461c",
+    "roleKey": "prof_6a92fa5f",
+    "name": "电商运营",
+    "description": "",
+    "styleHint": "",
+    "builtIn": false,
+    "createdAt": "2026-05-20 22:29:14"
+  },
+  {
+    "id": "prof_df411c0f01",
+    "roleKey": "prof_a1b098a9",
+    "name": "财务",
+    "description": "",
+    "styleHint": "",
+    "builtIn": false,
+    "createdAt": "2026-05-20 23:36:39"
+  }
+]

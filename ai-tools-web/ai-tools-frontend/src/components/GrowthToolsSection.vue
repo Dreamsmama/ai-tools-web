@@ -3,6 +3,13 @@ import { RouterLink } from 'vue-router'
 
 const tools = [
   {
+    to: '/tools/life-rpg',
+    title: 'AI 人生副本',
+    tag: '成长',
+    desc: '根据状态整理长期路线，生成今日可推进的安排',
+    cta: '开始使用',
+  },
+  {
     to: '/summary',
     title: '职场沟通回复助手',
     tag: '沟通',
@@ -53,6 +60,7 @@ const tools = [
             <span class="growth-tag">{{ tool.tag }}</span>
           </div>
           <p class="growth-desc">{{ tool.desc }}</p>
+          <span v-if="tool.cta" class="growth-cta">{{ tool.cta }}</span>
         </div>
       </RouterLink>
     </div>
@@ -172,5 +180,13 @@ const tools = [
   font-size: 13px;
   color: var(--text-muted);
   line-height: 1.55;
+}
+
+.growth-cta {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 13px;
+  font-weight: 700;
+  color: #4338ca;
 }
 </style>

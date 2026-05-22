@@ -1,0 +1,442 @@
+[
+  {
+    "id": "legacy_programmer",
+    "role": "programmer",
+    "name": "程序员",
+    "baseImageUrl": "/uploads/short-drama/characters/programmer/tired/programmer_tired_768f.png",
+    "source": "uploaded",
+    "status": "approved",
+    "isActive": false,
+    "createdAt": "2026-05-18 16:37:23"
+  },
+  {
+    "id": "ip_17af8be3",
+    "role": "programmer",
+    "name": "程序员·候选B",
+    "baseImageUrl": "/uploads/short-drama/character-ip/programmer/ip_17af8be3.png",
+    "source": "ai_generated",
+    "status": "approved",
+    "isActive": false,
+    "createdAt": "2026-05-18 16:40:40"
+  },
+  {
+    "id": "ip_2fd942ea",
+    "role": "programmer",
+    "name": "程序员·候选C",
+    "baseImageUrl": "/uploads/short-drama/character-ip/programmer/ip_2fd942ea.png",
+    "source": "ai_generated",
+    "status": "approved",
+    "isActive": false,
+    "createdAt": "2026-05-18 16:40:44"
+  },
+  {
+    "id": "ip_616e3741",
+    "role": "programmer",
+    "name": "程序员·候选A",
+    "baseImageUrl": "/uploads/short-drama/character-ip/programmer/ip_616e3741.png",
+    "source": "ai_generated",
+    "status": "approved",
+    "isActive": true,
+    "createdAt": "2026-05-18 16:49:47"
+  },
+  {
+    "id": "ip_41a6ba9c",
+    "role": "programmer",
+    "name": "程序员·候选C",
+    "baseImageUrl": "/uploads/short-drama/character-ip/programmer/ip_41a6ba9c.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 16:49:51"
+  },
+  {
+    "id": "ip_91de9017",
+    "role": "programmer",
+    "name": "程序员·候选B",
+    "baseImageUrl": "/uploads/short-drama/character-ip/programmer/ip_91de9017.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 16:49:52"
+  },
+  {
+    "id": "ip_988f9a4c",
+    "role": "programmer",
+    "name": "程序员·候选D",
+    "baseImageUrl": "/uploads/short-drama/character-ip/programmer/ip_988f9a4c.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 16:49:55"
+  },
+  {
+    "id": "ip_9ce12c70",
+    "role": "hr",
+    "name": "HR·候选B",
+    "baseImageUrl": "/uploads/short-drama/character-ip/hr/ip_9ce12c70.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 16:53:42"
+  },
+  {
+    "id": "ip_7a667bdd",
+    "role": "hr",
+    "name": "HR·候选D",
+    "baseImageUrl": "/uploads/short-drama/character-ip/hr/ip_7a667bdd.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 16:53:42"
+  },
+  {
+    "id": "ip_95eba3a4",
+    "role": "hr",
+    "name": "HR·候选A",
+    "baseImageUrl": "/uploads/short-drama/character-ip/hr/ip_95eba3a4.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 16:53:45"
+  },
+  {
+    "id": "ip_38c60d65",
+    "role": "hr",
+    "name": "HR·候选A",
+    "baseImageUrl": "/uploads/short-drama/character-ip/hr/ip_38c60d65.png",
+    "source": "ai_generated",
+    "status": "approved",
+    "isActive": true,
+    "createdAt": "2026-05-18 16:54:00"
+  },
+  {
+    "id": "ip_9b475f2e",
+    "role": "product_manager",
+    "name": "产品经理·候选A",
+    "baseImageUrl": "/uploads/short-drama/character-ip/product-manager/ip_9b475f2e.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 16:55:11"
+  },
+  {
+    "id": "ip_da6f4003",
+    "role": "product_manager",
+    "name": "产品经理·候选D",
+    "baseImageUrl": "/uploads/short-drama/character-ip/product-manager/ip_da6f4003.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 16:55:11"
+  },
+  {
+    "id": "ip_22c15c2c",
+    "role": "product_manager",
+    "name": "产品经理·候选C",
+    "baseImageUrl": "/uploads/short-drama/character-ip/product-manager/ip_22c15c2c.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 16:55:12"
+  },
+  {
+    "id": "ip_b8a24b24",
+    "role": "product_manager",
+    "name": "产品经理·候选B",
+    "baseImageUrl": "/uploads/short-drama/character-ip/product-manager/ip_b8a24b24.png",
+    "source": "ai_generated",
+    "status": "approved",
+    "isActive": true,
+    "createdAt": "2026-05-18 16:55:15"
+  },
+  {
+    "id": "ip_e9405d6c",
+    "role": "tester",
+    "name": "测试·候选D",
+    "baseImageUrl": "/uploads/short-drama/character-ip/tester/ip_e9405d6c.png",
+    "source": "ai_generated",
+    "status": "approved",
+    "isActive": false,
+    "createdAt": "2026-05-18 17:02:18"
+  },
+  {
+    "id": "ip_8f9553b2",
+    "role": "sales",
+    "name": "销售·候选C",
+    "baseImageUrl": "/uploads/short-drama/character-ip/sales/ip_8f9553b2.png",
+    "source": "ai_generated",
+    "status": "approved",
+    "isActive": true,
+    "createdAt": "2026-05-18 17:03:21"
+  },
+  {
+    "id": "ip_4a3b791b",
+    "role": "sales",
+    "name": "销售·候选B",
+    "baseImageUrl": "/uploads/short-drama/character-ip/sales/ip_4a3b791b.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 17:03:21"
+  },
+  {
+    "id": "ip_0f7e6287",
+    "role": "sales",
+    "name": "销售·候选D",
+    "baseImageUrl": "/uploads/short-drama/character-ip/sales/ip_0f7e6287.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 17:03:22"
+  },
+  {
+    "id": "ip_2d39d82d",
+    "role": "sales",
+    "name": "销售·候选A",
+    "baseImageUrl": "/uploads/short-drama/character-ip/sales/ip_2d39d82d.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 17:03:24"
+  },
+  {
+    "id": "ip_93da8bcf",
+    "role": "devops",
+    "name": "运维·候选D",
+    "baseImageUrl": "/uploads/short-drama/character-ip/devops/ip_93da8bcf.png",
+    "source": "ai_generated",
+    "status": "approved",
+    "isActive": true,
+    "createdAt": "2026-05-18 17:04:14"
+  },
+  {
+    "id": "ip_bf24db17",
+    "role": "devops",
+    "name": "运维·候选B",
+    "baseImageUrl": "/uploads/short-drama/character-ip/devops/ip_bf24db17.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 17:04:16"
+  },
+  {
+    "id": "ip_bbac320d",
+    "role": "devops",
+    "name": "运维·候选C",
+    "baseImageUrl": "/uploads/short-drama/character-ip/devops/ip_bbac320d.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 17:04:18"
+  },
+  {
+    "id": "ip_b18b5d76",
+    "role": "devops",
+    "name": "运维·候选A",
+    "baseImageUrl": "/uploads/short-drama/character-ip/devops/ip_b18b5d76.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 17:04:20"
+  },
+  {
+    "id": "ip_0f53a920",
+    "role": "tester",
+    "name": "测试·候选D",
+    "baseImageUrl": "/uploads/short-drama/character-ip/tester/ip_0f53a920.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 17:29:43"
+  },
+  {
+    "id": "ip_507b1c06",
+    "role": "tester",
+    "name": "测试·候选D",
+    "baseImageUrl": "/uploads/short-drama/character-ip/tester/ip_507b1c06.png",
+    "source": "ai_generated",
+    "status": "approved",
+    "isActive": true,
+    "createdAt": "2026-05-18 17:30:16"
+  },
+  {
+    "id": "ip_e2a3356b",
+    "role": "prof_5338258d",
+    "name": "前端开发·候选C",
+    "baseImageUrl": "/uploads/short-drama/character-ip/prof-5338258d/ip_e2a3356b.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 19:56:53"
+  },
+  {
+    "id": "ip_653cefad",
+    "role": "prof_5338258d",
+    "name": "前端开发·候选C",
+    "baseImageUrl": "/uploads/short-drama/character-ip/prof-5338258d/ip_653cefad.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 19:57:29"
+  },
+  {
+    "id": "ip_ef74a515",
+    "role": "prof_5338258d",
+    "name": "前端开发·候选A",
+    "baseImageUrl": "/uploads/short-drama/character-ip/prof-5338258d/ip_ef74a515.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 19:57:29"
+  },
+  {
+    "id": "ip_36b9bdc0",
+    "role": "prof_5338258d",
+    "name": "前端开发·候选D",
+    "baseImageUrl": "/uploads/short-drama/character-ip/prof-5338258d/ip_36b9bdc0.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 19:57:30"
+  },
+  {
+    "id": "ip_7ac85405",
+    "role": "prof_5338258d",
+    "name": "前端开发·候选B",
+    "baseImageUrl": "/uploads/short-drama/character-ip/prof-5338258d/ip_7ac85405.png",
+    "source": "ai_generated",
+    "status": "approved",
+    "isActive": true,
+    "createdAt": "2026-05-18 19:57:33"
+  },
+  {
+    "id": "ip_04e1b280",
+    "role": "prof_cbb78e8a",
+    "name": "猎头·候选D",
+    "baseImageUrl": "/uploads/short-drama/character-ip/prof-cbb78e8a/ip_04e1b280.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 21:29:32"
+  },
+  {
+    "id": "ip_f2c23dcb",
+    "role": "prof_cbb78e8a",
+    "name": "猎头·候选C",
+    "baseImageUrl": "/uploads/short-drama/character-ip/prof-cbb78e8a/ip_f2c23dcb.png",
+    "source": "ai_generated",
+    "status": "approved",
+    "isActive": true,
+    "createdAt": "2026-05-18 21:29:32"
+  },
+  {
+    "id": "ip_0dd5c9e6",
+    "role": "prof_cbb78e8a",
+    "name": "猎头·候选A",
+    "baseImageUrl": "/uploads/short-drama/character-ip/prof-cbb78e8a/ip_0dd5c9e6.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 21:29:33"
+  },
+  {
+    "id": "ip_665d9437",
+    "role": "prof_cbb78e8a",
+    "name": "猎头·候选B",
+    "baseImageUrl": "/uploads/short-drama/character-ip/prof-cbb78e8a/ip_665d9437.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-18 21:29:34"
+  },
+  {
+    "id": "ip_bd3ddc3d",
+    "role": "ui",
+    "name": "ui设计师·候选C",
+    "baseImageUrl": "/uploads/short-drama/character-ip/ui/ip_bd3ddc3d.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-19 11:39:08"
+  },
+  {
+    "id": "ip_27730cd2",
+    "role": "ui",
+    "name": "ui设计师·候选B",
+    "baseImageUrl": "/uploads/short-drama/character-ip/ui/ip_27730cd2.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-19 11:39:09"
+  },
+  {
+    "id": "ip_8426cf8c",
+    "role": "ui",
+    "name": "ui设计师·候选A",
+    "baseImageUrl": "/uploads/short-drama/character-ip/ui/ip_8426cf8c.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-19 11:39:12"
+  },
+  {
+    "id": "ip_796b0377",
+    "role": "ui",
+    "name": "ui设计师·候选D",
+    "baseImageUrl": "/uploads/short-drama/character-ip/ui/ip_796b0377.png",
+    "source": "ai_generated",
+    "status": "approved",
+    "isActive": true,
+    "createdAt": "2026-05-19 11:39:28"
+  },
+  {
+    "id": "ip_c27a5286",
+    "role": "prof_795c7abc",
+    "name": "行政·候选B",
+    "baseImageUrl": "/uploads/short-drama/character-ip/prof-795c7abc/ip_c27a5286.png",
+    "source": "ai_generated",
+    "status": "approved",
+    "isActive": true,
+    "createdAt": "2026-05-19 11:40:40"
+  },
+  {
+    "id": "ip_ffb8f525",
+    "role": "prof_795c7abc",
+    "name": "行政·候选A",
+    "baseImageUrl": "/uploads/short-drama/character-ip/prof-795c7abc/ip_ffb8f525.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-19 11:40:41"
+  },
+  {
+    "id": "ip_a789bff0",
+    "role": "prof_795c7abc",
+    "name": "行政·候选C",
+    "baseImageUrl": "/uploads/short-drama/character-ip/prof-795c7abc/ip_a789bff0.png",
+    "source": "ai_generated",
+    "status": "pending",
+    "isActive": false,
+    "createdAt": "2026-05-19 11:40:42"
+  },
+  {
+    "id": "ip_8806f145",
+    "role": "prof_6a92fa5f",
+    "name": "电商运营·候选A",
+    "baseImageUrl": "/uploads/short-drama/character-ip/prof-6a92fa5f/ip_8806f145.png",
+    "source": "ai_generated",
+    "status": "approved",
+    "isActive": true,
+    "createdAt": "2026-05-20 22:29:31"
+  },
+  {
+    "id": "ip_5157f34c",
+    "role": "prof_a1b098a9",
+    "name": "财务·候选C",
+    "baseImageUrl": "/uploads/short-drama/character-ip/prof-a1b098a9/ip_5157f34c.png",
+    "source": "ai_generated",
+    "status": "approved",
+    "isActive": true,
+    "createdAt": "2026-05-20 23:36:55"
+  }
+]

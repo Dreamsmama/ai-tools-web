@@ -1,0 +1,656 @@
+/**
+ * AI 人生副本 — 与全站工具页（如下班后安排）统一的样式
+ * 在 LifeRpgPage 根节点 .life-rpg 下生效
+ */
+
+.life-rpg .tool-card {
+  background: var(--surface-solid);
+  border-radius: var(--radius);
+  padding: 16px;
+  margin-bottom: 12px;
+  border: var(--border-soft);
+  box-shadow: var(--shadow-card);
+}
+
+.life-rpg .tool-card--soft {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.06), rgba(168, 85, 247, 0.04));
+}
+
+.life-rpg .field-label {
+  display: block;
+  margin: 0 0 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.life-rpg .field-label--tight {
+  margin-bottom: 4px;
+}
+
+.life-rpg .field-desc {
+  margin: -6px 0 10px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.life-rpg .hint {
+  font-weight: 500;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.life-rpg .text-input,
+.life-rpg .textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(241, 245, 249, 0.85);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+  font-family: inherit;
+}
+
+.life-rpg .text-input:focus,
+.life-rpg .textarea:focus,
+.life-rpg .select-input:focus {
+  outline: none;
+  border-color: rgba(99, 102, 241, 0.45);
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.12);
+}
+
+.life-rpg .textarea {
+  resize: vertical;
+  min-height: 88px;
+}
+
+.life-rpg .select-input {
+  width: 100%;
+  padding: 12px 36px 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(241, 245, 249, 0.85);
+  font-size: 15px;
+  color: var(--text);
+  font-family: inherit;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%236366f1' d='M3 4.5L6 8l3-3.5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  cursor: pointer;
+}
+
+.life-rpg .chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.life-rpg .chip-grid--2 .chip {
+  flex: 1 1 calc(50% - 8px);
+  min-width: calc(50% - 8px);
+}
+
+.life-rpg .chip {
+  flex: 1 1 auto;
+  min-width: fit-content;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--text);
+  text-align: center;
+  transition:
+    border-color var(--transition),
+    background var(--transition),
+    box-shadow var(--transition);
+}
+
+.life-rpg .chip:hover {
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+.life-rpg .chip.selected {
+  border-color: rgba(99, 102, 241, 0.55);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.08));
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.12);
+  color: var(--accent-a);
+  font-weight: 600;
+}
+
+.life-rpg .chip--multi.selected::after {
+  content: ' ✓';
+}
+
+.life-rpg .char-count {
+  margin: 6px 0 0;
+  text-align: right;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+/* 角色形成预览 */
+.life-rpg .preview-hero {
+  margin-bottom: 12px;
+  padding: 18px 16px;
+  border-radius: var(--radius);
+  border: var(--border-soft);
+  background: var(--surface-solid);
+  box-shadow: var(--shadow-card);
+}
+
+.life-rpg .preview-hero--active {
+  background: linear-gradient(160deg, rgba(99, 102, 241, 0.07), rgba(255, 255, 255, 1) 55%);
+}
+
+.life-rpg .preview-hero__title {
+  margin: 0 0 6px;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.4;
+  color: var(--text);
+}
+
+.life-rpg .preview-hero__sub {
+  margin: 0 0 14px;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--text-muted);
+}
+
+.life-rpg .preview-item {
+  margin-bottom: 10px;
+}
+
+.life-rpg .preview-item--world {
+  margin-bottom: 0;
+  padding-top: 10px;
+  border-top: var(--border-soft);
+}
+
+.life-rpg .preview-item__label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-muted);
+}
+
+.life-rpg .preview-item__value {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.life-rpg .preview-item__personality,
+.life-rpg .preview-item__world {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.55;
+  color: var(--text);
+}
+
+.life-rpg .preview-tags {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.life-rpg .preview-tags li {
+  padding: 5px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--accent-a);
+  background: rgba(238, 242, 255, 0.9);
+  border: 1px solid rgba(99, 102, 241, 0.15);
+}
+
+/* 人生状态卡片 */
+.life-rpg .state-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+}
+
+.life-rpg .state-card {
+  padding: 12px 10px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.95);
+  font-size: 14px;
+  font-weight: 600;
+  text-align: left;
+  color: var(--text);
+  transition:
+    border-color var(--transition),
+    background var(--transition);
+}
+
+.life-rpg .state-card.selected {
+  border-color: rgba(99, 102, 241, 0.55);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.08));
+  color: var(--accent-a);
+}
+
+.life-rpg .state-card.selected::after {
+  content: ' ✓';
+}
+
+/* 方向模板大卡片 */
+.life-rpg .template-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.life-rpg .template-card {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  width: 100%;
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(148, 163, 184, 0.35);
+  background: rgba(255, 255, 255, 0.95);
+  text-align: left;
+  transition:
+    border-color var(--transition),
+    box-shadow var(--transition);
+}
+
+.life-rpg .template-card.selected {
+  border-color: rgba(99, 102, 241, 0.55);
+  box-shadow: 0 0 0 1px rgba(99, 102, 241, 0.12);
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(255, 255, 255, 0.98));
+}
+
+.life-rpg .template-card__title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--text);
+}
+
+.life-rpg .template-card.selected .template-card__title {
+  color: var(--accent-a);
+}
+
+.life-rpg .template-card__sub {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.life-rpg .template-card__examples {
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-muted);
+}
+
+.life-rpg .tool-card--fold {
+  padding-top: 14px;
+  padding-bottom: 14px;
+}
+
+.life-rpg .phase-badge {
+  display: inline-block;
+  margin-bottom: 8px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: var(--accent-a);
+}
+
+/* 页面壳 */
+.life-rpg.page {
+  max-width: 520px;
+  margin: 0 auto;
+  padding: 16px 14px 48px;
+  min-height: 100vh;
+}
+
+.life-rpg .top-nav {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 2px 12px;
+}
+
+.life-rpg .nav-link {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--accent-a);
+  text-decoration: none;
+}
+
+.life-rpg .nav-link--secondary {
+  color: var(--text-muted);
+}
+
+.life-rpg .hero {
+  margin-bottom: 16px;
+}
+
+.life-rpg .hero-kicker {
+  margin: 0 0 8px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  color: var(--accent-a);
+}
+
+.life-rpg .title {
+  margin: 0 0 8px;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.life-rpg .sub {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.65;
+  color: var(--text-muted);
+}
+
+.life-rpg .kicker {
+  margin: 0 0 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--accent-a);
+}
+
+.life-rpg .block-title {
+  margin: 0 0 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.life-rpg .btn-outline {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(148, 163, 184, 0.4);
+  background: rgba(255, 255, 255, 0.95);
+  color: var(--accent-a);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.life-rpg .btn-outline--danger {
+  color: #b45309;
+  border-color: rgba(251, 191, 36, 0.45);
+}
+
+.life-rpg .submit-btn {
+  width: 100%;
+  margin-top: 4px;
+  padding: 15px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 16px;
+}
+
+.life-rpg .loading-hint {
+  margin: 24px 0;
+  text-align: center;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--accent-a);
+}
+
+.life-rpg .toast {
+  position: fixed;
+  left: 50%;
+  bottom: 48px;
+  transform: translateX(-50%);
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.88);
+  color: #fff;
+  font-size: 14px;
+  z-index: 2000;
+}
+
+/* 身份选择 */
+.life-rpg .identity-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+.life-rpg .search-wrap {
+  position: relative;
+}
+
+.life-rpg .search-input {
+  padding-left: 14px;
+}
+
+.life-rpg .suggest-list {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  margin: 0;
+  padding: 6px;
+  list-style: none;
+  border-radius: var(--radius-sm);
+  border: var(--border-soft);
+  background: var(--surface-solid);
+  box-shadow: var(--shadow-card);
+  z-index: 20;
+  max-height: 200px;
+  overflow-y: auto;
+}
+
+.life-rpg .suggest-item {
+  padding: 10px 12px;
+  border-radius: 10px;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.life-rpg .suggest-item:hover {
+  background: rgba(99, 102, 241, 0.08);
+  color: var(--accent-a);
+}
+
+.life-rpg .suggest-empty,
+.life-rpg .occ-hint {
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.life-rpg .suggest-empty {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(100% + 6px);
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+  background: var(--surface-solid);
+  border: var(--border-soft);
+  z-index: 20;
+}
+
+.life-rpg .occ-hint {
+  margin: 10px 0 0;
+}
+
+@media (max-width: 480px) {
+  .life-rpg .identity-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* 属性 / 进度 */
+.life-rpg .attr-value,
+.life-rpg .progress-stats strong,
+.life-rpg .task-reward,
+.life-rpg .ending {
+  color: var(--accent-a);
+}
+
+.life-rpg .attr-fill,
+.life-rpg .progress-fill {
+  background: linear-gradient(90deg, var(--accent-a), var(--accent-b));
+}
+
+.life-rpg .attr-bar,
+.life-rpg .progress-bar {
+  background: rgba(148, 163, 184, 0.25);
+}
+
+.life-rpg .task-btn {
+  background: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+}
+
+.life-rpg .task-btn--outline {
+  background: transparent;
+  border: 1px solid rgba(148, 163, 184, 0.45);
+  color: var(--accent-a);
+}
+
+.life-rpg .tool-card--warn {
+  background: linear-gradient(135deg, rgba(254, 243, 199, 0.4), rgba(255, 255, 255, 0.95));
+}
+
+.life-rpg .route-title,
+.life-rpg .world-title {
+  margin: 0 0 8px;
+  font-size: 20px;
+  font-weight: 800;
+  line-height: 1.35;
+  color: var(--text);
+}
+
+.life-rpg .route-summary,
+.life-rpg .world-desc,
+.life-rpg .world-hint {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.life-rpg .world-hint {
+  margin: 0 0 12px;
+  font-size: 13px;
+}
+
+.life-rpg .route-continuation {
+  margin: 10px 0 0;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text);
+}
+
+.life-rpg .bullet-list {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.life-rpg .ending-card {
+  text-align: center;
+}
+
+.life-rpg .raw-text {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 12px;
+  max-height: 200px;
+  overflow: auto;
+}
+
+.life-rpg .actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.life-rpg .actions .btn-gradient,
+.life-rpg .actions .btn-outline {
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.life-rpg .quest {
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  background: rgba(238, 242, 255, 0.5);
+  margin-bottom: 12px;
+}
+
+.life-rpg .quest-title {
+  margin: 0 0 8px;
+  font-size: 16px;
+  font-weight: 700;
+  line-height: 1.4;
+}
+
+.life-rpg .quest-goal {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.life-rpg .quest-meta {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--accent-a);
+}
+
+.life-rpg .task-item {
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  background: rgba(255, 255, 255, 0.95);
+  margin-bottom: 10px;
+}
+
+.life-rpg .task-item--done {
+  border-color: rgba(34, 197, 94, 0.35);
+  background: rgba(240, 253, 244, 0.85);
+}
+
+.life-rpg .task-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+}
+
+.life-rpg .task-action {
+  margin: 0 0 8px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-muted);
+}
+
+.life-rpg .task-btn {
+  width: 100%;
+  padding: 11px 14px;
+  border-radius: var(--radius-sm);
+  border: none;
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}

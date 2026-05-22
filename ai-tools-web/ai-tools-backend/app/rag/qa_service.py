@@ -6,11 +6,11 @@ from typing import Dict, List
 from app.config import settings
 from app.rag.prompt_builder import build_prompt
 from app.rag.query_pipeline import query_pipeline
-from app.rag.repository import rag_repository
+from app.repositories.rag import rag_repository
 from app.rag.retrieval_service import retrieval_service
 from app.rag.scope import RequestScope
-from app.rag.schemas import AskResponse, Citation
-from app.summarize_service import _call_dashscope
+from app.schemas.rag import AskResponse, Citation
+from app.llm.dashscope_client import call_dashscope
 
 
 class RagQaService:
@@ -60,7 +60,7 @@ class RagQaService:
             generation_started_at = query_pipeline.start_timer()
             generation_error = ""
             try:
-                answer = await _call_dashscope([system, user])
+                answer = await call_dashscope([system, user])
             except Exception as model_err:
                 generation_error = str(model_err)[:300]
                 answer = self._fallback_answer(normalized_query, prepared_hits)

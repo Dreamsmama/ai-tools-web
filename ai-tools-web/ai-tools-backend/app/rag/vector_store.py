@@ -3,7 +3,7 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 from app.config import settings
-from app.rag.repository import rag_repository
+from app.repositories.rag import rag_repository
 from app.rag.scope import RequestScope
 
 

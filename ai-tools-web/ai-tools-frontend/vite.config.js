@@ -42,10 +42,38 @@ export default defineConfig({
         changeOrigin: true,
         rewrite: () => '/interest-explorer',
       },
+      '/api/life-rpg/create-route': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        rewrite: () => '/life-rpg/create-route',
+      },
+      '/api/life-rpg/daily': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        rewrite: () => '/life-rpg/daily',
+      },
+      '/api/ai-short-drama': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/api/, ''),
+      },
+      '/generated': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
+      '/uploads': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+      },
       '/api/memory/compare': {
         target: 'http://127.0.0.1:8000',
         changeOrigin: true,
         rewrite: () => '/memory/compare',
+      },
+      '/api/tools/xiaohongshu-agent/generate-stream': {
+        target: 'http://127.0.0.1:8000',
+        changeOrigin: true,
+        rewrite: () => '/tools/xiaohongshu-agent/generate-stream',
       },
       '/api/tools/xiaohongshu-agent/generate': {
         target: 'http://127.0.0.1:8000',

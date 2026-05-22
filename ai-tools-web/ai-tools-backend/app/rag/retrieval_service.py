@@ -4,7 +4,7 @@ import math
 from typing import Any, Dict, List
 
 from app.rag.embedding_service import embedding_service
-from app.rag.repository import rag_repository
+from app.repositories.rag import rag_repository
 from app.rag.scope import RequestScope
 from app.rag.vector_store import vector_store
 

@@ -3,6 +3,12 @@ import { RouterLink } from 'vue-router'
 
 const scenarioTools = [
   {
+    to: '/tools/life-rpg',
+    title: 'AI 人生副本',
+    tag: '成长',
+    desc: '根据状态整理长期路线，生成今日可推进的安排',
+  },
+  {
     to: '/summary',
     title: '职场沟通回复助手',
     tag: '沟通',
@@ -43,6 +49,12 @@ const scenarioTools = [
     title: '小红书内容生产 Agent',
     tag: 'Agent',
     desc: '输入主题/产品/人群，一键生成标题、文案、图片提示词',
+  },
+  {
+    to: '/tools/ai-short-drama',
+    title: 'AI 职业图文成片',
+    tag: '图文',
+    desc: '职业观察局风格：一句文案一张图，自动匹配素材，可合成竖屏成片视频',
   },
 ]
 </script>

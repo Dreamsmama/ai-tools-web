@@ -34,10 +34,33 @@ systemctl status <backend-service-name> --no-pager -l
 
 ---
 
-## 本次「小红书内容生产 Agent」发布：建议变量
+## AI 短剧（职业观察局）建议变量
+
+完整说明见 [ai-short-drama.md](./ai-short-drama.md)。
 
 ```env
-# 必填：通义千问 API Key
+# 文案拆段（DashScope）
+DASHSCOPE_API_KEY=你的key
+SHORT_DRAMA_SCRIPT_TIMEOUT_SECONDS=90
+SHORT_DRAMA_AI_MATERIAL_TIMEOUT_SECONDS=90
+SHORT_DRAMA_AI_MATERIAL_PARALLEL=3
+
+# 场景图 + 角色 IP 生成（即梦 / 火山方舟）
+JIMENG_API_KEY=你的key
+JIMENG_API_BASE_URL=https://ark.cn-beijing.volces.com/api/v3
+JIMENG_MODEL=doubao-seedream-4-0-250828
+
+# 素材库：留空=本地 JSON，不要填 RAG_DATABASE_URL
+SHORT_DRAMA_DATABASE_URL=
+SHORT_DRAMA_STARTUP_CLEANUP=false
+```
+
+---
+
+## 小红书内容生产 Agent：建议变量
+
+```env
+# 必填：通义千问 API Key（五步 LLM）
 DASHSCOPE_API_KEY=你的key
 
 # 建议：模型改为 qwen-plus（默认）
@@ -45,6 +68,9 @@ DASHSCOPE_MODEL=qwen-plus
 
 # 可选：不填则使用项目默认地址
 DASHSCOPE_URL=https://dashscope.aliyuncs.com/api/v1/services/aigc/text-generation/generation
+
+# 可选：前端勾选「生成配图」时需要
+JIMENG_API_KEY=你的key
 ```
 
 ---

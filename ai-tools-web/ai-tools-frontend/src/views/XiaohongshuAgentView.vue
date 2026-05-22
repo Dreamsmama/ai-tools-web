@@ -20,9 +20,13 @@ const form = ref({
   audience: '',
   style: '种草',
   count: 3,
+  generateImages: false,
 })
 
 const loading = ref(false)
+const progressLabel = ref('')
+const progressIndex = ref(0)
+const progressTotal = ref(5)
 const result = ref(null)
 const toast = ref('')
 const errorDialog = ref(false)
@@ -61,6 +65,96 @@ function copyLines(lines, sectionName) {
   copyText(lines.join('\n'), sectionName)
 }
 
+function resetProgress() {
+  progressLabel.value = ''
+  progressIndex.value = 0
+  progressTotal.value = form.value.generateImages ? 6 : 5
+}
+
+function onProgressEvent(data) {
+  if (!data || data.type !== 'step') return
+  progressIndex.value = Number(data.index) || 0
+  progressTotal.value = Number(data.total) || progressTotal.value
+  const label = data.label || data.step || '处理中'
+  if (data.phase === 'start') {
+    progressLabel.value = `${data.index}/${data.total} ${label}…`
+  } else if (data.phase === 'done') {
+    progressLabel.value = `${data.index}/${data.total} ${label} 完成`
+  } else if (data.phase === 'failed') {
+    progressLabel.value = `${data.index}/${data.total} ${label} 失败`
+  }
+}
+
+/**
+ * POST + SSE：解析 progress / result 事件（R8）。
+ */
+async function fetchXiaohongshuStream(url, requestBody, onProgress) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Accept: 'text/event-stream',
+    },
+    body: JSON.stringify(requestBody),
+  })
+  if (!res.ok) {
+    const err = new Error(`HTTP ${res.status}`)
+    err.status = res.status
+    throw err
+  }
+  if (!res.body) {
+    throw new Error('浏览器不支持流式响应')
+  }
+
+  const reader = res.body.getReader()
+  const decoder = new TextDecoder()
+  let buffer = ''
+  let finalPayload = null
+
+  while (true) {
+    const { done, value } = await reader.read()
+    if (done) break
+    buffer += decoder.decode(value, { stream: true })
+    const blocks = buffer.split('\n\n')
+    buffer = blocks.pop() || ''
+    for (const block of blocks) {
+      const trimmed = block.trim()
+      if (!trimmed) continue
+      const eventLine = trimmed.match(/^event:\s*(.+)$/m)
+      const dataLine = trimmed.match(/^data:\s*(.+)$/ms)
+      const eventName = eventLine ? eventLine[1].trim() : 'message'
+      const rawData = dataLine ? dataLine[1].trim() : ''
+      if (!rawData) continue
+      let parsed
+      try {
+        parsed = JSON.parse(rawData)
+      } catch {
+        continue
+      }
+      if (eventName === 'progress') {
+        onProgress(parsed)
+      } else if (eventName === 'result') {
+        finalPayload = parsed
+      }
+    }
+  }
+  return finalPayload
+}
+
+async function fetchXiaohongshuJson(url, requestBody) {
+  const res = await fetch(url, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(requestBody),
+  })
+  if (!res.ok) {
+    const err = new Error(`HTTP ${res.status}`)
+    err.status = res.status
+    throw err
+  }
+  return res.json()
+}
+
 async function onGenerate() {
   const topic = (form.value.topic || '').trim()
   if (!topic) {
@@ -69,41 +163,37 @@ async function onGenerate() {
   }
 
   loading.value = true
+  resetProgress()
+  progressLabel.value = '准备中…'
   const requestStart = Date.now()
   const trackEventId = trackSubmit(FEATURE, PAGE_PATH)
-  const url = apiUrl(API.xiaohongshuAgentGenerate)
+  const streamUrl = apiUrl(API.xiaohongshuAgentGenerateStream)
+  const jsonUrl = apiUrl(API.xiaohongshuAgentGenerate)
   const requestBody = {
     topic,
     product: (form.value.product || '').trim(),
     audience: (form.value.audience || '').trim(),
     style: (form.value.style || '种草').trim(),
     count: Number(form.value.count) || 3,
+    generate_images: Boolean(form.value.generateImages),
   }
   try {
-    const res = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(requestBody),
-    })
-
-    if (!res.ok) {
-      await logApiFailure(url, requestBody, res, new Error(`HTTP ${res.status}`))
-      trackApiFail(FEATURE, PAGE_PATH, trackEventId, `http_${res.status}`, Date.now() - requestStart)
-      showErrorDetail(httpErrorMessage(res.status))
-      return
+    let payload = null
+    try {
+      payload = await fetchXiaohongshuStream(streamUrl, requestBody, onProgressEvent)
+    } catch (streamErr) {
+      await logApiFailure(streamUrl, requestBody, null, streamErr)
+      progressLabel.value = '流式不可用，改用普通请求…'
+      payload = await fetchXiaohongshuJson(jsonUrl, requestBody)
     }
 
-    let payload
-    try {
-      payload = await res.json()
-    } catch (parseErr) {
-      await logApiFailure(url, requestBody, res, parseErr)
+    if (!payload) {
       trackApiFail(FEATURE, PAGE_PATH, trackEventId, 'response_parse_error', Date.now() - requestStart)
       showErrorDetail(RESPONSE_PARSE_ERROR)
       return
     }
 
-    if (!payload || payload.code !== 0) {
+    if (payload.code !== 0) {
       trackApiFail(
         FEATURE,
         PAGE_PATH,
@@ -120,12 +210,23 @@ async function onGenerate() {
 
     trackApiSuccess(FEATURE, PAGE_PATH, trackEventId, Date.now() - requestStart)
     result.value = payload.data ?? null
+    progressLabel.value = '完成'
   } catch (err) {
-    await logApiFailure(url, requestBody, null, err)
-    trackApiFail(FEATURE, PAGE_PATH, trackEventId, 'network_error', Date.now() - requestStart)
-    showErrorDetail(NETWORK_UNREACHABLE)
+    const status = err?.status
+    if (status) {
+      await logApiFailure(streamUrl, requestBody, { status }, err)
+      trackApiFail(FEATURE, PAGE_PATH, trackEventId, `http_${status}`, Date.now() - requestStart)
+      showErrorDetail(httpErrorMessage(status))
+    } else {
+      await logApiFailure(streamUrl, requestBody, null, err)
+      trackApiFail(FEATURE, PAGE_PATH, trackEventId, 'network_error', Date.now() - requestStart)
+      showErrorDetail(NETWORK_UNREACHABLE)
+    }
   } finally {
     loading.value = false
+    window.setTimeout(() => {
+      if (!loading.value) progressLabel.value = ''
+    }, 1500)
   }
 }
 </script>
@@ -174,11 +275,25 @@ async function onGenerate() {
           <span class="label">输出数量</span>
           <input v-model.number="form.count" type="number" min="1" max="10" class="input" />
         </label>
+
+        <label class="field field-check">
+          <input v-model="form.generateImages" type="checkbox" class="checkbox" />
+          <span class="label-inline">同时生成配图（即梦，较慢，需后端配置 JIMENG_API_KEY）</span>
+        </label>
       </div>
 
       <button type="button" class="btn btn-gradient" :disabled="loading" @click="onGenerate">
-        {{ loading ? '生成中…' : '生成内容' }}
+        {{ loading ? (progressLabel || '生成中…') : '生成内容' }}
       </button>
+      <div v-if="loading && progressTotal > 0" class="progress-wrap" role="status">
+        <div class="progress-bar">
+          <div
+            class="progress-fill"
+            :style="{ width: `${Math.min(100, (progressIndex / progressTotal) * 100)}%` }"
+          />
+        </div>
+        <p class="progress-hint">{{ progressLabel }}</p>
+      </div>
     </section>
 
     <section class="card">
@@ -209,6 +324,20 @@ async function onGenerate() {
       <p v-if="!result" class="empty">点击「生成内容」后显示</p>
       <p v-else-if="!result.image_prompts?.length" class="empty">暂无结果</p>
       <p v-for="(item, idx) in result?.image_prompts || []" :key="'img-' + idx" class="item">• {{ item }}</p>
+    </section>
+
+    <section class="card">
+      <div class="block-head">
+        <h2 class="block-title">配图预览</h2>
+      </div>
+      <p v-if="!result" class="empty">勾选「同时生成配图」且生成成功后会显示</p>
+      <p v-else-if="!result.image_urls?.length" class="empty">本次未生成配图（未勾选或即梦未配置/失败）</p>
+      <div v-else class="image-grid">
+        <figure v-for="(url, idx) in result.image_urls" :key="'imgurl-' + idx" class="image-card">
+          <img :src="apiUrl(url)" :alt="'配图 ' + (idx + 1)" class="preview-img" loading="lazy" />
+          <figcaption class="image-cap">配图 {{ idx + 1 }}</figcaption>
+        </figure>
+      </div>
     </section>
 
     <section class="card">
@@ -333,6 +462,30 @@ async function onGenerate() {
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.15);
 }
 
+.progress-wrap {
+  margin-top: 12px;
+}
+
+.progress-bar {
+  height: 6px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.25);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #6366f1, #8b5cf6);
+  transition: width 0.35s ease;
+}
+
+.progress-hint {
+  margin: 8px 0 0;
+  font-size: 13px;
+  color: #64748b;
+}
+
 .btn {
   width: 100%;
   margin-top: 14px;
@@ -382,6 +535,52 @@ async function onGenerate() {
 
 .item:last-child {
   margin-bottom: 0;
+}
+
+.field-check {
+  flex-direction: row;
+  align-items: flex-start;
+  gap: 10px;
+  grid-column: 1 / -1;
+}
+
+.checkbox {
+  margin-top: 4px;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+}
+
+.label-inline {
+  font-size: 13px;
+  line-height: 1.5;
+  color: #475569;
+}
+
+.image-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 12px;
+}
+
+.image-card {
+  margin: 0;
+}
+
+.preview-img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  border-radius: 12px;
+  border: 1px solid rgba(148, 163, 184, 0.25);
+  background: #f1f5f9;
+}
+
+.image-cap {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #64748b;
+  text-align: center;
 }
 
 .text-block {

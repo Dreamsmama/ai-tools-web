@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import Dict, List
 
-from app.rag.repository import rag_repository
+from app.repositories.rag import rag_repository
 from app.rag.scope import RequestScope
 
 

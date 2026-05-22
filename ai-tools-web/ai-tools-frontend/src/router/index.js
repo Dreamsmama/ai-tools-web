@@ -22,6 +22,11 @@ import GaokaoZonePage from '../views/GaokaoZonePage.vue'
 import GaokaoHotTopicPage from '../views/GaokaoHotTopicPage.vue'
 import EveningPlanPage from '../views/EveningPlanPage.vue'
 import InterestExplorerPage from '../views/InterestExplorerPage.vue'
+import LifeRpgPage from '../views/LifeRpgPage.vue'
+import AiShortDramaLayout from '../modules/ai-short-drama/views/AiShortDramaLayout.vue'
+import AiShortDramaPage from '../modules/ai-short-drama/views/AiShortDramaPage.vue'
+import AiShortDramaMaterialsPage from '../modules/ai-short-drama/views/AiShortDramaMaterialsPage.vue'
+import AiShortDramaCharactersPage from '../modules/ai-short-drama/views/AiShortDramaCharactersPage.vue'
 
 const router = createRouter({
   history: createWebHistory(),
@@ -64,6 +69,20 @@ const router = createRouter({
     { path: '/xiaohongshu-agent', name: 'xiaohongshuAgent', component: XiaohongshuAgentView },
     { path: '/tools/evening-plan', name: 'eveningPlan', component: EveningPlanPage },
     { path: '/tools/interest-explorer', name: 'interestExplorer', component: InterestExplorerPage },
+    { path: '/tools/life-rpg', name: 'lifeRpg', component: LifeRpgPage },
+    {
+      path: '/tools/ai-short-drama',
+      component: AiShortDramaLayout,
+      children: [
+        { path: '', name: 'aiShortDrama', component: AiShortDramaPage },
+        {
+          path: 'characters',
+          name: 'aiShortDramaCharacters',
+          component: AiShortDramaCharactersPage,
+        },
+        { path: 'materials', name: 'aiShortDramaMaterials', component: AiShortDramaMaterialsPage },
+      ],
+    },
   ],
 })
 

@@ -1,44 +1,51 @@
 """
-FastAPI entry: /health, /summary, /prepare-consult (aligned with WeChat cloud functions).
+FastAPI entry: app setup, middleware, static mounts, route registration.
 """
 
 from __future__ import annotations
 
-from typing import Dict
+import logging
+import time
+from pathlib import Path
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 
-from app.evening_plan_service import evening_plan_recommend
-from app.interest_explorer_service import interest_explorer_recommend
-from app.memory_compare_service import memory_compare
-from app.model_compare_service import compare_model_output
-from app.offer_decision_service import offer_decision_analyze
-from app.prepare_consult_service import prepare_consult
-from app.rag.api import router as rag_router
-from app.schemas import (
-    EveningPlanEnvelope,
-    EveningPlanRequest,
-    InterestExplorerEnvelope,
-    InterestExplorerRequest,
-    MemoryCompareEnvelope,
-    MemoryCompareRequest,
-    ModelCompareEnvelope,
-    ModelCompareRequest,
-    OfferDecisionEnvelope,
-    OfferDecisionRequest,
-    PrepareConsultEnvelope,
-    PrepareConsultRequest,
-    SummaryEnvelope,
-    SummaryRequest,
-    XiaohongshuAgentEnvelope,
-    XiaohongshuAgentRequest,
+from app.routes import register_routes
+from app.startup import ensure_runtime_directories, run_short_drama_startup
+
+logging.basicConfig(
+    level=logging.INFO,
+    format="%(asctime)s %(levelname)s [%(name)s] %(message)s",
 )
-from app.summarize_service import summarize_chat
-from app.track_api import router as track_router
-from app.xiaohongshu_agent_service import xiaohongshu_agent_service
+_request_logger = logging.getLogger("app.request")
 
 app = FastAPI(title="ai-tools-backend", version="0.1.0")
+
+
+_TRACKED_PATH_PREFIXES = ("/ai-short-drama", "/tools/xiaohongshu-agent")
+
+
+@app.middleware("http")
+async def log_slow_agent_requests(request: Request, call_next):
+    path = request.url.path
+    track = path.startswith(_TRACKED_PATH_PREFIXES)
+    if track:
+        _request_logger.info("→ %s %s", request.method, path)
+    started = time.perf_counter()
+    response = await call_next(request)
+    if track:
+        elapsed = time.perf_counter() - started
+        _request_logger.info(
+            "← %s %s %.1fs status=%s",
+            request.method,
+            path,
+            elapsed,
+            response.status_code,
+        )
+    return response
+
 
 app.add_middleware(
     CORSMiddleware,
@@ -48,112 +55,37 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(rag_router)
-app.include_router(track_router)
+register_routes(app)
 
+_backend_root = Path(__file__).resolve().parent.parent
+_generated_root, _uploads_root = ensure_runtime_directories(_backend_root)
+run_short_drama_startup()
 
-@app.get("/health")
-async def health() -> Dict[str, str]:
-    return {"status": "ok"}
-
-
-@app.post(
-    "/summary",
-    response_model=SummaryEnvelope,
-    response_model_exclude_none=True,
-)
-async def summary(body: SummaryRequest) -> SummaryEnvelope:
-    """
-    Body: `{ "inputText": "..." }` — same field name as `wx.cloud.callFunction({ data: { inputText } })`.
-    Response: `{ "code": 0, "data": { intent, emotion, strategy, reply } }` or `{ "code", "message" }`.
-    """
-    return await summarize_chat(body.inputText)
-
-
-@app.post(
-    "/offer-decision",
-    response_model=OfferDecisionEnvelope,
-    response_model_exclude_none=True,
-)
-async def offer_decision(body: OfferDecisionRequest) -> OfferDecisionEnvelope:
-    return await offer_decision_analyze(body.input_text)
-
-
-@app.post(
-    "/evening-plan",
-    response_model=EveningPlanEnvelope,
-    response_model_exclude_none=True,
-)
-async def evening_plan(body: EveningPlanRequest) -> EveningPlanEnvelope:
-    return await evening_plan_recommend(body)
-
-
-@app.post(
-    "/interest-explorer",
-    response_model=InterestExplorerEnvelope,
-    response_model_exclude_none=True,
-)
-async def interest_explorer(body: InterestExplorerRequest) -> InterestExplorerEnvelope:
-    return await interest_explorer_recommend(body)
-
-
-@app.post(
-    "/prepare-consult",
-    response_model=PrepareConsultEnvelope,
-    response_model_exclude_none=True,
-)
-@app.post(
-    "/medical-assistant",
-    response_model=PrepareConsultEnvelope,
-    response_model_exclude_none=True,
-)
-async def prepare_consult_route(body: PrepareConsultRequest) -> PrepareConsultEnvelope:
-    """
-    对齐 `prepareConsult` 云函数：symptom / report / target。
-    `/medical-assistant` 与 `/prepare-consult` 相同，供 Nginx 剥掉 `/api` 后路径为 /medical-assistant 时使用。
-    """
-    return await prepare_consult(body.symptom, body.report, body.target)
-
-
-@app.post(
-    "/model-compare",
-    response_model=ModelCompareEnvelope,
-    response_model_exclude_none=True,
-)
-async def model_compare(body: ModelCompareRequest) -> ModelCompareEnvelope:
-    return await compare_model_output(body.input)
-
-
-@app.post(
-    "/memory/compare",
-    response_model=MemoryCompareEnvelope,
-    response_model_exclude_none=True,
-)
-async def compare_memory_answer(body: MemoryCompareRequest) -> MemoryCompareEnvelope:
-    return await memory_compare(body.chat_content, body.question)
-
-
-@app.post(
-    "/tools/xiaohongshu-agent/generate",
-    response_model=XiaohongshuAgentEnvelope,
-    response_model_exclude_none=True,
-)
-async def xiaohongshu_agent_generate(
-    body: XiaohongshuAgentRequest,
-) -> XiaohongshuAgentEnvelope:
-    return await xiaohongshu_agent_service.run(
-        topic=body.topic,
-        product=body.product,
-        audience=body.audience,
-        style=body.style,
-        count=body.count,
-    )
+app.mount("/generated", StaticFiles(directory=str(_generated_root)), name="generated")
+app.mount("/uploads", StaticFiles(directory=str(_uploads_root)), name="uploads")
 
 
 def main() -> None:
+    import os
+
     import uvicorn
 
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    # 长任务（/generate）进行中 reload 会打断请求；本地默认关 reload，需要热更新时设 UVICORN_RELOAD=1
+    reload = os.getenv("UVICORN_RELOAD", "0").lower() in ("1", "true", "yes")
+    # 多 worker：生图/分镜长任务占用一个进程时，其它接口仍可由另一进程响应（reload 模式仅支持单进程）
+    workers = 1
+    if not reload:
+        try:
+            workers = max(1, min(8, int(os.getenv("UVICORN_WORKERS", "2"))))
+        except ValueError:
+            workers = 2
+    uvicorn.run(
+        "app.main:app",
+        host="0.0.0.0",
+        port=8000,
+        reload=reload,
+        workers=workers,
+    )
 
 
 if __name__ == "__main__":
