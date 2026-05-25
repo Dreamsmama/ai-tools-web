@@ -56,6 +56,12 @@ const scenarioTools = [
     tag: '图文',
     desc: '职业观察局风格：一句文案一张图，自动匹配素材，可合成竖屏成片视频',
   },
+  {
+    to: '/tools/hairstyle',
+    title: 'AI 换发型',
+    tag: '形象',
+    desc: '上传自拍，AI 生成不同发型效果，看看哪种更适合你',
+  },
 ]
 </script>
 
