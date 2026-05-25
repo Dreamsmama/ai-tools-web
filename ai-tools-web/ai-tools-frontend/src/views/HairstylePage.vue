@@ -24,15 +24,8 @@ const errorMsg = ref('')
 
 let objectUrl = ''
 
-const MAX_UPLOAD_SIZE = 4 * 1024 * 1024 // 4MB
-const SAFE_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp'])
-
-function compressImage(file, maxSize = MAX_UPLOAD_SIZE) {
-  const needsConvert = !SAFE_TYPES.has(file.type) || file.size > maxSize
-  if (!needsConvert) {
-    return Promise.resolve(file)
-  }
-  return new Promise((resolve, reject) => {
+function compressImage(file) {
+  return new Promise((resolve) => {
     const img = new window.Image()
     const url = URL.createObjectURL(file)
     img.onload = () => {
@@ -55,8 +48,8 @@ function compressImage(file, maxSize = MAX_UPLOAD_SIZE) {
             resolve(file)
             return
           }
-          const compressed = new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' })
-          resolve(compressed)
+          const name = (file.name || 'photo').replace(/\.\w+$/, '') + '.jpg'
+          resolve(new File([blob], name, { type: 'image/jpeg' }))
         },
         'image/jpeg',
         0.85
