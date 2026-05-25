@@ -199,11 +199,9 @@ async def generate_hairstyle(
     gender: Literal["male", "female"],
     beauty_level: str = "light",
 ) -> HairstyleResult:
-    model = settings.hairstyle_model.strip()
+    model = (settings.hairstyle_model or settings.jimeng_model).strip()
     if not model:
-        raise ValueError(
-            "未配置 HAIRSTYLE_MODEL，请在 .env 中设置（参考 .env.example）"
-        )
+        raise ValueError("未配置模型：请在 .env 中设置 HAIRSTYLE_MODEL 或 JIMENG_MODEL")
     if not settings.jimeng_api_key.strip():
         raise ValueError("未配置 JIMENG_API_KEY，无法调用 ARK 图片编辑接口")
 
