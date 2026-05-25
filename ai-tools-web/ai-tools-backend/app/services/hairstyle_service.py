@@ -185,10 +185,11 @@ async def _call_ark_image_edit(
 
     item = data_list[0]
     if item.get("b64_json"):
-        return base64.b64decode(item["b64_json"])
+        return base64.b64decode(item["b64_json"]), None
     url = str(item.get("url") or "")
     if url:
-        return await _download_bytes(url)
+        img_bytes = await _download_bytes(url)
+        return img_bytes, url
     raise RuntimeError(
         f"ARK 返回结构无法解析：{json.dumps(body, ensure_ascii=False)[:200]}"
     )
@@ -222,7 +223,7 @@ async def generate_hairstyle(
     prompt = _build_prompt(style, beauty_level)
 
     try:
-        img_bytes = await asyncio.wait_for(
+        img_bytes, cloud_url = await asyncio.wait_for(
             _call_ark_image_edit(image_bytes, image_filename, prompt, model),
             timeout=settings.hairstyle_timeout_seconds,
         )
@@ -243,7 +244,7 @@ async def generate_hairstyle(
         len(img_bytes),
     )
 
-    result_url = f"/generated/hairstyle/{out_name}"
+    result_url = cloud_url if cloud_url else f"/generated/hairstyle/{out_name}"
     style_suggestion = _STYLE_SUGGESTIONS.get(
         style, "这个发型会让整体气质更清爽，适合想提升精神感和形象辨识度的场景。"
     )

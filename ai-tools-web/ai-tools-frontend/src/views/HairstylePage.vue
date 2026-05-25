@@ -2,6 +2,7 @@
 import { ref, onUnmounted } from 'vue'
 import { RouterLink } from 'vue-router'
 import { requestHairstyleGenerate } from '../lib/hairstyleApi.js'
+import { staticUrl } from '../api.js'
 
 const MALE_STYLES = ['韩系碎盖', '清爽短发', '三七分', '寸头', '商务背头', '微分碎盖']
 const FEMALE_STYLES = ['锁骨发', '空气刘海', '法式短发', '韩系长卷发', '高层次长发', '温柔短发']
@@ -218,7 +219,7 @@ onUnmounted(() => {
               <p class="result-img-label">AI 效果图</p>
               <img
                 v-if="result.resultImageUrl"
-                :src="result.resultImageUrl"
+                :src="staticUrl(result.resultImageUrl)"
                 alt="AI换发型效果"
                 class="result-img"
               />

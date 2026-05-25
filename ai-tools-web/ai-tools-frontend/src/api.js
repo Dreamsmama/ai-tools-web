@@ -53,6 +53,22 @@ export function apiUrl(path) {
 }
 
 /**
+ * 将后端返回的静态资源相对路径（如 /generated/hairstyle/xxx.jpg）
+ * 转为可在当前环境（开发/生产）访问的完整 URL。
+ */
+export function staticUrl(path) {
+  if (!path) return ''
+  if (path.startsWith('http://') || path.startsWith('https://')) return path
+  const p = path.startsWith('/') ? path : `/${path}`
+  const raw = import.meta.env.VITE_API_BASE
+  if (raw == null || String(raw).trim() === '') {
+    return p
+  }
+  const base = String(raw).replace(/\/$/, '')
+  return `${base}${p}`
+}
+
+/**
  * 请求失败时打印，便于线上排查（不改变用户可见提示文案）。
  */
 export async function logApiFailure(url, requestBody, res, err) {
