@@ -50,11 +50,39 @@ _STYLE_SUGGESTIONS: dict[str, str] = {
     "温柔短发": "温柔短发清爽又减龄，打理方便，适合追求简单精致生活的人群。",
 }
 
-# 固定附加约束：保留人物身份，只改发型
-_PRESERVE_INSTRUCTION = (
-    "保留人物的脸型、五官、表情、肤色和背景，不要改变人物身份，不要过度美颜，"
-    "发际线要自然真实，光影与原图保持一致，不要贴图感，不要明显AI感。"
+# 核心身份保留约束（所有 beautyLevel 共用）
+_PRESERVE_BASE = (
+    "保留人物身份、五官、脸型、表情、肤色和原始构图，只改变发型。"
+    "发型必须自然贴合头型，发际线真实，头发边缘自然，光影和原照片一致。"
+    "不要像假发，不要像贴图，不要改变脸，不要改变背景。"
 )
+
+# 各美化强度追加指令
+_BEAUTY_INSTRUCTIONS: dict[str, str] = {
+    "natural": (
+        "尽量保持原照片真实状态，只做发型变化，不进行明显美颜。"
+    ),
+    "light": (
+        "在保留本人身份和五官特征的前提下，进行轻微自然美化："
+        "改善肤色、光线和照片质感，让人物看起来更清爽自然，"
+        "但不要过度磨皮，不要网红脸，不要改变脸型和五官。"
+    ),
+    "upgrade": (
+        "在保留本人身份和五官特征的前提下，进行自然形象升级："
+        "让人物看起来更精神、更清爽、更有气质，"
+        "适度优化肤色、光线、照片质感和整体形象，"
+        "但必须保持真实自然，不要变成另一个人，不要过度美颜。"
+    ),
+}
+
+# 各美化强度对应的建议文案前缀
+_BEAUTY_SUGGESTIONS: dict[str, str] = {
+    "natural": "这个结果更接近真实剪发效果，适合想保守参考发型的人。",
+    "light": "这个结果在保留本人特征的基础上做了轻微美化，看起来会更清爽自然。",
+    "upgrade": "这个结果更偏整体形象提升，适合想尝试更明显风格变化的人。",
+}
+
+_VALID_BEAUTY_LEVELS = frozenset({"natural", "light", "upgrade"})
 
 _EXT_CONTENT_TYPE: dict[str, str] = {
     ".jpg": "image/jpeg",
@@ -64,9 +92,12 @@ _EXT_CONTENT_TYPE: dict[str, str] = {
 }
 
 
-def _build_prompt(style: str) -> str:
+def _build_prompt(style: str, beauty_level: str) -> str:
     style_desc = _STYLE_PROMPTS.get(style, f"把人物发型改成{style}，发丝自然真实。")
-    return f"{style_desc}{_PRESERVE_INSTRUCTION}"
+    beauty_instruction = _BEAUTY_INSTRUCTIONS.get(
+        beauty_level, _BEAUTY_INSTRUCTIONS["light"]
+    )
+    return f"{style_desc}{_PRESERVE_BASE}{beauty_instruction}"
 
 
 def _get_generated_dir() -> Path:
@@ -166,6 +197,7 @@ async def generate_hairstyle(
     image_filename: str,
     style: str,
     gender: Literal["male", "female"],
+    beauty_level: str = "light",
 ) -> HairstyleResult:
     model = settings.hairstyle_model.strip()
     if not model:
@@ -175,7 +207,11 @@ async def generate_hairstyle(
     if not settings.jimeng_api_key.strip():
         raise ValueError("未配置 JIMENG_API_KEY，无法调用 ARK 图片编辑接口")
 
-    prompt = _build_prompt(style)
+    # 防御：beauty_level 不合法时回退到 light
+    if beauty_level not in _VALID_BEAUTY_LEVELS:
+        beauty_level = "light"
+
+    prompt = _build_prompt(style, beauty_level)
 
     try:
         img_bytes = await asyncio.wait_for(
@@ -191,15 +227,18 @@ async def generate_hairstyle(
     out_path = generated_dir / out_name
     out_path.write_bytes(img_bytes)
     logger.info(
-        "[换发型] 生成完成 style=%s gender=%s path=%s bytes=%d",
+        "[换发型] 生成完成 style=%s gender=%s beauty_level=%s path=%s bytes=%d",
         style,
         gender,
+        beauty_level,
         out_path,
         len(img_bytes),
     )
 
     result_url = f"/generated/hairstyle/{out_name}"
-    suggestion = _STYLE_SUGGESTIONS.get(
+    style_suggestion = _STYLE_SUGGESTIONS.get(
         style, "这个发型会让整体气质更清爽，适合想提升精神感和形象辨识度的场景。"
     )
+    beauty_suggestion = _BEAUTY_SUGGESTIONS.get(beauty_level, _BEAUTY_SUGGESTIONS["light"])
+    suggestion = f"{beauty_suggestion}{style_suggestion}"
     return HairstyleResult(result_image_url=result_url, suggestion=suggestion)

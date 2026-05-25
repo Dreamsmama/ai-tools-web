@@ -6,10 +6,17 @@ import { requestHairstyleGenerate } from '../lib/hairstyleApi.js'
 const MALE_STYLES = ['韩系碎盖', '清爽短发', '三七分', '寸头', '商务背头', '微分碎盖']
 const FEMALE_STYLES = ['锁骨发', '空气刘海', '法式短发', '韩系长卷发', '高层次长发', '温柔短发']
 
+const BEAUTY_OPTIONS = [
+  { value: 'natural', name: '自然真实', desc: '尽量只换发型，保留原图真实状态' },
+  { value: 'light', name: '轻微美化', desc: '换发型 + 提亮肤色 + 优化光线，看起来更清爽自然' },
+  { value: 'upgrade', name: '形象升级', desc: '换发型 + 更有精神感和气质，但仍保留本人特征' },
+]
+
 const imageUrl = ref('')
 const imageFile = ref(null)
 const gender = ref('female')
 const selectedStyle = ref('')
+const beautyLevel = ref('light')
 const loading = ref(false)
 const result = ref(null)
 const errorMsg = ref('')
@@ -59,6 +66,7 @@ async function generate() {
     image: imageFile.value,
     style: selectedStyle.value,
     gender: gender.value,
+    beautyLevel: beautyLevel.value,
   })
 
   loading.value = false
@@ -151,6 +159,22 @@ onUnmounted(() => {
             @click="selectStyle(style)"
           >
             {{ style }}
+          </button>
+        </div>
+      </section>
+
+      <!-- Beauty level selection -->
+      <section class="section card beauty-section">
+        <span class="section-label">效果强度</span>
+        <div class="beauty-options">
+          <button
+            v-for="opt in BEAUTY_OPTIONS"
+            :key="opt.value"
+            :class="['beauty-option', { selected: beautyLevel === opt.value }]"
+            @click="beautyLevel = opt.value"
+          >
+            <span class="beauty-option-name">{{ opt.name }}</span>
+            <span class="beauty-option-desc">{{ opt.desc }}</span>
           </button>
         </div>
       </section>
@@ -629,6 +653,60 @@ onUnmounted(() => {
   cursor: pointer;
   text-decoration: underline;
   text-underline-offset: 3px;
+}
+
+/* Beauty level */
+.beauty-section {
+  margin-bottom: 12px;
+}
+
+.beauty-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.beauty-option {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  width: 100%;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  background: rgba(148, 163, 184, 0.08);
+  border: 1px solid rgba(148, 163, 184, 0.22);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    background var(--transition),
+    border-color var(--transition);
+}
+
+.beauty-option:hover {
+  border-color: rgba(99, 102, 241, 0.3);
+}
+
+.beauty-option.selected {
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.08));
+  border-color: rgba(99, 102, 241, 0.45);
+}
+
+.beauty-option-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.3;
+}
+
+.beauty-option.selected .beauty-option-name {
+  color: #4338ca;
+}
+
+.beauty-option-desc {
+  font-size: 12px;
+  color: var(--text-muted);
+  line-height: 1.5;
 }
 
 /* Tips */

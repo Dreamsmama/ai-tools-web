@@ -23,6 +23,9 @@ class HairstyleGenerateResponse(BaseModel):
     message: str = ""
 
 
+_VALID_BEAUTY_LEVELS = {"natural", "light", "upgrade"}
+
+
 @router.post(
     "/hairstyle/generate",
     response_model=HairstyleGenerateResponse,
@@ -32,6 +35,7 @@ async def hairstyle_generate(
     image: UploadFile = File(...),
     style: str = Form(...),
     gender: str = Form(...),
+    beauty_level: str = Form("light"),
 ) -> HairstyleGenerateResponse:
     # --- 参数校验 ---
     filename = (image.filename or "").strip()
@@ -54,6 +58,11 @@ async def hairstyle_generate(
             success=False, message="参数错误：gender 必须为 male 或 female"
         )
 
+    # beauty_level 非法时静默回退到 light（前端传错不影响生成）
+    beauty_level = beauty_level.strip()
+    if beauty_level not in _VALID_BEAUTY_LEVELS:
+        beauty_level = "light"
+
     # --- 读取文件 ---
     content = await image.read()
     if not content:
@@ -68,6 +77,7 @@ async def hairstyle_generate(
             filename,
             style,
             gender,  # type: ignore[arg-type]
+            beauty_level,
         )
         return HairstyleGenerateResponse(
             success=True,
