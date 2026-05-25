@@ -14,7 +14,7 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-_ARK_EDIT_PATH = "/images/edits"
+_ARK_EDIT_PATH = "/images/generations"
 
 # 发型风格 → 编辑 Prompt（指令式，要求只改发型）
 _STYLE_PROMPTS: dict[str, str] = {
@@ -123,8 +123,8 @@ async def _call_ark_image_edit(
     model: str,
 ) -> bytes:
     """
-    调用火山方舟 OpenAI 兼容图片编辑接口（/api/v3/images/edits）。
-    复用 settings.jimeng_api_key / jimeng_api_base_url 配置。
+    调用火山方舟图生图接口（/api/v3/images/generations）。
+    使用 JSON body，图片通过 base64 data URI 传递。
     """
     api_key = settings.jimeng_api_key.strip()
     base_url = settings.jimeng_api_base_url.rstrip("/")
@@ -132,23 +132,33 @@ async def _call_ark_image_edit(
 
     ext = PurePosixPath(image_filename).suffix.lower()
     file_ct = _EXT_CONTENT_TYPE.get(ext, "image/jpeg")
+    image_b64 = base64.b64encode(image_bytes).decode("utf-8")
+    image_data_uri = f"data:{file_ct};base64,{image_b64}"
 
     logger.info(
-        "[换发型] ARK 图片编辑请求 url=%s model=%s file_ct=%s prompt=%.80s",
+        "[换发型] ARK 图生图请求 url=%s model=%s prompt=%.80s",
         final_url,
         model,
-        file_ct,
         prompt,
     )
 
-    headers = {"Authorization": f"Bearer {api_key}"}
-    files = {"image": (image_filename, image_bytes, file_ct)}
-    form_data = {"model": model, "prompt": prompt, "n": "1"}
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "model": model,
+        "prompt": prompt,
+        "image": image_data_uri,
+        "size": "1080x1920",
+        "response_format": "url",
+        "watermark": False,
+    }
 
     timeout = httpx.Timeout(settings.hairstyle_timeout_seconds)
     async with httpx.AsyncClient(timeout=timeout) as client:
         resp = await client.post(
-            final_url, headers=headers, files=files, data=form_data
+            final_url, headers=headers, json=payload
         )
         body_text = resp.text
         logger.info(
@@ -158,7 +168,7 @@ async def _call_ark_image_edit(
         )
         if resp.status_code >= 400:
             raise RuntimeError(
-                f"ARK 图片编辑失败 HTTP {resp.status_code}: {body_text[:400]}"
+                f"ARK 图生图失败 HTTP {resp.status_code}: {body_text[:400]}"
             )
         try:
             body = resp.json()
