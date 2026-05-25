@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import asyncio
 import base64
+import io
 import json
 import logging
 import uuid
@@ -9,6 +10,7 @@ from pathlib import Path, PurePosixPath
 from typing import Literal
 
 import httpx
+from PIL import Image
 
 from app.config import settings
 
@@ -16,22 +18,22 @@ logger = logging.getLogger(__name__)
 
 _ARK_EDIT_PATH = "/images/generations"
 
-# 发型风格 → 编辑 Prompt（指令式，要求只改发型）
+# 发型风格 → 编辑 Prompt（简洁但包含发型视觉特征描述）
 _STYLE_PROMPTS: dict[str, str] = {
     # 男生
-    "韩系碎盖": "把人物发型改成自然男生韩系碎盖短发，顶部有轻微蓬松感，两侧清爽，整体年轻干净，发丝自然真实。",
-    "清爽短发": "把人物发型改成清爽干净的男生短发，两侧修整，顶部轻微有层次，整体精神干净，发丝真实。",
-    "三七分": "把人物发型改成自然三七分，成熟干净，发丝层次自然，适合商务场合。",
-    "寸头": "把人物发型改成自然真实寸头，保留真实头型与发际线，不要改变脸型。",
-    "商务背头": "把人物发型改成成熟商务背头，发丝整齐向后梳理，整体干练有质感。",
-    "微分碎盖": "把人物发型改成男生微分碎盖，刘海轻微分开，发丝自然蓬松，清新年轻感。",
+    "韩系碎盖": "将图中人物发型更改为韩系碎盖短发，刘海盖住额头、发尾碎层次感、两侧清爽贴头，只改发型其他不变",
+    "清爽短发": "将图中人物发型更改为清爽男生短发，两侧推短、顶部短而有层次，只改发型其他不变",
+    "三七分": "将图中人物发型更改为三七分偏分发型，头发向一侧梳理、露出额头、整齐干练，只改发型其他不变",
+    "寸头": "将图中人物发型更改为寸头，头发极短约1厘米、贴合头皮、露出完整头型，只改发型其他不变",
+    "商务背头": "将图中人物发型更改为商务背头，头发全部向后梳理、前额露出、发丝整齐有光泽，只改发型其他不变",
+    "微分碎盖": "将图中人物发型更改为微分碎盖，刘海从中间微微分开、两边碎发自然垂落遮住额头、蓬松感强，只改发型其他不变",
     # 女生
-    "锁骨发": "把人物发型改成自然锁骨发，发尾轻微内扣，整体温柔自然，发量真实。",
-    "空气刘海": "把人物发型改成自然空气刘海，刘海轻盈真实，不要厚重，整体清爽甜美。",
-    "法式短发": "把人物发型改成法式短发，层次自然，整体干练有个性，不要过于厚重。",
-    "韩系长卷发": "把人物发型改成自然韩系长卷发，卷度柔和，发量真实，整体温柔有女人味。",
-    "高层次长发": "把人物发型改成高层次长发，发尾轻盈有流动感，整体自然飘逸。",
-    "温柔短发": "把人物发型改成温柔短发，层次柔和，整体清爽减龄，发丝真实自然。",
+    "锁骨发": "将图中人物发型更改为锁骨发，头发长度到锁骨位置、发尾轻微内扣、中分或偏分，只改发型其他不变",
+    "空气刘海": "将图中人物发型更改为空气刘海，额前刘海轻薄透光、能看到额头、自然弧度，只改发型其他不变",
+    "法式短发": "将图中人物发型更改为法式短发，头发到下巴长度、外翻卷翘、慵懒随性，只改发型其他不变",
+    "韩系长卷发": "将图中人物发型更改为韩系长卷发，长发大波浪卷、卷度自然柔和、有空气感，只改发型其他不变",
+    "高层次长发": "将图中人物发型更改为高层次长发，头发有明显层次、发尾轻盈、有流动感，只改发型其他不变",
+    "温柔短发": "将图中人物发型更改为温柔短发，耳下短发、层次柔和贴脸、清爽减龄，只改发型其他不变",
 }
 
 # 发型风格 → AI 建议文案
@@ -50,29 +52,14 @@ _STYLE_SUGGESTIONS: dict[str, str] = {
     "温柔短发": "温柔短发清爽又减龄，打理方便，适合追求简单精致生活的人群。",
 }
 
-# 核心身份保留约束（所有 beautyLevel 共用）
-_PRESERVE_BASE = (
-    "保留人物身份、五官、脸型、表情、肤色和原始构图，只改变发型。"
-    "发型必须自然贴合头型，发际线真实，头发边缘自然，光影和原照片一致。"
-    "不要像假发，不要像贴图，不要改变脸，不要改变背景。"
-)
+# 核心身份保留约束（所有 beautyLevel 共用）——保持简洁
+_PRESERVE_BASE = ""
 
-# 各美化强度追加指令
+# 各美化强度追加指令——尽量简短，避免干扰模型对原图的保持
 _BEAUTY_INSTRUCTIONS: dict[str, str] = {
-    "natural": (
-        "尽量保持原照片真实状态，只做发型变化，不进行明显美颜。"
-    ),
-    "light": (
-        "在保留本人身份和五官特征的前提下，进行轻微自然美化："
-        "改善肤色、光线和照片质感，让人物看起来更清爽自然，"
-        "但不要过度磨皮，不要网红脸，不要改变脸型和五官。"
-    ),
-    "upgrade": (
-        "在保留本人身份和五官特征的前提下，进行自然形象升级："
-        "让人物看起来更精神、更清爽、更有气质，"
-        "适度优化肤色、光线、照片质感和整体形象，"
-        "但必须保持真实自然，不要变成另一个人，不要过度美颜。"
-    ),
+    "natural": "",
+    "light": "",
+    "upgrade": "，同时轻微提升整体精神感和气质",
 }
 
 # 各美化强度对应的建议文案前缀
@@ -92,12 +79,42 @@ _EXT_CONTENT_TYPE: dict[str, str] = {
 }
 
 
+_MAX_ARK_IMAGE_BYTES = 4 * 1024 * 1024  # 压缩目标：4MB 以内（base64 后约 5.3MB）
+
+
+def _compress_image(image_bytes: bytes, max_bytes: int = _MAX_ARK_IMAGE_BYTES) -> tuple[bytes, str]:
+    """将图片压缩为 JPEG 格式，确保不超过 max_bytes。返回 (压缩后bytes, content_type)。"""
+    if len(image_bytes) <= max_bytes:
+        # 小图片尝试检测是否已经是 JPEG
+        if image_bytes[:2] == b'\xff\xd8':
+            return image_bytes, "image/jpeg"
+
+    img = Image.open(io.BytesIO(image_bytes))
+    if img.mode in ("RGBA", "P"):
+        img = img.convert("RGB")
+
+    quality = 85
+    while quality >= 30:
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", quality=quality)
+        result = buf.getvalue()
+        if len(result) <= max_bytes:
+            return result, "image/jpeg"
+        quality -= 10
+
+    buf = io.BytesIO()
+    img.save(buf, format="JPEG", quality=30)
+    return buf.getvalue(), "image/jpeg"
+
+
 def _build_prompt(style: str, beauty_level: str) -> str:
-    style_desc = _STYLE_PROMPTS.get(style, f"把人物发型改成{style}，发丝自然真实。")
-    beauty_instruction = _BEAUTY_INSTRUCTIONS.get(
-        beauty_level, _BEAUTY_INSTRUCTIONS["light"]
+    style_desc = _STYLE_PROMPTS.get(
+        style, f"将图中人物发型更改为{style}，其他所有内容保持不变"
     )
-    return f"{style_desc}{_PRESERVE_BASE}{beauty_instruction}"
+    beauty_instruction = _BEAUTY_INSTRUCTIONS.get(
+        beauty_level, _BEAUTY_INSTRUCTIONS["natural"]
+    )
+    return f"{style_desc}{beauty_instruction}"
 
 
 def _get_generated_dir() -> Path:
@@ -116,12 +133,28 @@ async def _download_bytes(url: str) -> bytes:
         return resp.content
 
 
+def _pick_output_size(image_bytes: bytes) -> str:
+    """根据原图宽高比选择合适的 ARK 输出尺寸（使用官方支持的 2K 分辨率）。"""
+    img = Image.open(io.BytesIO(image_bytes))
+    w, h = img.size
+    ratio = w / h
+
+    if ratio >= 1.3:
+        return "2848x1600"  # 横图 16:9 (2K)
+    elif ratio >= 0.9:
+        return "2048x2048"  # 方图 1:1 (2K)
+    elif ratio >= 0.7:
+        return "1728x2304"  # 竖图 3:4 (2K)
+    else:
+        return "1600x2848"  # 长竖图 9:16 (2K)
+
+
 async def _call_ark_image_edit(
     image_bytes: bytes,
     image_filename: str,
     prompt: str,
     model: str,
-) -> bytes:
+) -> tuple[bytes, str | None]:
     """
     调用火山方舟图生图接口（/api/v3/images/generations）。
     使用 JSON body，图片通过 base64 data URI 传递。
@@ -130,15 +163,16 @@ async def _call_ark_image_edit(
     base_url = settings.jimeng_api_base_url.rstrip("/")
     final_url = f"{base_url}{_ARK_EDIT_PATH}"
 
-    ext = PurePosixPath(image_filename).suffix.lower()
-    file_ct = _EXT_CONTENT_TYPE.get(ext, "image/jpeg")
-    image_b64 = base64.b64encode(image_bytes).decode("utf-8")
+    output_size = _pick_output_size(image_bytes)
+    compressed_bytes, file_ct = _compress_image(image_bytes)
+    image_b64 = base64.b64encode(compressed_bytes).decode("utf-8")
     image_data_uri = f"data:{file_ct};base64,{image_b64}"
 
     logger.info(
-        "[换发型] ARK 图生图请求 url=%s model=%s prompt=%.80s",
+        "[换发型] ARK 图生图请求 url=%s model=%s size=%s prompt=%.80s",
         final_url,
         model,
+        output_size,
         prompt,
     )
 
@@ -150,7 +184,7 @@ async def _call_ark_image_edit(
         "model": model,
         "prompt": prompt,
         "image": image_data_uri,
-        "size": "1080x1920",
+        "size": output_size,
         "response_format": "url",
         "watermark": False,
     }

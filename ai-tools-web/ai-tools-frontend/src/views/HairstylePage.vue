@@ -24,12 +24,50 @@ const errorMsg = ref('')
 
 let objectUrl = ''
 
-function handleFileChange(e) {
+const MAX_UPLOAD_SIZE = 4 * 1024 * 1024 // 4MB
+
+function compressImage(file, maxSize = MAX_UPLOAD_SIZE) {
+  return new Promise((resolve) => {
+    if (file.size <= maxSize) {
+      resolve(file)
+      return
+    }
+    const img = new window.Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      const canvas = document.createElement('canvas')
+      let { width, height } = img
+      const maxDim = 2048
+      if (width > maxDim || height > maxDim) {
+        const scale = maxDim / Math.max(width, height)
+        width = Math.round(width * scale)
+        height = Math.round(height * scale)
+      }
+      canvas.width = width
+      canvas.height = height
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, width, height)
+      canvas.toBlob(
+        (blob) => {
+          const compressed = new File([blob], file.name.replace(/\.\w+$/, '.jpg'), { type: 'image/jpeg' })
+          resolve(compressed)
+        },
+        'image/jpeg',
+        0.85
+      )
+    }
+    img.src = url
+  })
+}
+
+async function handleFileChange(e) {
   const file = e.target.files?.[0]
   if (!file) return
   if (objectUrl) URL.revokeObjectURL(objectUrl)
-  objectUrl = URL.createObjectURL(file)
-  imageFile.value = file
+  const compressed = await compressImage(file)
+  objectUrl = URL.createObjectURL(compressed)
+  imageFile.value = compressed
   imageUrl.value = objectUrl
   result.value = null
   selectedStyle.value = ''
@@ -109,12 +147,10 @@ onUnmounted(() => {
         <div class="upload-text">立即拍照 / 上传照片</div>
         <div class="upload-hint">支持 JPG / PNG，建议正脸清晰照</div>
       </label>
-      <!-- capture="user" 优先唤起前置摄像头；部分设备会限制相册，可按需去掉 capture 属性 -->
       <input
         id="hairstyle-photo"
         type="file"
         accept="image/*"
-        capture="user"
         class="file-input"
         @change="handleFileChange"
       />
