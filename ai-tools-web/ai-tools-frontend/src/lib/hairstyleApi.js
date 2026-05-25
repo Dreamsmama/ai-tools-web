@@ -2,7 +2,7 @@ import { API, apiUrl, logApiFailure } from '../api.js'
 
 /**
  * 调用 AI 换发型接口。
- * @param {{ image: File, style: string, gender: 'male' | 'female' }} payload
+ * @param {{ image: File, style: string, gender: 'male' | 'female', beautyLevel?: 'natural' | 'light' | 'upgrade' }} payload
  * @returns {Promise<{ ok: boolean, data?: { resultImageUrl: string, suggestion: string }, kind?: string, message?: string }>}
  */
 export async function requestHairstyleGenerate(payload) {
@@ -11,6 +11,7 @@ export async function requestHairstyleGenerate(payload) {
   formData.append('image', payload.image)
   formData.append('style', payload.style)
   formData.append('gender', payload.gender)
+  formData.append('beautyLevel', payload.beautyLevel || 'light')
 
   let res
   try {
