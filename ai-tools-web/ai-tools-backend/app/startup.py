@@ -12,6 +12,7 @@ def ensure_runtime_directories(backend_root: Path) -> tuple[Path, Path]:
     generated_root.mkdir(parents=True, exist_ok=True)
     (generated_root / "short-drama").mkdir(parents=True, exist_ok=True)
     (generated_root / "xiaohongshu").mkdir(parents=True, exist_ok=True)
+    (generated_root / "hairstyle").mkdir(parents=True, exist_ok=True)
 
     uploads_root = backend_root / "uploads"
     uploads_root.mkdir(parents=True, exist_ok=True)

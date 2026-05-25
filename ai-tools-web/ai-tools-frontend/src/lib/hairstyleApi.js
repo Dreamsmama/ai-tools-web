@@ -1,7 +1,7 @@
 import { API, apiUrl, logApiFailure } from '../api.js'
 
 /**
- * 请求 AI 换发型接口。
+ * 调用 AI 换发型接口。
  * @param {{ image: File, style: string, gender: 'male' | 'female' }} payload
  * @returns {Promise<{ ok: boolean, data?: { resultImageUrl: string, suggestion: string }, kind?: string, message?: string }>}
  */
@@ -22,9 +22,23 @@ export async function requestHairstyleGenerate(payload) {
 
   if (!res.ok) {
     await logApiFailure(url, { style: payload.style, gender: payload.gender }, res, null)
-    return { ok: false, kind: 'api', message: '生成失败，请稍后重试' }
+    return { ok: false, kind: 'http', message: '请求失败，请稍后重试' }
   }
 
-  const data = await res.json()
+  let data
+  try {
+    data = await res.json()
+  } catch (err) {
+    return { ok: false, kind: 'parse', message: '响应解析失败，请重试' }
+  }
+
+  if (!data.success) {
+    return {
+      ok: false,
+      kind: 'api',
+      message: data.message || '生成失败，请换一张正脸清晰照片再试。',
+    }
+  }
+
   return { ok: true, data }
 }
