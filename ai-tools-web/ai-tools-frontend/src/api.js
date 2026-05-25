@@ -32,6 +32,7 @@ export const API = {
   memoryCompare: '/api/memory/compare',
   xiaohongshuAgentGenerate: '/api/tools/xiaohongshu-agent/generate',
   xiaohongshuAgentGenerateStream: '/api/tools/xiaohongshu-agent/generate-stream',
+  hairstyleGenerate: '/api/hairstyle/generate',
   health: '/api/health',
   trackEvents: '/api/track/events',
   trackStats: '/api/track/stats',

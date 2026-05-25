@@ -33,6 +33,12 @@ const tools = [
     tag: '实验',
     desc: '同一输入下对比原始模型与优化模型输出差异',
   },
+  {
+    to: '/tools/hairstyle',
+    title: 'AI 换发型',
+    tag: '形象',
+    desc: '上传自拍，AI 生成不同发型效果，看看哪种更适合你',
+  },
 ]
 </script>
 
