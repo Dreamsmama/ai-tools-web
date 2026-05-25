@@ -1,10 +1,10 @@
 <script setup>
 import { ref, onUnmounted } from 'vue'
 import { RouterLink } from 'vue-router'
+import { requestHairstyleGenerate } from '../lib/hairstyleApi.js'
 
 const MALE_STYLES = ['韩系碎盖', '清爽短发', '三七分', '寸头', '商务背头', '微分碎盖']
 const FEMALE_STYLES = ['锁骨发', '空气刘海', '法式短发', '韩系长卷发', '高层次长发', '温柔短发']
-const MOCK_SUGGESTION = '这个发型会让整体气质更清爽，适合想提升精神感和形象辨识度的场景。'
 
 const imageUrl = ref('')
 const imageFile = ref(null)
@@ -12,6 +12,7 @@ const gender = ref('female')
 const selectedStyle = ref('')
 const loading = ref(false)
 const result = ref(null)
+const errorMsg = ref('')
 
 let objectUrl = ''
 
@@ -32,6 +33,7 @@ function resetUpload() {
   imageFile.value = null
   imageUrl.value = ''
   result.value = null
+  errorMsg.value = ''
   selectedStyle.value = ''
   // Reset the input so same file can be re-selected
   const input = document.getElementById('hairstyle-photo')
@@ -48,25 +50,30 @@ function selectStyle(style) {
 }
 
 async function generate() {
-  if (!imageUrl.value || !selectedStyle.value) return
+  if (!imageUrl.value || !selectedStyle.value || !imageFile.value) return
   loading.value = true
   result.value = null
+  errorMsg.value = ''
 
-  // TODO: Replace with real API call
-  // See src/lib/hairstyleApi.js for the full request/response structure
-  // POST /api/hairstyle/generate
-  // Body: FormData { image: imageFile.value, style: selectedStyle.value, gender: gender.value }
-  await new Promise((resolve) => setTimeout(resolve, 2000))
+  const res = await requestHairstyleGenerate({
+    image: imageFile.value,
+    style: selectedStyle.value,
+    gender: gender.value,
+  })
 
-  result.value = {
-    resultImageUrl: null, // replace with actual URL from API response
-    suggestion: MOCK_SUGGESTION,
-  }
   loading.value = false
+
+  if (!res.ok) {
+    errorMsg.value = res.message || '生成失败，请换一张正脸清晰照片再试。'
+    return
+  }
+
+  result.value = res.data
 }
 
 function tryAnotherStyle() {
   result.value = null
+  errorMsg.value = ''
 }
 
 onUnmounted(() => {
@@ -160,6 +167,12 @@ onUnmounted(() => {
         <span v-else>开始生成</span>
       </button>
 
+      <!-- Error message -->
+      <div v-if="errorMsg" class="error-card">
+        <p class="error-text">{{ errorMsg }}</p>
+        <button class="error-retry-btn" @click="tryAnotherStyle">重新选择发型</button>
+      </div>
+
       <!-- Result section -->
       <section v-if="loading || result" class="section card result-section">
         <span class="section-label">生成结果</span>
@@ -167,7 +180,7 @@ onUnmounted(() => {
         <!-- Loading state -->
         <div v-if="loading" class="loading-state">
           <div class="spinner" />
-          <p class="loading-text">AI 正在为你生成发型效果，稍候片刻...</p>
+          <p class="loading-text">AI正在帮你换发型，大约需要几十秒...</p>
         </div>
 
         <!-- Result state -->
@@ -179,8 +192,13 @@ onUnmounted(() => {
             </div>
             <div class="result-img-wrap">
               <p class="result-img-label">AI 效果图</p>
-              <!-- Replace result-placeholder with <img :src="result.resultImageUrl" /> when API is ready -->
-              <div class="result-placeholder">
+              <img
+                v-if="result.resultImageUrl"
+                :src="result.resultImageUrl"
+                alt="AI换发型效果"
+                class="result-img"
+              />
+              <div v-else class="result-placeholder">
                 <p class="placeholder-text">这里将展示 AI 生成后的发型效果图</p>
               </div>
             </div>
@@ -583,6 +601,34 @@ onUnmounted(() => {
 .try-again-btn:hover {
   background: rgba(99, 102, 241, 0.14);
   transform: translateY(-1px);
+}
+
+/* Error */
+.error-card {
+  margin-bottom: 12px;
+  padding: 14px 16px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(135deg, rgba(254, 226, 226, 0.7), rgba(254, 202, 202, 0.5));
+  border: 1px solid rgba(239, 68, 68, 0.3);
+}
+
+.error-text {
+  margin: 0 0 10px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #991b1b;
+}
+
+.error-retry-btn {
+  font-size: 13px;
+  font-weight: 600;
+  color: #dc2626;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 /* Tips */

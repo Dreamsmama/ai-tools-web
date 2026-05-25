@@ -16,6 +16,7 @@ from app.routes.offer_decision import router as offer_decision_router
 from app.routes.rag import router as rag_router
 from app.routes.summary import router as summary_router
 from app.routes.xiaohongshu_agent import router as xiaohongshu_agent_router
+from app.routes.hairstyle import router as hairstyle_router
 from app.routes.track import router as track_router
 
 
@@ -32,4 +33,5 @@ def register_routes(app: FastAPI) -> None:
     app.include_router(xiaohongshu_agent_router)
     app.include_router(rag_router)
     app.include_router(track_router)
+    app.include_router(hairstyle_router)
     app.include_router(ai_short_drama_router)

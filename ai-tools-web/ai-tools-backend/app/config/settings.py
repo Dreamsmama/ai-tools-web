@@ -62,6 +62,10 @@ class Settings(BaseSettings):
     )
     dashscope_image_model: str = "wanx2.1-t2i-turbo"
 
+    # AI 换发型（复用 jimeng_api_key / jimeng_api_base_url；需配置支持图片编辑的模型）
+    hairstyle_model: str = ""
+    hairstyle_timeout_seconds: float = 90.0
+
     # CosyVoice TTS 配音（复用 dashscope_api_key）
     # 模型：cosyvoice-v2 / cosyvoice-v3-flash 等，见百炼非流式 CosyVoice 文档
     tts_model: str = "cosyvoice-v2"
