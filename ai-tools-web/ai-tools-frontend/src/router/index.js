@@ -24,6 +24,7 @@ import EveningPlanPage from '../views/EveningPlanPage.vue'
 import InterestExplorerPage from '../views/InterestExplorerPage.vue'
 import LifeRpgPage from '../views/LifeRpgPage.vue'
 import HairstylePage from '../views/HairstylePage.vue'
+import DatingMenuTool from '../views/DatingMenuTool.vue'
 import AiShortDramaLayout from '../modules/ai-short-drama/views/AiShortDramaLayout.vue'
 import AiShortDramaPage from '../modules/ai-short-drama/views/AiShortDramaPage.vue'
 import AiShortDramaMaterialsPage from '../modules/ai-short-drama/views/AiShortDramaMaterialsPage.vue'
@@ -72,6 +73,7 @@ const router = createRouter({
     { path: '/tools/interest-explorer', name: 'interestExplorer', component: InterestExplorerPage },
     { path: '/tools/life-rpg', name: 'lifeRpg', component: LifeRpgPage },
     { path: '/tools/hairstyle', name: 'hairstyle', component: HairstylePage },
+    { path: '/tools/dating-menu', name: 'datingMenu', component: DatingMenuTool },
     {
       path: '/tools/ai-short-drama',
       component: AiShortDramaLayout,
